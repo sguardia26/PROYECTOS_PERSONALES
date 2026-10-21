@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <!-- Ciberseguridad: Content Security Policy (CSP) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+
+    <!-- PWA (Progressive Web App) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FFD000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PROJECTHUB">
+
+    <title>PROJECTHUB | C.E.N. - Centro Educativo Nonogasta (5° Año Informática)</title>
+    <link rel="icon" type="image/png" href="assets/img/ProjectHub.png">
+    <link rel="apple-touch-icon" href="assets/img/ProjectHub.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Estilos Personalizados PROJECTHUB App-Shell -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+    <!-- ======================================================================
+         TOPBAR FIJA (ESTILO YOUTUBE / INSTAGRAM)
+         ====================================================================== -->
+    <header class="app-topbar">
+        <div class="topbar-left">
+            <button class="sidebar-toggle-btn" onclick="toggleAppSidebar()" title="Alternar Menú Lateral (Sidebar)">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <a href="#" class="brand" onclick="navigateToSection('inicio'); return false;">
+                <img src="assets/img/ProjectHub.png" alt="Logo ProjectHub C.E.N." class="brand-logo">
+                <div>
+                    <div class="brand-title">PROJECT<span>HUB</span></div>
+                    <div class="brand-subtitle">C.E.N. Nonogasta • 5° Año T.I.P.P.</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Buscador Global Rápido (Redirige y filtra en Vitrina al escribir) -->
+        <div class="topbar-center">
+            <div class="global-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="globalSearchInput" placeholder="Buscar proyectos de 5° Año, alumnos o tecnologías..." oninput="handleGlobalSearch(this.value)">
+            </div>
+        </div>
+
+        <div class="topbar-right">
+            <!-- Escudo de Ciberseguridad -->
+            <button class="security-badge" onclick="openModal('securityModal')" title="Estado de Ciberseguridad">
+                <i class="fa-solid fa-shield-halved"></i> <span>Seguridad</span>
+            </button>
+
+            <!-- Botón Descargar / Instalar App (PWA) -->
+            <button class="btn-install-app" id="installAppBtn" onclick="triggerAppInstall()" title="Descargar e Instalar en tu Dispositivo">
+                <i class="fa-solid fa-download"></i> <span>Instalar App</span>
+            </button>
+
+            <!-- Cambio de Tema Oscuro / Claro -->
+            <button class="btn-icon" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar Tema Visual">
+                <i class="fa-solid fa-sun"></i>
+            </button>
+
+            <!-- BOTÓN DE LOGIN UNIFICADO (UN SOLO ACCESO TANTO PARA DOCENTE COMO ALUMNO) -->
+            <div id="guestActions">
+                <button class="btn btn-primary" onclick="openLoginModal()">
+                    <i class="fa-solid fa-circle-user"></i> Iniciar Sesión
+                </button>
+            </div>
+
+            <!-- Estado de Sesión Iniciada (Detectado según el usuario logueado) -->
+            <div id="loggedUserActions" style="display: none; align-items: center; gap: 0.6rem;">
+                <div class="user-badge">
+                    <span class="role-tag" id="activeRoleBadge">ROL</span>
+                    <strong id="activeUserName">Usuario</strong>
+                </div>
+                <button class="btn btn-ghost" style="padding: 0.5rem 0.85rem;" onclick="logoutSession()" title="Cerrar Sesión">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ======================================================================
+         CONTENEDOR PRINCIPAL APP-SHELL (SIDEBAR + SECCIONES INDEPENDIENTES)
+         ====================================================================== -->
+    <div class="app-shell">
+
+        <!-- ==================================================================
+             SIDEBAR PRINCIPAL VINCULADO A TODA LA PLATAFORMA
+             ================================================================== -->
+        <aside class="app-sidebar" id="appSidebar">
+            <div>
+                <div class="sidebar-nav-group">
+                    <div class="sidebar-section-title">Navegación Principal</div>
+
+                    <button class="sidebar-link active" data-section="inicio" onclick="navigateToSection('inicio')">
+                        <i class="fa-solid fa-house"></i>
+                        <span class="sidebar-label">Página Principal</span>
+                    </button>
+
+                    <button class="sidebar-link" data-section="vitrina" onclick="navigateToSection('vitrina')">
+                        <i class="fa-solid fa-compass"></i>
+                        <span class="sidebar-label">Vitrina de Proyectos</span>
+                    </button>
+
+                    <button class="sidebar-link" data-section="cargar" onclick="handleProtectedNavigation('cargar')">
+                        <i class="fa-solid fa-square-plus"></i>
+                        <span class="sidebar-label">Adjuntar Proyecto</span>
+                    </button>
+
+                    <button class="sidebar-link" id="sidebarEvaluationBtn" data-section="evaluacion" onclick="handleProtectedNavigation('evaluacion')">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        <span class="sidebar-label">Evaluación Docente</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-divider"></div>
+
+                <div class="sidebar-nav-group">
+                    <div class="sidebar-section-title">Categorías 5° Año</div>
+
+                    <button class="sidebar-link" onclick="quickCategoryJump('Sistema Web')">
+                        <i class="fa-solid fa-globe"></i>
+                        <span class="sidebar-label">Sistemas Web</span>
+                    </button>
+
+                    <button class="sidebar-link" onclick="quickCategoryJump('Software de Gestión')">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span class="sidebar-label">Software de Gestión</span>
+                    </button>
+
+                    <button class="sidebar-link" onclick="quickCategoryJump('IoT y Hardware')">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span class="sidebar-label">IoT & Hardware</span>
+                    </button>
+
+                    <button class="sidebar-link" onclick="quickCategoryJump('App Móvil')">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                        <span class="sidebar-label">Apps Móviles</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-divider"></div>
+
+                <div class="sidebar-nav-group">
+                    <div class="sidebar-section-title">Sistema & Cuenta</div>
+
+                    <button class="sidebar-link" id="sidebarLoginBtn" onclick="openLoginModal()">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span class="sidebar-label">Acceso Unificado (Login)</span>
+                    </button>
+
+                    <button class="sidebar-link" onclick="openModal('securityModal')">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span class="sidebar-label">Ciberseguridad C.E.N.</span>
+                    </button>
+
+                    <button class="sidebar-link" onclick="triggerAppInstall()">
+                        <i class="fa-solid fa-download"></i>
+                        <span class="sidebar-label">Descargar en Dispositivo</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjeta Institucional Inferior en el Sidebar -->
+            <div class="sidebar-footer-card">
+                <img src="assets/img/ProjectHub.png" alt="Escudo C.E.N.">
+                <h5>C.E.N. NONOGASTA</h5>
+                <p>5° Año Secundario Técnico en Informática P. y P. • La Rioja</p>
+            </div>
+        </aside>
+
+        <!-- ==================================================================
+             ESCENARIO CENTRAL DE SECCIONES (CADA ACCESO ABRE SU SECCIÓN)
+             ================================================================== -->
+        <main class="app-main">
+
+            <!-- ==============================================================
+                 SECCIÓN 1: PÁGINA PRINCIPAL (RESUMEN ARTICULACIÓN + BOTONES DE ACCESO)
+                 ============================================================== -->
+            <section id="section-inicio" class="app-section active">
+
+                <!-- Barra de Historias / Accesos Rápidos (Estilo Instagram Highlights) -->
+                <div class="stories-bar">
+                    <button class="story-item" onclick="navigateToSection('vitrina')">
+                        <div class="story-ring"><div class="story-inner"><i class="fa-solid fa-layer-group"></i></div></div>
+                        <span>Vitrina 5°</span>
+                    </button>
+                    <button class="story-item" onclick="openLoginModal()">
+                        <div class="story-ring"><div class="story-inner"><i class="fa-solid fa-user-shield"></i></div></div>
+                        <span>Login Único</span>
+                    </button>
+                    <button class="story-item" onclick="handleProtectedNavigation('cargar')">
+                        <div class="story-ring"><div class="story-inner"><i class="fa-solid fa-cloud-arrow-up"></i></div></div>
+                        <span>Subir Proyecto</span>
+                    </button>
+                    <button class="story-item" onclick="quickCategoryJump('Software de Gestión')">
+                        <div class="story-ring"><div class="story-inner"><i class="fa-solid fa-briefcase"></i></div></div>
+                        <span>Tec. Gestión</span>
+                    </button>
+                    <button class="story-item" onclick="quickCategoryJump('Sistema Web')">
+                        <div class="story-ring"><div class="story-inner"><i class="fa-solid fa-code"></i></div></div>
+                        <span>Prácticas Prof.</span>
+                    </button>
+                    <button class="story-item" onclick="quickCategoryJump('IoT y Hardware')">
+                        <div class="story-ring"><div class="story-inner"><i class="fa-solid fa-microchip"></i></div></div>
+                        <span>Robótica/IoT</span>
+                    </button>
+                    <button class="story-item" onclick="openModal('securityModal')">
+                        <div class="story-ring"><div class="story-inner"><i class="fa-solid fa-lock"></i></div></div>
+                        <span>Ciberseguridad</span>
+                    </button>
+                </div>
+
+                <!-- Portada Institucional C.E.N. -->
+                <div class="home-hero-banner">
+                    <div>
+                        <div class="institution-pill">
+                            <i class="fa-solid fa-microchip"></i>
+                            Centro Educativo Nonogasta • 5° Año Informática P. y P.
+                        </div>
+                        <h1 class="home-hero-title">
+                            Plataforma Interactiva <span class="highlight">PROJECTHUB</span>
+                        </h1>
+                        <p class="home-hero-desc">
+                            Bienvenidos al espacio oficial de proyectos de desarrollo de los alumnos de <strong>5° Año</strong> del <strong>Centro Educativo Nonogasta (La Rioja)</strong>. Selecciona cualquiera de los accesos personalizados o navega desde el <strong>Sidebar lateral</strong> para ingresar a cada módulo.
+                        </p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.9rem;">
+                            <button class="btn btn-primary" onclick="navigateToSection('vitrina')">
+                                <i class="fa-solid fa-compass"></i> Ir a la Vitrina de Proyectos
+                            </button>
+                            <button class="btn btn-outline" onclick="openLoginModal()">
+                                <i class="fa-solid fa-right-to-bracket"></i> Ingresar a la Plataforma (Login)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="logo-orbit-wrapper">
+                        <div class="logo-orbit-ring"></div>
+                        <div class="logo-orbit-ring-inner"></div>
+                        <img src="assets/img/ProjectHub.png" alt="Logo Oficial ProjectHub C.E.N." class="hero-main-logo">
+                    </div>
+                </div>
+
+                <!-- RESUMEN DE LA ARTICULACIÓN INTERDISCIPLINARIA (NÚCLEO DE LA PÁGINA PRINCIPAL) -->
+                <div class="articulation-summary-section">
+                    <div class="section-heading-bar">
+                        <h2><i class="fa-solid fa-diagram-project"></i> Resumen de la Articulación Curricular (5° Año)</h2>
+                        <span class="badge-category">Trabajo Integrador Articulado</span>
+                    </div>
+
+                    <div class="articulation-cards-grid">
+                        <!-- Espacio 1: Prácticas Profesionalizantes -->
+                        <div class="articulation-summary-card">
+                            <div class="art-card-top">
+                                <div class="art-card-icon"><i class="fa-solid fa-laptop-code"></i></div>
+                                <div>
+                                    <span>ESPACIO TÉCNICO ESPECÍFICO</span>
+                                    <h3>Prácticas Profesionalizantes</h3>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.92rem; color: var(--text-secondary);">
+                                Los alumnos de 5° Año aplican los conocimientos del perfil de <strong>Técnico en Informática Profesional y Personal</strong> en el diseño, codificación e implementación de sistemas informáticos reales para su entorno productivo y comunitario.
+                            </p>
+                            <ul class="art-points">
+                                <li><i class="fa-solid fa-circle-check"></i> <span><strong>Desarrollo de Software:</strong> Interfaces Frontend (HTML5, CSS3, JS), bases de datos y prototipos de hardware/IoT.</span></li>
+                                <li><i class="fa-solid fa-circle-check"></i> <span><strong>Documentación Profesional:</strong> Manuales técnicos, repositorios de código y pruebas de usuario.</span></li>
+                                <li><i class="fa-solid fa-circle-check"></i> <span><strong>Entorno Real:</strong> Soluciones pensadas para instituciones, PyMEs y productores de Nonogasta.</span></li>
+                            </ul>
+                        </div>
+
+                        <!-- Espacio 2: Tecnología de Gestión -->
+                        <div class="articulation-summary-card">
+                            <div class="art-card-top">
+                                <div class="art-card-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                                <div>
+                                    <span>ESPACIO ESTRATÉGICO Y ORGANIZACIONAL</span>
+                                    <h3>Tecnología de Gestión</h3>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.92rem; color: var(--text-secondary);">
+                                Aporta la estructura organizacional, el análisis de procesos y el estudio de viabilidad para que cada software o proyecto desarrollado en Prácticas Profesionalizantes responda eficazmente a la gestión de una organización.
+                            </p>
+                            <ul class="art-points">
+                                <li><i class="fa-solid fa-circle-check"></i> <span><strong>Diagnóstico y FODA:</strong> Relevamiento de problemas administrativos y optimización de recursos.</span></li>
+                                <li><i class="fa-solid fa-circle-check"></i> <span><strong>Planificación de Proyecto:</strong> Diagramas de tiempos, factibilidad operativa, costos y rentabilidad.</span></li>
+                                <li><i class="fa-solid fa-circle-check"></i> <span><strong>Toma de Decisiones:</strong> Indicadores de impacto en la organización destinataria.</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTONES PERSONALIZADOS PARA ACCEDER A LAS DEMÁS FUNCIONALIDADES -->
+                <div class="section-heading-bar">
+                    <h2><i class="fa-solid fa-grip"></i> Accesos Directos a las Funcionalidades</h2>
+                </div>
+
+                <div class="quick-access-grid">
+                    <!-- Acceso 1: Vitrina de Proyectos -->
+                    <div class="access-action-card" onclick="navigateToSection('vitrina')">
+                        <div class="access-card-header">
+                            <div class="access-icon-box"><i class="fa-solid fa-cubes"></i></div>
+                            <div class="access-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div>
+                            <h4>Explorar Vitrina de Proyectos</h4>
+                            <p>Ingresa al catálogo interactivo para ver todos los proyectos adjuntados por los alumnos de 5° Año, sus informes y repositorios.</p>
+                        </div>
+                    </div>
+
+                    <!-- Acceso 2: Login Único (Docente y Alumno) -->
+                    <div class="access-action-card" onclick="openLoginModal()">
+                        <div class="access-card-header">
+                            <div class="access-icon-box"><i class="fa-solid fa-user-lock"></i></div>
+                            <div class="access-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div>
+                            <h4>Iniciar Sesión (Acceso Único)</h4>
+                            <p>Portal único de autenticación para <strong>Docentes y Alumnos</strong>. El sistema identifica automáticamente tus permisos según tus credenciales.</p>
+                        </div>
+                    </div>
+
+                    <!-- Acceso 3: Adjuntar Proyecto -->
+                    <div class="access-action-card" onclick="handleProtectedNavigation('cargar')">
+                        <div class="access-card-header">
+                            <div class="access-icon-box"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                            <div class="access-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div>
+                            <h4>Adjuntar Nuevo Proyecto</h4>
+                            <p>Sección exclusiva para que los equipos de 5° Año suban la ficha técnica, articulación de gestión y archivos del proyecto.</p>
+                        </div>
+                    </div>
+
+                    <!-- Acceso 4: Panel de Evaluación -->
+                    <div class="access-action-card" onclick="handleProtectedNavigation('evaluacion')">
+                        <div class="access-card-header">
+                            <div class="access-icon-box"><i class="fa-solid fa-chalkboard-user"></i></div>
+                            <div class="access-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div>
+                            <h4>Panel de Evaluación y Seguimiento</h4>
+                            <p>Módulo para supervisar las entregas, asignar calificaciones integradas y redactar devoluciones pedagógicas.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indicadores Institucionales -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-code-branch"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statTotalProjects">0</h3>
+                            <p>Proyectos en Plataforma</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-users-gear"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statTotalStudents">0</h3>
+                            <p>Alumnos de 5° Año</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statApprovedProjects">0</h3>
+                            <p>Proyectos Aprobados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div class="stat-info">
+                            <h3>100%</h3>
+                            <p>Protección Ciberseguridad</p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ==============================================================
+                 SECCIÓN 2: VITRINA DE PROYECTOS (SECCIÓN INDEPENDIENTE)
+                 ============================================================== -->
+            <section id="section-vitrina" class="app-section">
+                <div class="section-header">
+                    <div class="section-title-group">
+                        <h2><i class="fa-solid fa-compass"></i> Vitrina de Proyectos (5° Año C.E.N.)</h2>
+                        <p>Explora y filtra todas las soluciones tecnológicas desarrolladas en Prácticas Profesionalizantes y Tecnología de Gestión.</p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="btn btn-ghost" onclick="navigateToSection('inicio')">
+                            <i class="fa-solid fa-arrow-left"></i> Volver al Inicio
+                        </button>
+                        <button class="btn btn-primary" onclick="handleProtectedNavigation('cargar')">
+                            <i class="fa-solid fa-plus"></i> Subir Proyecto
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Barra de Chips de Categorías estilo YouTube -->
+                <div class="filters-bar">
+                    <div class="filter-pills" id="categoryPills">
+                        <button class="filter-pill active" data-category="TODOS" onclick="setCategoryFilter('TODOS', this)">Todos los Proyectos</button>
+                        <button class="filter-pill" data-category="Sistema Web" onclick="setCategoryFilter('Sistema Web', this)">Sistemas Web</button>
+                        <button class="filter-pill" data-category="Software de Gestión" onclick="setCategoryFilter('Software de Gestión', this)">Software de Gestión</button>
+                        <button class="filter-pill" data-category="IoT y Hardware" onclick="setCategoryFilter('IoT y Hardware', this)">IoT & Hardware</button>
+                        <button class="filter-pill" data-category="App Móvil" onclick="setCategoryFilter('App Móvil', this)">Apps Móviles</button>
+                    </div>
+
+                    <select class="select-filter" id="statusFilter" onchange="filterProjects()">
+                        <option value="TODOS">Todos los estados</option>
+                        <option value="Aprobado">✔ Aprobados</option>
+                        <option value="En Revisión">⏳ En Revisión Docente</option>
+                        <option value="En Desarrollo">⚙️ En Desarrollo</option>
+                    </select>
+                </div>
+
+                <!-- Grilla de Tarjetas de Proyectos -->
+                <div class="projects-grid" id="projectsGridContainer">
+                    <!-- Renderizado dinámico por app.js -->
+                </div>
+            </section>
+
+            <!-- ==============================================================
+                 SECCIÓN 3: ADJUNTAR PROYECTO Y MIS ENTREGAS (SECCIÓN ALUMNOS)
+                 ============================================================== -->
+            <section id="section-cargar" class="app-section">
+                <div class="section-header">
+                    <div class="section-title-group">
+                        <h2><i class="fa-solid fa-square-plus"></i> Adjuntar Proyecto Integrador (5° Año)</h2>
+                        <p>Completa la información técnica de Prácticas Profesionalizantes y el análisis organizacional de Tecnología de Gestión.</p>
+                    </div>
+                    <button class="btn btn-ghost" onclick="navigateToSection('vitrina')">
+                        <i class="fa-solid fa-layer-group"></i> Ver en Vitrina
+                    </button>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Formulario Oficial de Presentación</h3>
+                        <span class="badge-category">5° Año Informática P. y P.</span>
+                    </div>
+
+                    <form id="projectUploadForm" onsubmit="handleProjectSubmit(event)">
+                        <input type="hidden" id="csrfTokenUpload" value="">
+
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Título del Proyecto de Desarrollo <span>*</span></label>
+                                <input type="text" id="projTitle" class="form-control" maxlength="140" placeholder="Ej: Sistema de Control de Stock e Inventario para PyME Regional" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Categoría Tecnológica <span>*</span></label>
+                                <select id="projCategory" class="form-control" required>
+                                    <option value="Sistema Web">Sistema Web Full / Frontend</option>
+                                    <option value="Software de Gestión">Software de Gestión (ERP / Ventas / Turnos)</option>
+                                    <option value="IoT y Hardware">Automatización, IoT y Hardware</option>
+                                    <option value="App Móvil">Aplicación Móvil / Multiplataforma</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>División / Curso <span>*</span></label>
+                                <input type="text" id="projDivision" class="form-control" maxlength="80" value="5° Año - Informática P. y P." required>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Integrantes del Equipo Desarrollador (Alumnos) <span>*</span></label>
+                                <input type="text" id="projAuthors" class="form-control" maxlength="200" placeholder="Ej: Carrizo Mateo, Bazán Valentina, Vega Santiago" required>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Descripción Técnica (Prácticas Profesionalizantes) <span>*</span></label>
+                                <textarea id="projDescription" class="form-control" maxlength="1500" placeholder="Describe qué problema resuelve el proyecto, sus módulos principales, arquitectura y funcionalidades desarrolladas..." required></textarea>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Articulación con Tecnología de Gestión (Viabilidad y Gestión Organizacional) <span>*</span></label>
+                                <textarea id="projManagement" class="form-control" maxlength="1500" placeholder="Explica el diagnóstico organizacional, optimización de tiempos, matriz FODA o beneficio administrativo que aporta..." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Tecnologías y Herramientas Utilizadas <span>*</span></label>
+                                <input type="text" id="projTechs" class="form-control" maxlength="200" placeholder="Ej: HTML5, CSS3, JavaScript, MySQL, PHP" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Enlace a Repositorio / Demo Web (Opcional)</label>
+                                <input type="url" id="projRepo" class="form-control" maxlength="250" placeholder="https://github.com/usuario/proyecto" pattern="https?://.+">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Adjuntar Informe Técnico + Carpeta de Campo (.PDF, .ZIP, .DOCX)</label>
+                                <div class="file-drop-zone" onclick="document.getElementById('projFileInput').click()">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <p id="fileDropText">Haz clic aquí para seleccionar el documento del proyecto (Informe PDF, Manual de Usuario o Código .ZIP)</p>
+                                    <small style="color: var(--text-muted);"><i class="fa-solid fa-shield-halved" style="color:var(--status-approved);"></i> Verificación Antimalware Activa: solo formatos .PDF, .DOCX, .ZIP, .PPTX (Máx 25MB)</small>
+                                    <input type="file" id="projFileInput" accept=".pdf,.docx,.zip,.pptx" style="display:none;" onchange="updateFileLabel(this)">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                            <button type="reset" class="btn btn-ghost">Limpiar Formulario</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-paper-plane"></i> Publicar Proyecto en PROJECTHUB
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Historial de Entregas y Devoluciones -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3><i class="fa-solid fa-list-check"></i> Estado de Entregas y Devoluciones Docentes</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="hub-table">
+                            <thead>
+                                <tr>
+                                    <th>Proyecto</th>
+                                    <th>Equipo 5° Año</th>
+                                    <th>Archivo Adjunto</th>
+                                    <th>Estado</th>
+                                    <th>Calificación y Devolución</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentSubmissionsTable">
+                                <!-- Dinámico desde app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==============================================================
+                 SECCIÓN 4: PANEL DE EVALUACIÓN DOCENTE (SECCIÓN INDEPENDIENTE)
+                 ============================================================== -->
+            <section id="section-evaluacion" class="app-section">
+                <div class="section-header">
+                    <div class="section-title-group">
+                        <h2><i class="fa-solid fa-chalkboard-user"></i> Evaluación y Seguimiento Docente</h2>
+                        <p>Supervisión colegiada: <strong>Prácticas Profesionalizantes</strong> & <strong>Tecnología de Gestión</strong> (5° Año C.E.N.)</p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="btn btn-outline" onclick="exportProjectsSummary()">
+                            <i class="fa-solid fa-file-export"></i> Exportar Planilla
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3><i class="fa-solid fa-clipboard-check"></i> Bandeja de Proyectos Adjuntados por 5° Año</h3>
+                        <span class="badge-category">Rol Docente</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="hub-table">
+                            <thead>
+                                <tr>
+                                    <th>Proyecto / Categoría</th>
+                                    <th>Alumnos Integrantes</th>
+                                    <th>Documentación</th>
+                                    <th>Estado</th>
+                                    <th>Calificación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacherEvaluationTable">
+                                <!-- Dinámico desde app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ======================================================================
+         BARRA INFERIOR MÓVIL (ESTILO INSTAGRAM / YOUTUBE EN CELULARES)
+         ====================================================================== -->
+    <nav class="mobile-bottom-nav">
+        <button class="bottom-nav-btn active" data-section="inicio" onclick="navigateToSection('inicio')">
+            <i class="fa-solid fa-house"></i>
+            <span>Inicio</span>
+        </button>
+        <button class="bottom-nav-btn" data-section="vitrina" onclick="navigateToSection('vitrina')">
+            <i class="fa-solid fa-compass"></i>
+            <span>Vitrina</span>
+        </button>
+        <button class="bottom-nav-btn" data-section="cargar" onclick="handleProtectedNavigation('cargar')">
+            <i class="fa-solid fa-square-plus"></i>
+            <span>Subir</span>
+        </button>
+        <button class="bottom-nav-btn" data-section="evaluacion" onclick="handleProtectedNavigation('evaluacion')">
+            <i class="fa-solid fa-clipboard-check"></i>
+            <span>Evaluar</span>
+        </button>
+        <button class="bottom-nav-btn" onclick="openLoginModal()">
+            <i class="fa-solid fa-circle-user"></i>
+            <span id="mobileBottomAuthLabel">Acceder</span>
+        </button>
+    </nav>
+
+    <!-- ======================================================================
+         MODAL 1: LOGIN UNIFICADO (UN SOLO FORMULARIO PARA DOCENTES Y ALUMNOS)
+         ====================================================================== -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('loginModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="login-header">
+                <img src="assets/img/ProjectHub.png" alt="Logo C.E.N. ProjectHub">
+                <h3>ACCESO ÚNICO PROJECTHUB</h3>
+                <p>Centro Educativo Nonogasta • 5° Año Informática P. y P.</p>
+            </div>
+
+            <!-- Explicación de Login Unificado listo para Backend y Base de Datos -->
+            <div class="unified-login-info">
+                <i class="fa-solid fa-database"></i>
+                <span><strong>Ingreso Inteligente:</strong> Introduce tu usuario y contraseña. El sistema identificará automáticamente si tu cuenta corresponde a <strong>DOCENTE</strong> o <strong>ALUMNO</strong>.</span>
+            </div>
+
+            <!-- Alerta Dinámica de Bloqueo por Fuerza Bruta -->
+            <div class="security-lockout-box" id="loginLockoutBox">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.4rem; color: var(--danger);"></i>
+                <div>
+                    <strong>Acceso temporalmente bloqueado</strong>
+                    <p id="lockoutTimerMsg" style="font-size:0.78rem; margin-top:0.15rem;">Por seguridad, espera antes de volver a intentar.</p>
+                </div>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLoginSubmit(event)" autocomplete="off">
+                <input type="hidden" id="csrfTokenLogin" value="">
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Usuario, Correo Institucional o DNI <span>*</span></label>
+                    <input type="text" id="loginUsername" class="form-control" maxlength="80" placeholder="Ej: usuario@cennonogasta.edu.ar" required autocomplete="username">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.35rem;">
+                    <label>Contraseña de Acceso <span>*</span></label>
+                    <input type="password" id="loginPassword" class="form-control" maxlength="64" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+                    <i class="fa-solid fa-right-to-bracket"></i> Ingresar a PROJECTHUB
+                </button>
+            </form>
+
+            <!-- Botones de Simulación de Base de Datos mientras se construye el Backend -->
+            <div class="demo-credentials-box">
+                <strong style="color: var(--gold-primary); display:block;">Simulador de Credenciales (Pre-Backend):</strong>
+                <span style="color: var(--text-secondary);">Prueba cómo el mismo Login detecta el rol automáticamente según la cuenta ingresada:</span>
+                <div class="demo-buttons-row">
+                    <button type="button" class="btn btn-outline" style="padding: 0.45rem; font-size: 0.76rem;" onclick="fillUnifiedDemo('ALUMNO')">
+                        <i class="fa-solid fa-user-graduate"></i> Probar Cuenta Alumno
+                    </button>
+                    <button type="button" class="btn btn-outline" style="padding: 0.45rem; font-size: 0.76rem;" onclick="fillUnifiedDemo('DOCENTE')">
+                        <i class="fa-solid fa-chalkboard-user"></i> Probar Cuenta Docente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 2: VISTA DETALLADA DE PROYECTO (FICHA TÉCNICA + GESTIÓN)
+         ====================================================================== -->
+    <div class="modal-overlay" id="projectDetailModal">
+        <div class="modal-box modal-lg">
+            <button class="modal-close" onclick="closeModal('projectDetailModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="projectDetailContent"></div>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 3: EVALUACIÓN DOCENTE (CALIFICAR Y DAR DEVOLUCIÓN)
+         ====================================================================== -->
+    <div class="modal-overlay" id="evaluateModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('evaluateModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="login-header" style="margin-bottom: 1rem;">
+                <h3 style="color: var(--gold-primary);"><i class="fa-solid fa-star-half-stroke"></i> Evaluar Proyecto</h3>
+                <p id="evalProjectTitleSubtitle">Proyecto de 5° Año</p>
+            </div>
+
+            <form id="evaluateForm" onsubmit="saveTeacherEvaluation(event)">
+                <input type="hidden" id="evalProjectId">
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Dictamen / Estado del Proyecto <span>*</span></label>
+                    <select id="evalStatus" class="form-control" required>
+                        <option value="Aprobado">✔ Aprobado (Listo para Muestra Institucional)</option>
+                        <option value="En Revisión">⏳ En Revisión (Requiere correcciones menores)</option>
+                        <option value="En Desarrollo">⚙️ En Desarrollo (Avance parcial)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Calificación Integrada (Escala 1 a 10) <span>*</span></label>
+                    <input type="number" id="evalGrade" class="form-control" min="1" max="10" step="0.5" placeholder="Ej: 9.5" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label>Devolución Pedagógica (Prácticas Profesionalizantes y Tec. de Gestión) <span>*</span></label>
+                    <textarea id="evalFeedback" class="form-control" maxlength="1500" placeholder="Escribe las observaciones sobre el desarrollo de software y la gestión del proyecto..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar Evaluación Docente
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 4: ESCUDO DE CIBERSEGURIDAD INSTITUCIONAL
+         ====================================================================== -->
+    <div class="modal-overlay" id="securityModal">
+        <div class="modal-box modal-lg">
+            <button class="modal-close" onclick="closeModal('securityModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="login-header" style="text-align: left; display:flex; align-items:center; gap:1rem; border-bottom:1px solid var(--gold-border); padding-bottom:1rem;">
+                <div style="width:56px; height:56px; border-radius:14px; background:rgba(16,185,129,0.15); border:1.5px solid var(--status-approved); display:flex; align-items:center; justify-content:center; font-size:1.6rem; color:var(--status-approved); flex-shrink:0;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h3 style="color:var(--text-primary); font-size:1.3rem;">CENTRO DE CIBERSEGURIDAD PROJECTHUB</h3>
+                    <p style="color:var(--text-secondary); font-size:0.84rem;">Protección activa contra inyecciones, XSS, enlaces maliciosos y fuerza bruta.</p>
+                </div>
+            </div>
+
+            <ul class="security-checklist">
+                <li class="security-item">
+                    <i class="fa-solid fa-shield-virus"></i>
+                    <div>
+                        <strong style="color:var(--gold-primary); display:block;">Sanitización Anti-XSS (Cross-Site Scripting)</strong>
+                        <span>Codificación estricta de caracteres especiales en cada entrada de texto antes de renderizarse en el DOM.</span>
+                    </div>
+                </li>
+                <li class="security-item">
+                    <i class="fa-solid fa-link-slash"></i>
+                    <div>
+                        <strong style="color:var(--gold-primary); display:block;">Inspector de Enlaces Externos y Anti-Tabnabbing</strong>
+                        <span>Bloqueo de esquemas <code>javascript:</code> o <code>data:</code> y verificación previa antes de abrir repositorios externos.</span>
+                    </div>
+                </li>
+                <li class="security-item">
+                    <i class="fa-solid fa-file-shield"></i>
+                    <div>
+                        <strong style="color:var(--gold-primary); display:block;">Filtro Seguro de Archivos Adjuntos</strong>
+                        <span>Lista blanca estricta (<code>.pdf, .docx, .zip, .pptx</code>) y bloqueo inmediato de scripts ejecutables (<code>.exe, .php, .bat, .sh</code>).</span>
+                    </div>
+                </li>
+                <li class="security-item">
+                    <i class="fa-solid fa-user-lock"></i>
+                    <div>
+                        <strong style="color:var(--gold-primary); display:block;">Contención Anti-Fuerza Bruta y Tokens CSRF</strong>
+                        <span>Bloqueo temporal automático tras 4 intentos fallidos en el login unificado y tokens criptográficos por sesión.</span>
+                    </div>
+                </li>
+            </ul>
+
+            <div style="margin-top:1.35rem; display:flex; justify-content:flex-end;">
+                <button class="btn btn-primary" onclick="closeModal('securityModal')">
+                    <i class="fa-solid fa-check"></i> Cerrar Panel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 5: INSPECCIÓN DE ENLACE EXTERNO (ANTI-PHISHING)
+         ====================================================================== -->
+    <div class="modal-overlay" id="linkSafetyModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal('linkSafetyModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="login-header" style="margin-bottom:1rem;">
+                <div style="font-size:2.3rem; color:var(--gold-primary); margin-bottom:0.4rem;"><i class="fa-solid fa-up-right-from-square"></i></div>
+                <h3 style="color:var(--text-primary);">Verificación de Enlace Externo</h3>
+                <p>El escudo de seguridad ha verificado que el protocolo del enlace es válido:</p>
+            </div>
+            <div style="background:var(--bg-surface); padding:0.9rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border); word-break:break-all; font-family:monospace; font-size:0.84rem; color:var(--gold-primary); margin-bottom:1.4rem;" id="safeLinkDisplay">
+                https://...
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+                <button class="btn btn-ghost" onclick="closeModal('linkSafetyModal')">Cancelar</button>
+                <a id="safeLinkProceedBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" onclick="closeModal('linkSafetyModal')">
+                    Abrir Repositorio <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor de Notificaciones Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Lógica Dinámica Frontend App-Shell -->
+    <script src="assets/js/app.js"></script>
+</body>
+</html>

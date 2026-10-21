@@ -1,0 +1,58 @@
+# ==============================================================================
+# PROJECTHUB - Centro Educativo Nonogasta (C.E.N.)
+# Configuración de Seguridad de Servidor Web Apache (.htaccess)
+# ==============================================================================
+
+# 1. PREVENCIÓN DE EXPLORACIÓN DE DIRECTORIOS
+# Evita que usuarios no autorizados listen los archivos de las carpetas
+Options -Indexes -MultiViews
+
+# 2. BLOQUEO DE ACCESO A ARCHIVOS SENSIBLES Y OCULTOS
+# Impide la descarga de archivos de configuración, logs, git, etc.
+<FilesMatch "(^\.|\.(bak|config|sql|fla|psd|ini|log|sh|env|md)$)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# 3. CABECERAS DE CIBERSEGURIDAD HTTP
+<IfModule mod_headers.c>
+    # Previene ataques de Clickjacking (la página no puede ser incrustada en iframes maliciosos externos)
+    Header set X-Frame-Options "SAMEORIGIN"
+
+    # Previene ataques basados en confusión de tipo MIME (MIME-Sniffing)
+    Header set X-Content-Type-Options "nosniff"
+
+    # Habilita el filtro XSS del navegador en navegadores heredados
+    Header set X-XSS-Protection "1; mode=block"
+
+    # Política estricta de Referrer para no filtrar datos de navegación
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Restricción de permisos para periféricos no utilizados
+    Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# 4. REGLAS DE REESCRITURA Y FILTRO ANTI-INYECCIÓN (SQLi / XSS / LFI)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /ProjectHub/
+
+    # Bloquear intentos de Directory Traversal (../ o ..\)
+    RewriteCond %{QUERY_STRING} (\.\./|\.\.\\) [NC,OR]
+
+    # Bloquear inyecciones de etiquetas HTML / scripts en URLs
+    RewriteCond %{QUERY_STRING} (<|%3C).*script.*(>|%3E) [NC,OR]
+
+    # Bloquear intentos de inyección SQL común en query strings
+    RewriteCond %{QUERY_STRING} (UNION.*SELECT|SELECT.*FROM|INSERT.*INTO|DELETE.*FROM|DROP.*TABLE) [NC,OR]
+    RewriteCond %{QUERY_STRING} (concat.*\(|base64_decode|eval\(|benchmark\() [NC]
+    RewriteRule ^.*$ - [F,L]
+</IfModule>
+
+# 5. TIPOS MIME PARA PWA Y FUENTES
+<IfModule mod_mime.c>
+    AddType application/manifest+json .json
+    AddType font/woff2 .woff2
+    AddType font/woff .woff
+</IfModule>
+
