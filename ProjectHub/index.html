@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <!-- Ciberseguridad: Content Security Policy (CSP) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self';">
+    <!-- Ciberseguridad: Content Security Policy (CSP) con Lista Blanca para API Segura de Supabase -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://obtnmzjsbyeqttyzxasq.supabase.co wss://obtnmzjsbyeqttyzxasq.supabase.co https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self';">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="strict-origin-when-cross-origin">
 
@@ -79,11 +79,15 @@
                 </button>
             </div>
 
-            <!-- Estado de Sesión Iniciada (Detectado según el usuario logueado) -->
+            <!-- Estado de Sesión Iniciada (Detectado según el usuario logueado y sus roles en Supabase) -->
             <div id="loggedUserActions" style="display: none; align-items: center; gap: 0.6rem;">
-                <div class="user-badge">
+                <!-- Selector dinámico de Rol Activo (solo aparece cuando el usuario tiene más de un rol en usuarios_roles) -->
+                <select id="roleSwitcherSelect" class="select-filter" style="display: none; padding: 0.35rem 0.65rem; font-size: 0.75rem; font-weight: 700; border-color: var(--gold-primary); color: var(--gold-primary);" onchange="switchActiveUserRole(this.value)" title="Cambiar entre tus roles asignados">
+                </select>
+                <div class="user-badge" onclick="openUserProfileModal()" style="cursor: pointer;" title="Ver mi Ficha Relacional y Roles">
                     <span class="role-tag" id="activeRoleBadge">ROL</span>
                     <strong id="activeUserName">Usuario</strong>
+                    <i class="fa-solid fa-id-card-clip" style="color: var(--gold-primary); font-size: 0.85rem; margin-left: 0.25rem;"></i>
                 </div>
                 <button class="btn btn-ghost" style="padding: 0.5rem 0.85rem;" onclick="logoutSession()" title="Cerrar Sesión">
                     <i class="fa-solid fa-right-from-bracket"></i>
@@ -633,10 +637,10 @@
                 <p>Centro Educativo Nonogasta • 5° Año Informática P. y P.</p>
             </div>
 
-            <!-- Explicación de Login Unificado listo para Backend y Base de Datos -->
+            <!-- Explicación de Login Unificado conectado a Base de Datos Relacional Supabase -->
             <div class="unified-login-info">
                 <i class="fa-solid fa-database"></i>
-                <span><strong>Ingreso Inteligente:</strong> Introduce tu usuario y contraseña. El sistema identificará automáticamente si tu cuenta corresponde a <strong>DOCENTE</strong> o <strong>ALUMNO</strong>.</span>
+                <span><strong>Autenticación Relacional Supabase:</strong> Ingresa con tu <strong>Correo Institucional, Usuario o DNI</strong>. El sistema valida tu identidad y carga tus roles (<strong>ADMINISTRADOR, DOCENTE, ALUMNO</strong>).</span>
             </div>
 
             <!-- Alerta Dinámica de Bloqueo por Fuerza Bruta -->
@@ -666,16 +670,19 @@
                 </button>
             </form>
 
-            <!-- Botones de Simulación de Base de Datos mientras se construye el Backend -->
+            <!-- Cuentas Reales en la Base de Datos de Supabase para Pruebas -->
             <div class="demo-credentials-box">
-                <strong style="color: var(--gold-primary); display:block;">Simulador de Credenciales (Pre-Backend):</strong>
-                <span style="color: var(--text-secondary);">Prueba cómo el mismo Login detecta el rol automáticamente según la cuenta ingresada:</span>
-                <div class="demo-buttons-row">
-                    <button type="button" class="btn btn-outline" style="padding: 0.45rem; font-size: 0.76rem;" onclick="fillUnifiedDemo('ALUMNO')">
-                        <i class="fa-solid fa-user-graduate"></i> Probar Cuenta Alumno
+                <strong style="color: var(--gold-primary); display:block;"><i class="fa-solid fa-server"></i> Cuentas Reales en Supabase (Prueba de Roles):</strong>
+                <span style="color: var(--text-secondary);">Selecciona un perfil para cargar sus credenciales reales de la base de datos (puedes ingresar por Correo, Usuario o DNI):</span>
+                <div class="demo-buttons-row" style="grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));">
+                    <button type="button" class="btn btn-outline" style="padding: 0.45rem; font-size: 0.74rem;" onclick="fillUnifiedDemo('ALUMNO')">
+                        <i class="fa-solid fa-user-graduate"></i> Alumno 5° Año
                     </button>
-                    <button type="button" class="btn btn-outline" style="padding: 0.45rem; font-size: 0.76rem;" onclick="fillUnifiedDemo('DOCENTE')">
-                        <i class="fa-solid fa-chalkboard-user"></i> Probar Cuenta Docente
+                    <button type="button" class="btn btn-outline" style="padding: 0.45rem; font-size: 0.74rem;" onclick="fillUnifiedDemo('DOCENTE')">
+                        <i class="fa-solid fa-chalkboard-user"></i> Docente C.E.N.
+                    </button>
+                    <button type="button" class="btn btn-outline" style="padding: 0.45rem; font-size: 0.74rem;" onclick="fillUnifiedDemo('ADMINISTRADOR')">
+                        <i class="fa-solid fa-user-shield"></i> Admin + Docente
                     </button>
                 </div>
             </div>
@@ -819,13 +826,25 @@
         </div>
     </div>
 
+    <!-- ======================================================================
+         MODAL 6: FICHA RELACIONAL DEL USUARIO Y ROLES (SUPABASE DB)
+         ====================================================================== -->
+    <div class="modal-overlay" id="userProfileModal">
+        <div class="modal-box modal-lg">
+            <button class="modal-close" onclick="closeModal('userProfileModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="userProfileModalContent"></div>
+        </div>
+    </div>
+
     <!-- Contenedor de Notificaciones Toast -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Cliente Oficial Supabase & Servicio de Autenticación Relacional -->
+    <script type="module" src="assets/js/supabaseClient.js"></script>
+
     <!-- Lógica Dinámica Frontend App-Shell -->
     <script src="assets/js/app.js"></script>
-
-    <!-- Supabase -->
-    <script type="module" src="./supabaseClient.js"></script>
 </body>
 </html>

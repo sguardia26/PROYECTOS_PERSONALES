@@ -332,9 +332,12 @@ function handleProtectedNavigation(sectionName) {
         return;
     }
 
-    if (sectionName === 'evaluacion' && currentSession.role !== 'DOCENTE') {
-        showToast('Sección exclusiva para el Rol DOCENTE. Inicia sesión con una cuenta docente.');
-        openLoginModal();
+    const canEvaluate = currentSession.role === 'DOCENTE' ||
+                        currentSession.role === 'ADMINISTRADOR' ||
+                        (Array.isArray(currentSession.roles) && currentSession.roles.some(r => r.codigo === 'DOCENTE' || r.codigo === 'ADMINISTRADOR'));
+
+    if (sectionName === 'evaluacion' && !canEvaluate) {
+        showToast('Sección exclusiva para los roles DOCENTE o ADMINISTRADOR.');
         return;
     }
 
@@ -359,7 +362,7 @@ function handleGlobalSearch(query) {
 }
 
 /* ==========================================================================
-   LOGIN UNIFICADO (UN SOLO FORMULARIO - DETECCIÓN AUTOMÁTICA DE ROL)
+   LOGIN UNIFICADO CONECTADO A SUPABASE (RELACIONAL, NORMALIZADO Y MULTIRROL)
    ========================================================================== */
 function openLoginModal() {
     Security.generateCSRFToken();
@@ -371,18 +374,22 @@ function fillUnifiedDemo(targetRole) {
     const userField = document.getElementById('loginUsername');
     const passField = document.getElementById('loginPassword');
 
-    if (targetRole === 'DOCENTE') {
+    if (targetRole === 'ADMINISTRADOR') {
+        userField.value = 'admin.cen@cennonogasta.edu.ar';
+        passField.value = 'cen2026admin';
+        showToast('Cuenta Multirrol (ADMINISTRADOR + DOCENTE) cargada. También puedes usar DNI 32500100 o usuario sguardia.admin.');
+    } else if (targetRole === 'DOCENTE') {
         userField.value = 'docente.practicas@cennonogasta.edu.ar';
         passField.value = 'cen2026docente';
-        showToast('Credenciales de cuenta DOCENTE cargadas en el Login Único.');
+        showToast('Cuenta DOCENTE cargada. También puedes usar DNI 34800200 o usuario docente.practicas.');
     } else {
         userField.value = 'alumno.5to.tipp@cennonogasta.edu.ar';
         passField.value = 'cen2026alumno';
-        showToast('Credenciales de cuenta ALUMNO cargadas en el Login Único.');
+        showToast('Cuenta ALUMNO cargada. También puedes usar DNI 47900300 o usuario mateo.carrizo.');
     }
 }
 
-function handleLoginSubmit(event) {
+async function handleLoginSubmit(event) {
     event.preventDefault();
 
     if (!Security.checkBruteForce()) return;
@@ -393,53 +400,132 @@ function handleLoginSubmit(event) {
         return;
     }
 
-    const username = document.getElementById('loginUsername').value.trim();
+    const identifier = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
 
-    if (!password || password.length < 6) {
+    if (!identifier || !password || password.length < 6) {
         Security.recordFailedLogin();
         return;
     }
 
-    Security.resetFailedLogins();
+    const submitBtn = document.getElementById('loginSubmitBtn');
+    const originalBtnHTML = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Verificando en Supabase...';
+    }
 
-    // Detección inteligente de Rol según el usuario (Preparado para cuando se conecte la Base de Datos / Backend)
-    const lowerUser = username.toLowerCase();
-    const isTeacher = lowerUser.includes('docente') || lowerUser.includes('prof') || lowerUser.includes('admin') || lowerUser.includes('evaluador');
+    try {
+        if (!window.ProjectHubAuth) {
+            throw new Error('El cliente de seguridad de Supabase aún se está inicializando. Intenta de nuevo.');
+        }
 
-    const detectedRole = isTeacher ? 'DOCENTE' : 'ALUMNO';
-    const displayName = isTeacher
-        ? 'Prof. Evaluación C.E.N.'
-        : 'Alumno 5° Año T.I.P.P.';
+        const result = await window.ProjectHubAuth.signInUnified(identifier, password);
+
+        if (!result.ok) {
+            if (result.code === 'ACCOUNT_LOCKED') {
+                Security.showLockoutAlert(result.remainingSeconds || 60);
+                showToast(result.message);
+            } else {
+                Security.recordFailedLogin();
+            }
+            return;
+        }
+
+        Security.resetFailedLogins();
+
+        const profileData = result.profile;
+        if (!profileData || !profileData.usuario) {
+            showToast('Cuenta autenticada, pero sin ficha en la entidad pública de usuarios.');
+            return;
+        }
+
+        buildAndSaveRelationalSession(profileData);
+        updateAuthUI();
+        closeModal('loginModal');
+        document.getElementById('loginForm').reset();
+
+        const rolesNames = currentSession.roles.map(r => r.codigo).join(' + ');
+        if (currentSession.role === 'ADMINISTRADOR' || currentSession.role === 'DOCENTE') {
+            navigateToSection('evaluacion');
+            showToast(`Bienvenido/a ${currentSession.displayName} | Roles activos en BD: [${rolesNames}]`);
+        } else {
+            navigateToSection('cargar');
+            showToast(`Bienvenido/a ${currentSession.displayName} | Rol activo: [${rolesNames}]`);
+        }
+    } catch (err) {
+        console.error('[Login Error]', err);
+        showToast(err.message || 'No se pudo completar la autenticación con Supabase.');
+    } finally {
+        if (submitBtn && !submitBtn.disabled) {
+            submitBtn.innerHTML = originalBtnHTML;
+        } else if (submitBtn && !sessionStorage.getItem('cen_login_lockout')) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHTML;
+        }
+    }
+}
+
+function buildAndSaveRelationalSession(profileData, preferredActiveRole = null) {
+    const u = profileData.usuario;
+    const rolesArray = Array.isArray(profileData.roles) && profileData.roles.length > 0
+        ? profileData.roles
+        : [{ codigo: 'ALUMNO', nombre: 'Alumno Desarrollador (5° Año)', es_rol_principal: true }];
+
+    const primaryRoleCode = preferredActiveRole && rolesArray.some(r => r.codigo === preferredActiveRole)
+        ? preferredActiveRole
+        : (profileData.rol_principal || rolesArray[0].codigo);
 
     currentSession = {
-        role: detectedRole,
-        username: username,
-        displayName: displayName,
-        loginTime: new Date().toLocaleTimeString(),
+        userId: u.id,
+        dni: u.dni,
+        cuil: u.cuil,
+        username: u.username,
+        email: u.email,
+        nombres: u.nombres,
+        apellidos: u.apellidos,
+        displayName: `${u.nombres} ${u.apellidos}`,
+        role: primaryRoleCode,
+        roles: rolesArray,
+        perfilesRol: profileData.perfiles_rol || {},
+        usuarioRaw: u,
+        loginTime: new Date().toLocaleTimeString('es-AR'),
         token: Security.csrfToken
     };
 
     localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(currentSession));
-    updateAuthUI();
-    closeModal('loginModal');
-    document.getElementById('loginForm').reset();
-
-    if (detectedRole === 'DOCENTE') {
-        navigateToSection('evaluacion');
-        showToast('Rol DOCENTE identificado. Bienvenido al Panel de Evaluación.');
-    } else {
-        navigateToSection('cargar');
-        showToast('Rol ALUMNO identificado. Bienvenido al espacio de carga de 5° Año.');
-    }
 }
 
-function logoutSession() {
+function switchActiveUserRole(newRoleCode) {
+    if (!currentSession || !Array.isArray(currentSession.roles)) return;
+    const exists = currentSession.roles.some(r => r.codigo === newRoleCode);
+    if (!exists) return;
+
+    currentSession.role = newRoleCode;
+    localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(currentSession));
+    updateAuthUI();
+
+    if (newRoleCode === 'ALUMNO') {
+        navigateToSection('cargar');
+    } else {
+        navigateToSection('evaluacion');
+    }
+    showToast(`Vista cambiada al Rol asignado: ${newRoleCode}`);
+}
+
+async function logoutSession() {
+    try {
+        if (window.ProjectHubAuth) {
+            await window.ProjectHubAuth.signOut();
+        }
+    } catch (e) {
+        console.warn('Cierre de sesión local:', e);
+    }
     currentSession = null;
     localStorage.removeItem(STORAGE_KEY_SESSION);
     updateAuthUI();
     navigateToSection('inicio');
-    showToast('Sesión finalizada de forma segura.');
+    showToast('Sesión finalizada de forma segura en Supabase.');
 }
 
 function updateAuthUI() {
@@ -448,12 +534,14 @@ function updateAuthUI() {
     const sidebarEvalBtn = document.getElementById('sidebarEvaluationBtn');
     const sidebarLoginBtn = document.getElementById('sidebarLoginBtn');
     const mobileBottomAuthLabel = document.getElementById('mobileBottomAuthLabel');
+    const roleSwitcher = document.getElementById('roleSwitcherSelect');
 
     if (!currentSession) {
         if (guestActions) guestActions.style.display = 'block';
         if (loggedActions) loggedActions.style.display = 'none';
         if (sidebarLoginBtn) sidebarLoginBtn.style.display = 'flex';
         if (mobileBottomAuthLabel) mobileBottomAuthLabel.textContent = 'Acceder';
+        if (roleSwitcher) roleSwitcher.style.display = 'none';
         return;
     }
 
@@ -470,9 +558,141 @@ function updateAuthUI() {
     if (userName) userName.textContent = safeName;
     if (mobileBottomAuthLabel) mobileBottomAuthLabel.textContent = safeRole;
 
-    if (sidebarEvalBtn) {
-        sidebarEvalBtn.style.opacity = currentSession.role === 'DOCENTE' ? '1' : '0.65';
+    // Si el usuario tiene múltiples roles en la tabla intermedia usuarios_roles, habilitar el selector
+    if (roleSwitcher) {
+        const rolesList = Array.isArray(currentSession.roles) ? currentSession.roles : [];
+        if (rolesList.length > 1) {
+            roleSwitcher.style.display = 'inline-block';
+            roleSwitcher.innerHTML = rolesList.map(r => {
+                const code = Security.escapeHTML(r.codigo);
+                const selected = r.codigo === currentSession.role ? 'selected' : '';
+                return `<option value="${code}" ${selected}>Rol: ${code}</option>`;
+            }).join('');
+        } else {
+            roleSwitcher.style.display = 'none';
+        }
     }
+
+    if (sidebarEvalBtn) {
+        const canEval = currentSession.role === 'DOCENTE' || currentSession.role === 'ADMINISTRADOR';
+        sidebarEvalBtn.style.opacity = canEval ? '1' : '0.65';
+    }
+}
+
+function openUserProfileModal() {
+    if (!currentSession) {
+        openLoginModal();
+        return;
+    }
+
+    const u = currentSession.usuarioRaw || {};
+    const roles = Array.isArray(currentSession.roles) ? currentSession.roles : [];
+    const perfiles = currentSession.perfilesRol || {};
+
+    const rolesBadgesHTML = roles.map(r => `
+        <span class="badge-status status-aprobado" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+            <i class="fa-solid fa-user-check"></i> ${Security.escapeHTML(r.codigo)}
+            ${r.es_rol_principal ? ' (Principal)' : ' (Secundario)'}
+        </span>
+    `).join('');
+
+    let roleEntitiesHTML = '';
+
+    if (perfiles.administrador) {
+        const adm = perfiles.administrador;
+        roleEntitiesHTML += `
+            <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--gold-border);">
+                <h4 style="color:var(--gold-primary); font-size:0.88rem; margin-bottom:0.5rem;">
+                    <i class="fa-solid fa-user-shield"></i> ENTIDAD: public.administradores (Legajo: ${Security.escapeHTML(adm.legajo_admin)})
+                </h4>
+                <p style="font-size:0.84rem; color:var(--text-secondary);">
+                    <strong>Cargo:</strong> ${Security.escapeHTML(adm.cargo_institucional)}<br>
+                    <strong>Área:</strong> ${Security.escapeHTML(adm.departamento_area)} • <strong>Nivel Acceso:</strong> ${Security.escapeHTML(adm.nivel_acceso)}/10<br>
+                    <strong>Resolución:</strong> ${Security.escapeHTML(adm.resolucion_designacion || 'N/A')}
+                </p>
+            </div>
+        `;
+    }
+
+    if (perfiles.docente) {
+        const doc = perfiles.docente;
+        const materias = Array.isArray(doc.espacios_curriculares) ? doc.espacios_curriculares.join(', ') : '';
+        const cursos = Array.isArray(doc.cursos_asignados) ? doc.cursos_asignados.join(', ') : '';
+        roleEntitiesHTML += `
+            <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--gold-border);">
+                <h4 style="color:var(--gold-primary); font-size:0.88rem; margin-bottom:0.5rem;">
+                    <i class="fa-solid fa-chalkboard-user"></i> ENTIDAD: public.docentes (Legajo: ${Security.escapeHTML(doc.legajo_docente)})
+                </h4>
+                <p style="font-size:0.84rem; color:var(--text-secondary);">
+                    <strong>Título:</strong> ${Security.escapeHTML(doc.titulo_profesional)} (${Security.escapeHTML(doc.situacion_revista)})<br>
+                    <strong>Espacios Curriculares:</strong> ${Security.escapeHTML(materias)}<br>
+                    <strong>Cursos Asignados:</strong> ${Security.escapeHTML(cursos)}
+                </p>
+            </div>
+        `;
+    }
+
+    if (perfiles.alumno) {
+        const alu = perfiles.alumno;
+        roleEntitiesHTML += `
+            <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--gold-border);">
+                <h4 style="color:var(--gold-primary); font-size:0.88rem; margin-bottom:0.5rem;">
+                    <i class="fa-solid fa-user-graduate"></i> ENTIDAD: public.alumnos (Matrícula: ${Security.escapeHTML(alu.matricula_legajo)})
+                </h4>
+                <p style="font-size:0.84rem; color:var(--text-secondary);">
+                    <strong>Curso:</strong> ${Security.escapeHTML(alu.anio_cursado)}° Año "${Security.escapeHTML(alu.division)}" (${Security.escapeHTML(alu.turno)}) - ${Security.escapeHTML(alu.orientacion_tecnica)}<br>
+                    <strong>Equipo de Proyecto:</strong> ${Security.escapeHTML(alu.nombre_equipo_proyecto || 'Sin asignar')} (${Security.escapeHTML(alu.rol_en_equipo || '')})<br>
+                    <strong>Tutor Legal:</strong> ${Security.escapeHTML(alu.tutor_legal_nombre || 'No registrado')} (${Security.escapeHTML(alu.tutor_legal_parentesco || '')})
+                </p>
+            </div>
+        `;
+    }
+
+    const container = document.getElementById('userProfileModalContent');
+    if (container) {
+        container.innerHTML = `
+            <div class="login-header" style="text-align:left; border-bottom:1px solid var(--gold-border); padding-bottom:1rem; margin-bottom:1.2rem;">
+                <span class="badge-category">Ficha Relacional Supabase (3FN)</span>
+                <h3 style="color:var(--gold-primary); font-size:1.35rem; margin-top:0.35rem;">
+                    ${Security.escapeHTML(currentSession.displayName)}
+                </h3>
+                <p style="color:var(--text-secondary); font-size:0.85rem;">
+                    Usuario: <strong>@${Security.escapeHTML(currentSession.username)}</strong> • DNI: <strong>${Security.escapeHTML(currentSession.dni)}</strong> • CUIL: <strong>${Security.escapeHTML(currentSession.cuil || 'N/A')}</strong>
+                </p>
+            </div>
+
+            <div style="margin-bottom:1.2rem;">
+                <strong style="display:block; font-size:0.78rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.45rem;">
+                    Roles Asignados en Tabla Intermedia (public.usuarios_roles):
+                </strong>
+                <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                    ${rolesBadgesHTML}
+                </div>
+            </div>
+
+            <div style="display:grid; gap:1rem; margin-bottom:1.2rem;">
+                <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--gold-border);">
+                    <h4 style="color:var(--gold-primary); font-size:0.88rem; margin-bottom:0.5rem;">
+                        <i class="fa-solid fa-address-card"></i> ENTIDAD PRINCIPAL: public.usuarios
+                    </h4>
+                    <p style="font-size:0.84rem; color:var(--text-secondary);">
+                        <strong>Correo Institucional:</strong> ${Security.escapeHTML(currentSession.email)}<br>
+                        <strong>Teléfono:</strong> ${Security.escapeHTML(u.telefono || 'No especificado')} • <strong>Localidad:</strong> ${Security.escapeHTML(u.localidad || 'Nonogasta')}, ${Security.escapeHTML(u.provincia || 'La Rioja')}<br>
+                        <strong>Domicilio:</strong> ${Security.escapeHTML(u.domicilio || 'No especificado')}
+                    </p>
+                </div>
+                ${roleEntitiesHTML}
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+                <button class="btn btn-primary" onclick="closeModal('userProfileModal')">
+                    <i class="fa-solid fa-check"></i> Cerrar Ficha
+                </button>
+            </div>
+        `;
+    }
+
+    openModal('userProfileModal');
 }
 
 /* ==========================================================================
@@ -496,7 +716,7 @@ function saveProjectsToStorage() {
     localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(projectsList));
 }
 
-function loadSessionFromStorage() {
+async function loadSessionFromStorage() {
     const savedSession = localStorage.getItem(STORAGE_KEY_SESSION);
     if (savedSession) {
         try {
@@ -506,6 +726,26 @@ function loadSessionFromStorage() {
         }
     }
     updateAuthUI();
+
+    // Sincronizar con la sesión activa de Supabase si existe
+    if (window.ProjectHubAuth) {
+        try {
+            const { data } = await window.ProjectHubAuth.client.auth.getSession();
+            if (data?.session) {
+                const freshProfile = await window.ProjectHubAuth.fetchCurrentUserProfile();
+                if (freshProfile && freshProfile.usuario) {
+                    buildAndSaveRelationalSession(freshProfile, currentSession?.role);
+                    updateAuthUI();
+                }
+            } else if (currentSession) {
+                currentSession = null;
+                localStorage.removeItem(STORAGE_KEY_SESSION);
+                updateAuthUI();
+            }
+        } catch (err) {
+            console.warn('[C.E.N. Auth Sync]', err);
+        }
+    }
 }
 
 function renderAllViews() {
