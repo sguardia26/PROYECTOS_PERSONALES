@@ -128,6 +128,11 @@
                         <i class="fa-solid fa-clipboard-check"></i>
                         <span class="sidebar-label">Evaluación Docente</span>
                     </button>
+
+                    <button class="sidebar-link" id="sidebarAdminBtn" data-section="administracion" onclick="handleProtectedNavigation('administracion')">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span class="sidebar-label">Supervisión Admin</span>
+                    </button>
                 </div>
 
                 <div class="sidebar-divider"></div>
@@ -357,6 +362,18 @@
                         <div>
                             <h4>Panel de Evaluación y Seguimiento</h4>
                             <p>Módulo para supervisar las entregas, asignar calificaciones integradas y redactar devoluciones pedagógicas.</p>
+                        </div>
+                    </div>
+
+                    <!-- Acceso 5: Supervisión Integral Administrador -->
+                    <div class="access-action-card" onclick="handleProtectedNavigation('administracion')">
+                        <div class="access-card-header">
+                            <div class="access-icon-box"><i class="fa-solid fa-user-shield"></i></div>
+                            <div class="access-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div>
+                            <h4>Supervisión General (Rol Administrador)</h4>
+                            <p>Control relacional de <strong>Usuarios, Docentes, Alumnos, Proyectos y Asignaturas</strong> con alta, edición, ficha detallada y baja lógica booleana.</p>
                         </div>
                     </div>
                 </div>
@@ -589,6 +606,273 @@
                                 <!-- Dinámico desde app.js -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==============================================================
+                 SECCIÓN 5: PANEL DE SUPERVISIÓN INTEGRAL (ROL ADMINISTRADOR)
+                 1) Usuarios | 2) Docentes | 3) Alumnos | 4) Proyectos | 5) Asignaturas
+                 Con Agregar, Modificar, VerInfo y Baja/Alta Lógica (Booleano activo)
+                 ============================================================== -->
+            <section id="section-administracion" class="app-section">
+                <div class="section-header">
+                    <div class="section-title-group">
+                        <h2><i class="fa-solid fa-user-shield"></i> Centro de Supervisión y Control Integral (Rol Administrador)</h2>
+                        <p>Gestión relacional en tiempo real conectada con <strong>Supabase PostgreSQL (3FN)</strong> • Baja lógica mediante estado booleano (<code>activo: true/false</code>).</p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button class="btn btn-outline" onclick="refreshSystemDataFromSupabase(true)">
+                            <i class="fa-solid fa-arrows-rotate"></i> Sincronizar BD
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPIs del Administrador -->
+                <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchAdminTab('usuarios')">
+                        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                        <div class="stat-info">
+                            <h3 id="adminKpiUsuarios">0</h3>
+                            <p>Usuarios Registrados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchAdminTab('docentes')">
+                        <div class="stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+                        <div class="stat-info">
+                            <h3 id="adminKpiDocentes">0</h3>
+                            <p>Docentes Supervisados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchAdminTab('alumnos')">
+                        <div class="stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
+                        <div class="stat-info">
+                            <h3 id="adminKpiAlumnos">0</h3>
+                            <p>Alumnos 5° Año</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchAdminTab('asignaturas')">
+                        <div class="stat-icon"><i class="fa-solid fa-book-open-reader"></i></div>
+                        <div class="stat-info">
+                            <h3 id="adminKpiAsignaturas">0</h3>
+                            <p>Asignaturas Relacionales</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de 5 Pestañas de Supervisión del Administrador -->
+                <div class="admin-tabs-bar">
+                    <button class="admin-tab-btn active" data-admintab="usuarios" onclick="switchAdminTab('usuarios')">
+                        <i class="fa-solid fa-users-gear"></i> 1. Usuarios y Roles
+                    </button>
+                    <button class="admin-tab-btn" data-admintab="docentes" onclick="switchAdminTab('docentes')">
+                        <i class="fa-solid fa-chalkboard-user"></i> 2. Docentes (Proyectos / Alumnos)
+                    </button>
+                    <button class="admin-tab-btn" data-admintab="alumnos" onclick="switchAdminTab('alumnos')">
+                        <i class="fa-solid fa-user-graduate"></i> 3. Alumnos (Proyectos / Docentes / Asignaturas)
+                    </button>
+                    <button class="admin-tab-btn" data-admintab="proyectos" onclick="switchAdminTab('proyectos')">
+                        <i class="fa-solid fa-diagram-project"></i> 4. Proyectos Integradores
+                    </button>
+                    <button class="admin-tab-btn" data-admintab="asignaturas" onclick="switchAdminTab('asignaturas')">
+                        <i class="fa-solid fa-book-bookmark"></i> 5. Entidad Asignaturas
+                    </button>
+                </div>
+
+                <!-- ==========================================================
+                     SUB-MÓDULO 1: SUPERVISIÓN DE TODOS LOS USUARIOS
+                     ========================================================== -->
+                <div id="admin-subview-usuarios" class="admin-subview active">
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-users-gear"></i> 1. Supervisión General de Usuarios (Entidad <code>public.usuarios</code> + <code>usuarios_roles</code>)
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Control de cuentas, asignación de múltiples roles y estado booleano de actividad.</p>
+                            </div>
+                            <div style="display:flex; gap:0.65rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="adminSearchUsuarios" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar por nombre, DNI o correo..." oninput="renderAdminUsuariosTable()">
+                                <select id="adminFilterEstadoUsuarios" class="select-filter" onchange="renderAdminUsuariosTable()">
+                                    <option value="TODOS">Todos (Activos + Inactivos)</option>
+                                    <option value="ACTIVOS">Solo Activos (activo = true)</option>
+                                    <option value="INACTIVOS">Solo Inactivos / Baja Lógica (activo = false)</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="openAdminUserModal(null, 'ADMINISTRADOR')">
+                                    <i class="fa-solid fa-user-plus"></i> Agregar Usuario
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario / Identificación</th>
+                                        <th>Contacto & Localidad</th>
+                                        <th>Roles Asignados (N:M)</th>
+                                        <th>Fichas Especializadas</th>
+                                        <th>Estado Booleano</th>
+                                        <th>Acciones (VerInfo / Modificar / Estado)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminUsuariosTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     SUB-MÓDULO 2: SUPERVISIÓN DE DOCENTES (PROYECTOS + ALUMNOS + ASIGNATURAS)
+                     ========================================================== -->
+                <div id="admin-subview-docentes" class="admin-subview">
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-chalkboard-user"></i> 2. Supervisión de Docentes (Proyectos, Alumnos y Asignaturas Asignadas)
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Entidad <code>public.docentes</code> vinculada con <code>proyectos_docentes</code>, <code>docentes_alumnos</code> y <code>docentes_asignaturas</code>.</p>
+                            </div>
+                            <div style="display:flex; gap:0.65rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="adminSearchDocentes" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar docente, legajo o proyecto..." oninput="renderAdminDocentesTable()">
+                                <button class="btn btn-primary" onclick="openAdminUserModal(null, 'DOCENTE')">
+                                    <i class="fa-solid fa-user-plus"></i> Agregar Docente
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th>Docente / Legajo & Título</th>
+                                        <th>Asignaturas que Dicta</th>
+                                        <th>Proyectos que Supervisa</th>
+                                        <th>Alumnos Asignados (Tutoría)</th>
+                                        <th>Estado Booleano</th>
+                                        <th>Acciones (VerInfo / Modificar / Estado)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminDocentesTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     SUB-MÓDULO 3: SUPERVISIÓN DE ALUMNOS (PROYECTOS + DOCENTES + ASIGNATURAS)
+                     ========================================================== -->
+                <div id="admin-subview-alumnos" class="admin-subview">
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-user-graduate"></i> 3. Supervisión de Alumnos (Proyectos, Docentes Asignados y Asignaturas)
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Entidad <code>public.alumnos</code> vinculada con <code>proyectos_alumnos</code>, <code>docentes_alumnos</code> y <code>alumnos_asignaturas</code>.</p>
+                            </div>
+                            <div style="display:flex; gap:0.65rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="adminSearchAlumnos" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar alumno, matrícula o curso..." oninput="renderAdminAlumnosTable()">
+                                <button class="btn btn-primary" onclick="openAdminUserModal(null, 'ALUMNO')">
+                                    <i class="fa-solid fa-user-plus"></i> Agregar Alumno
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th>Alumno / Matrícula & Curso</th>
+                                        <th>Proyectos Integradores</th>
+                                        <th>Docentes Asignados</th>
+                                        <th>Asignaturas Cursadas</th>
+                                        <th>Estado Booleano</th>
+                                        <th>Acciones (VerInfo / Modificar / Estado)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminAlumnosTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     SUB-MÓDULO 4: SUPERVISIÓN DE PROYECTOS (DOCENTES + ALUMNOS + ASIGNATURAS)
+                     ========================================================== -->
+                <div id="admin-subview-proyectos" class="admin-subview">
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-diagram-project"></i> 4. Supervisión de Proyectos (Docentes, Alumnos y Asignaturas Articuladas)
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Entidad <code>public.proyectos</code> vinculada con equipos de alumnos, docentes evaluadores y asignaturas.</p>
+                            </div>
+                            <div style="display:flex; gap:0.65rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="adminSearchProyectos" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar proyecto, código o tecnología..." oninput="renderAdminProyectosTable()">
+                                <button class="btn btn-primary" onclick="openAdminProjectModal(null)">
+                                    <i class="fa-solid fa-folder-plus"></i> Agregar Proyecto
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th>Código / Proyecto & Categoría</th>
+                                        <th>Alumnos Integrantes</th>
+                                        <th>Docentes Evaluadores</th>
+                                        <th>Asignaturas Articuladas</th>
+                                        <th>Dictamen / Nota</th>
+                                        <th>Estado Booleano</th>
+                                        <th>Acciones (VerInfo / Modificar / Estado)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminProyectosTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     SUB-MÓDULO 5: SUPERVISIÓN DE ASIGNATURAS (DOCENTES + ALUMNOS + PROYECTOS)
+                     ========================================================== -->
+                <div id="admin-subview-asignaturas" class="admin-subview">
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-book-bookmark"></i> 5. Supervisión de Asignaturas (Entidad Relacional <code>public.asignaturas</code>)
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Espacios curriculares de 5° Año T.I.P.P. vinculados con docentes de cátedra, alumnos y proyectos.</p>
+                            </div>
+                            <div style="display:flex; gap:0.65rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="adminSearchAsignaturas" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar asignatura o código..." oninput="renderAdminAsignaturasTable()">
+                                <button class="btn btn-primary" onclick="openAdminAsignaturaModal(null)">
+                                    <i class="fa-solid fa-book-medical"></i> Agregar Asignatura
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th>Código / Asignatura & Campo</th>
+                                        <th>Curso / Carga Horaria</th>
+                                        <th>Docentes a Cargo</th>
+                                        <th>Alumnos Inscriptos</th>
+                                        <th>Proyectos Articulados</th>
+                                        <th>Estado Booleano</th>
+                                        <th>Acciones (VerInfo / Modificar / Estado)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminAsignaturasTableBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -835,6 +1119,398 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <div id="userProfileModalContent"></div>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 7: VER INFO RELACIONAL COMPLETA (USUARIOS, DOCENTES, ALUMNOS, PROYECTOS, ASIGNATURAS)
+         ====================================================================== -->
+    <div class="modal-overlay" id="adminVerInfoModal">
+        <div class="modal-box modal-lg">
+            <button class="modal-close" onclick="closeModal('adminVerInfoModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="adminVerInfoContent"></div>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 8: FORMULARIO INTEGRAL DE USUARIO / DOCENTE / ALUMNO (AGREGAR Y MODIFICAR)
+         ====================================================================== -->
+    <div class="modal-overlay" id="adminUserFormModal">
+        <div class="modal-box modal-lg">
+            <button class="modal-close" onclick="closeModal('adminUserFormModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="login-header" style="text-align:left; border-bottom:1px solid var(--gold-border); padding-bottom:0.85rem; margin-bottom:1.15rem;">
+                <span class="badge-category" id="adminUserFormSubtitle">Gestión Relacional Supabase</span>
+                <h3 style="color:var(--gold-primary); font-size:1.3rem; margin-top:0.25rem;" id="adminUserFormTitle">
+                    <i class="fa-solid fa-user-pen"></i> Registrar / Modificar Usuario
+                </h3>
+            </div>
+
+            <form id="adminUserIntegralForm" onsubmit="submitAdminUserIntegralForm(event)">
+                <input type="hidden" id="admUserId" value="">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombres <span>*</span></label>
+                        <input type="text" id="admUserNombres" class="form-control" required maxlength="100" placeholder="Ej: Mateo">
+                    </div>
+                    <div class="form-group">
+                        <label>Apellidos <span>*</span></label>
+                        <input type="text" id="admUserApellidos" class="form-control" required maxlength="100" placeholder="Ej: Carrizo">
+                    </div>
+                    <div class="form-group">
+                        <label>DNI (Sin puntos) <span>*</span></label>
+                        <input type="text" id="admUserDni" class="form-control" required pattern="[0-9]{7,9}" maxlength="9" placeholder="Ej: 47900300">
+                    </div>
+                    <div class="form-group">
+                        <label>CUIL (Formato XX-XXXXXXXX-X)</label>
+                        <input type="text" id="admUserCuil" class="form-control" maxlength="15" placeholder="Ej: 20-47900300-9">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre de Usuario (Login) <span>*</span></label>
+                        <input type="text" id="admUserUsername" class="form-control" required maxlength="50" placeholder="Ej: mateo.carrizo">
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Institucional <span>*</span></label>
+                        <input type="email" id="admUserEmail" class="form-control" required maxlength="150" placeholder="Ej: usuario@cennonogasta.edu.ar">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña (En nuevo o para cambiarla)</label>
+                        <input type="password" id="admUserPassword" class="form-control" maxlength="64" placeholder="Mínimo 6 caracteres (Cifrado bcrypt)">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono de Contacto</label>
+                        <input type="text" id="admUserTelefono" class="form-control" maxlength="30" placeholder="Ej: +54 9 3825 520300">
+                    </div>
+                    <div class="form-group">
+                        <label>Domicilio</label>
+                        <input type="text" id="admUserDomicilio" class="form-control" maxlength="200" placeholder="Ej: Barrio Centro S/N">
+                    </div>
+                    <div class="form-group">
+                        <label>Estado Booleano en Sistema (<code>activo</code>) <span>*</span></label>
+                        <select id="admUserActivo" class="form-control">
+                            <option value="true">✔ ACTIVO (true - Habilitado)</option>
+                            <option value="false">✖ INACTIVO / BAJA LÓGICA (false - Deshabilitado sin borrar)</option>
+                        </select>
+                    </div>
+
+                    <!-- Selección de Múltiples Roles (Tabla Intermedia usuarios_roles) -->
+                    <div class="form-group full-width" style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
+                        <label style="color:var(--gold-primary);"><i class="fa-solid fa-layer-group"></i> Roles Asignados en <code>public.usuarios_roles</code> (Puedes marcar uno o varios) <span>*</span></label>
+                        <div style="display:flex; flex-wrap:wrap; gap:1.2rem; margin-top:0.5rem;">
+                            <label class="checkbox-item-card">
+                                <input type="checkbox" id="chkRolAdmin" value="ADMINISTRADOR" onchange="toggleAdminUserRoleSections()">
+                                <span><strong>ADMINISTRADOR</strong> (Control Total)</span>
+                            </label>
+                            <label class="checkbox-item-card">
+                                <input type="checkbox" id="chkRolDocente" value="DOCENTE" onchange="toggleAdminUserRoleSections()">
+                                <span><strong>DOCENTE</strong> (Cátedra y Evaluación)</span>
+                            </label>
+                            <label class="checkbox-item-card">
+                                <input type="checkbox" id="chkRolAlumno" value="ALUMNO" onchange="toggleAdminUserRoleSections()">
+                                <span><strong>ALUMNO</strong> (Estudiante 5° Año)</span>
+                            </label>
+                        </div>
+                        <div style="margin-top:0.75rem;">
+                            <label style="font-size:0.78rem;">Rol Principal por Defecto al Iniciar Sesión:</label>
+                            <select id="admUserRolPrincipal" class="form-control" style="max-width:280px; margin-top:0.25rem;">
+                                <option value="ALUMNO">ALUMNO</option>
+                                <option value="DOCENTE">DOCENTE</option>
+                                <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN ESPECÍFICA SI TIENE ROL DOCENTE -->
+                    <div id="admSectionDocenteFields" class="form-group full-width" style="display:none; background:rgba(255,208,0,0.04); padding:1.1rem; border-radius:var(--radius-md); border:1px solid var(--gold-border);">
+                        <h4 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:0.9rem; margin-bottom:0.85rem;">
+                            <i class="fa-solid fa-chalkboard-user"></i> Parámetros de la Entidad <code>public.docentes</code> y Relaciones Académicas
+                        </h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Legajo Docente</label>
+                                <input type="text" id="admDocLegajo" class="form-control" placeholder="Ej: DOC-CEN-104">
+                            </div>
+                            <div class="form-group">
+                                <label>Título Profesional</label>
+                                <input type="text" id="admDocTitulo" class="form-control" placeholder="Ej: Prof. en Informática / Ing. en Sistemas">
+                            </div>
+                            <div class="form-group">
+                                <label>Especialidad</label>
+                                <input type="text" id="admDocEspecialidad" class="form-control" placeholder="Ej: Desarrollo Web y Tecnología de Gestión">
+                            </div>
+                            <div class="form-group">
+                                <label>Situación de Revista</label>
+                                <select id="admDocSituacion" class="form-control">
+                                    <option value="Titular">Titular</option>
+                                    <option value="Interino">Interino</option>
+                                    <option value="Suplente">Suplente</option>
+                                    <option value="Contratado">Contratado</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Asignaturas que Dicta (<code>public.docentes_asignaturas</code>)</label>
+                                <div id="admDocAsignaturasCheckboxes" class="checkbox-multi-grid"></div>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Proyectos que Supervisa / Evalúa (<code>public.proyectos_docentes</code>)</label>
+                                <div id="admDocProyectosCheckboxes" class="checkbox-multi-grid"></div>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Alumnos Asignados bajo su Tutoría (<code>public.docentes_alumnos</code>)</label>
+                                <div id="admDocAlumnosCheckboxes" class="checkbox-multi-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN ESPECÍFICA SI TIENE ROL ALUMNO -->
+                    <div id="admSectionAlumnoFields" class="form-group full-width" style="display:none; background:rgba(16,185,129,0.04); padding:1.1rem; border-radius:var(--radius-md); border:1px solid rgba(16,185,129,0.35);">
+                        <h4 style="color:var(--status-approved); font-family:var(--font-heading); font-size:0.9rem; margin-bottom:0.85rem;">
+                            <i class="fa-solid fa-user-graduate"></i> Parámetros de la Entidad <code>public.alumnos</code> y Relaciones Académicas
+                        </h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Matrícula / Legajo Estudiantil</label>
+                                <input type="text" id="admAluMatricula" class="form-control" placeholder="Ej: ALU-2026-506">
+                            </div>
+                            <div class="form-group">
+                                <label>Año y División</label>
+                                <select id="admAluDivision" class="form-control">
+                                    <option value="A">5° Año "A" - T.I.P.P.</option>
+                                    <option value="B">5° Año "B" - T.I.P.P.</option>
+                                    <option value="C">5° Año "C" - T.I.P.P.</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Equipo de Proyecto / Rol Técnico</label>
+                                <input type="text" id="admAluRolEquipo" class="form-control" placeholder="Ej: Desarrollador Full-Stack / Analista">
+                            </div>
+                            <div class="form-group">
+                                <label>Promedio General (1 a 10)</label>
+                                <input type="number" id="admAluPromedio" class="form-control" step="0.01" min="1" max="10" placeholder="Ej: 9.25">
+                            </div>
+                            <div class="form-group">
+                                <label>Tutor Legal (Padre / Madre / Tutor)</label>
+                                <input type="text" id="admAluTutorNombre" class="form-control" placeholder="Nombre y Apellido del Tutor">
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono del Tutor Legal</label>
+                                <input type="text" id="admAluTutorTelefono" class="form-control" placeholder="Ej: +54 9 3825 ...">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Asignaturas que Cursa (<code>public.alumnos_asignaturas</code>)</label>
+                                <div id="admAluAsignaturasCheckboxes" class="checkbox-multi-grid"></div>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Docentes Asignados al Alumno (<code>public.docentes_alumnos</code>)</label>
+                                <div id="admAluDocentesCheckboxes" class="checkbox-multi-grid"></div>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Proyectos Integradores en los que Participa (<code>public.proyectos_alumnos</code>)</label>
+                                <div id="admAluProyectosCheckboxes" class="checkbox-multi-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:1.4rem; display:flex; justify-content:flex-end; gap:0.75rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('adminUserFormModal')">Cancelar</button>
+                    <button type="submit" id="admUserSubmitBtn" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar en Base de Datos Relacional
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 9: FORMULARIO RELACIONAL DE PROYECTO (AGREGAR Y MODIFICAR POR ADMIN)
+         ====================================================================== -->
+    <div class="modal-overlay" id="adminProjectFormModal">
+        <div class="modal-box modal-lg">
+            <button class="modal-close" onclick="closeModal('adminProjectFormModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="login-header" style="text-align:left; border-bottom:1px solid var(--gold-border); padding-bottom:0.85rem; margin-bottom:1.15rem;">
+                <span class="badge-category">Entidad Relacional public.proyectos</span>
+                <h3 style="color:var(--gold-primary); font-size:1.3rem; margin-top:0.25rem;" id="adminProjectFormTitle">
+                    <i class="fa-solid fa-diagram-project"></i> Registrar / Modificar Proyecto Integrador
+                </h3>
+            </div>
+
+            <form id="adminProjectRelationalForm" onsubmit="submitAdminProjectRelationalForm(event)">
+                <input type="hidden" id="admProjId" value="">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Código Único de Proyecto <span>*</span></label>
+                        <input type="text" id="admProjCodigo" class="form-control" required placeholder="Ej: PRJ-2026-105">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoría Tecnológica <span>*</span></label>
+                        <select id="admProjCategoria" class="form-control" required>
+                            <option value="Sistema Web">Sistema Web</option>
+                            <option value="Software de Gestión">Software de Gestión</option>
+                            <option value="IoT y Hardware">IoT y Hardware</option>
+                            <option value="App Móvil">App Móvil</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Título del Proyecto <span>*</span></label>
+                        <input type="text" id="admProjTitulo" class="form-control" required placeholder="Título oficial del proyecto...">
+                    </div>
+                    <div class="form-group">
+                        <label>División / Curso <span>*</span></label>
+                        <input type="text" id="admProjDivision" class="form-control" required value="5° Año A - T.I.P.P.">
+                    </div>
+                    <div class="form-group">
+                        <label>Tecnologías (Separadas por coma) <span>*</span></label>
+                        <input type="text" id="admProjTecnologias" class="form-control" required placeholder="HTML5, CSS3, JavaScript, Supabase">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Descripción Técnica (Prácticas Profesionalizantes) <span>*</span></label>
+                        <textarea id="admProjDescripcion" class="form-control" required></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Articulación con Tecnología de Gestión <span>*</span></label>
+                        <textarea id="admProjGestion" class="form-control" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado de Evaluación</label>
+                        <select id="admProjEstado" class="form-control">
+                            <option value="Aprobado">✔ Aprobado</option>
+                            <option value="En Revisión">⏳ En Revisión</option>
+                            <option value="En Desarrollo">⚙️ En Desarrollo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Calificación (1 a 10)</label>
+                        <input type="number" id="admProjCalificacion" class="form-control" min="1" max="10" step="0.25" placeholder="Ej: 9.5">
+                    </div>
+                    <div class="form-group">
+                        <label>URL Repositorio / Demo</label>
+                        <input type="url" id="admProjRepo" class="form-control" placeholder="https://github.com/...">
+                    </div>
+                    <div class="form-group">
+                        <label>Estado Booleano (<code>activo</code>)</label>
+                        <select id="admProjActivo" class="form-control">
+                            <option value="true">✔ ACTIVO (true - Visible)</option>
+                            <option value="false">✖ INACTIVO / BAJA LÓGICA (false)</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Devolución Pedagógica Docente</label>
+                        <textarea id="admProjDevolucion" class="form-control"></textarea>
+                    </div>
+
+                    <!-- Relaciones N:M del Proyecto -->
+                    <div class="form-group full-width">
+                        <label style="color:var(--gold-primary);"><i class="fa-solid fa-user-graduate"></i> Alumnos Integrantes Asignados al Proyecto (<code>public.proyectos_alumnos</code>)</label>
+                        <div id="admProjAlumnosCheckboxes" class="checkbox-multi-grid"></div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label style="color:var(--gold-primary);"><i class="fa-solid fa-chalkboard-user"></i> Docentes Evaluadores / Supervisores Asignados (<code>public.proyectos_docentes</code>)</label>
+                        <div id="admProjDocentesCheckboxes" class="checkbox-multi-grid"></div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label style="color:var(--gold-primary);"><i class="fa-solid fa-book-bookmark"></i> Asignaturas Articuladas en este Proyecto (<code>public.proyectos_asignaturas</code>)</label>
+                        <div id="admProjAsignaturasCheckboxes" class="checkbox-multi-grid"></div>
+                    </div>
+                </div>
+
+                <div style="margin-top:1.4rem; display:flex; justify-content:flex-end; gap:0.75rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('adminProjectFormModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Proyecto y Relaciones
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 10: FORMULARIO RELACIONAL DE ASIGNATURA (AGREGAR Y MODIFICAR POR ADMIN)
+         ====================================================================== -->
+    <div class="modal-overlay" id="adminAsignaturaFormModal">
+        <div class="modal-box modal-lg">
+            <button class="modal-close" onclick="closeModal('adminAsignaturaFormModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="login-header" style="text-align:left; border-bottom:1px solid var(--gold-border); padding-bottom:0.85rem; margin-bottom:1.15rem;">
+                <span class="badge-category">Entidad Relacional public.asignaturas</span>
+                <h3 style="color:var(--gold-primary); font-size:1.3rem; margin-top:0.25rem;" id="adminAsignaturaFormTitle">
+                    <i class="fa-solid fa-book-bookmark"></i> Registrar / Modificar Asignatura
+                </h3>
+            </div>
+
+            <form id="adminAsignaturaRelationalForm" onsubmit="submitAdminAsignaturaRelationalForm(event)">
+                <input type="hidden" id="admAsigId" value="">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Código Curricular <span>*</span></label>
+                        <input type="text" id="admAsigCodigo" class="form-control" required placeholder="Ej: CEN-5TO-PP">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre de la Asignatura <span>*</span></label>
+                        <input type="text" id="admAsigNombre" class="form-control" required placeholder="Ej: Prácticas Profesionalizantes">
+                    </div>
+                    <div class="form-group">
+                        <label>Campo Formativo <span>*</span></label>
+                        <select id="admAsigCampo" class="form-control" required>
+                            <option value="Formación Técnica Específica">Formación Técnica Específica</option>
+                            <option value="Prácticas Profesionalizantes">Prácticas Profesionalizantes</option>
+                            <option value="Formación Científico-Tecnológica">Formación Científico-Tecnológica</option>
+                            <option value="Formación General y Ética">Formación General y Ética</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>División / Alcance</label>
+                        <select id="admAsigDivision" class="form-control">
+                            <option value="Todas">Todas las divisiones (5° A y B)</option>
+                            <option value="A">5° Año "A"</option>
+                            <option value="B">5° Año "B"</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Carga Horaria Semanal (Hs Cátedra)</label>
+                        <input type="number" id="admAsigHoras" class="form-control" min="1" max="30" value="4" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado Booleano (<code>activo</code>)</label>
+                        <select id="admAsigActivo" class="form-control">
+                            <option value="true">✔ ACTIVA (true - Vigente)</option>
+                            <option value="false">✖ INACTIVA / BAJA LÓGICA (false)</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Descripción / Contenidos Mínimos y Articulación</label>
+                        <textarea id="admAsigDescripcion" class="form-control" placeholder="Describe los ejes formativos de la asignatura..."></textarea>
+                    </div>
+
+                    <!-- Relaciones N:M de la Asignatura -->
+                    <div class="form-group full-width">
+                        <label style="color:var(--gold-primary);"><i class="fa-solid fa-chalkboard-user"></i> Docentes Asignados a la Cátedra (<code>public.docentes_asignaturas</code>)</label>
+                        <div id="admAsigDocentesCheckboxes" class="checkbox-multi-grid"></div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label style="color:var(--gold-primary);"><i class="fa-solid fa-user-graduate"></i> Alumnos Inscriptos en la Asignatura (<code>public.alumnos_asignaturas</code>)</label>
+                        <div id="admAsigAlumnosCheckboxes" class="checkbox-multi-grid"></div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label style="color:var(--gold-primary);"><i class="fa-solid fa-diagram-project"></i> Proyectos Articulados con esta Asignatura (<code>public.proyectos_asignaturas</code>)</label>
+                        <div id="admAsigProyectosCheckboxes" class="checkbox-multi-grid"></div>
+                    </div>
+                </div>
+
+                <div style="margin-top:1.4rem; display:flex; justify-content:flex-end; gap:0.75rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('adminAsignaturaFormModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Asignatura y Relaciones
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

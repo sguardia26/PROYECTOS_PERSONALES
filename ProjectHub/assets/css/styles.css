@@ -1719,3 +1719,238 @@ textarea.form-control {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   PANEL DE SUPERVISIÓN INTEGRAL DEL ADMINISTRADOR (5 SUB-MÓDULOS + CRUD BOOLEANO)
+   ========================================================================== */
+.admin-tabs-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--gold-border);
+    border-radius: var(--radius-md);
+}
+
+.admin-tab-btn {
+    flex: 1;
+    min-width: 170px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 0.78rem 1rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.admin-tab-btn i {
+    color: var(--gold-primary);
+    font-size: 1rem;
+}
+
+.admin-tab-btn:hover {
+    background: rgba(255, 208, 0, 0.08);
+    color: var(--text-primary);
+    border-color: rgba(255, 208, 0, 0.2);
+}
+
+.admin-tab-btn.active {
+    background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-secondary) 100%);
+    color: var(--espresso-dark);
+    font-weight: 800;
+    box-shadow: 0 4px 15px rgba(255, 208, 0, 0.28);
+}
+
+.admin-tab-btn.active i {
+    color: var(--espresso-dark);
+}
+
+.admin-subview {
+    display: none;
+    animation: sectionEnter 0.25s ease;
+}
+
+.admin-subview.active {
+    display: block;
+}
+
+.admin-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.15rem;
+}
+
+.admin-search-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.admin-search-box input {
+    min-width: 240px;
+    max-width: 380px;
+}
+
+.rel-pill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+}
+
+.rel-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: rgba(255, 208, 0, 0.08);
+    border: 1px solid var(--gold-border);
+    color: var(--text-secondary);
+}
+
+.rel-pill i {
+    color: var(--gold-primary);
+    font-size: 0.68rem;
+}
+
+.bool-badge-true {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    background: rgba(16, 185, 129, 0.14);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    color: var(--status-approved);
+}
+
+.bool-badge-false {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    background: rgba(239, 68, 68, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    color: #fca5a5;
+}
+
+.row-inactivo {
+    opacity: 0.58;
+    background: rgba(239, 68, 68, 0.03);
+}
+
+.action-btns-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.btn-action-sm {
+    padding: 0.36rem 0.62rem;
+    font-size: 0.74rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.btn-action-info {
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+}
+.btn-action-info:hover {
+    background: #3B82F6;
+    color: #fff;
+}
+
+.btn-action-edit {
+    background: rgba(255, 208, 0, 0.12);
+    border-color: var(--gold-border);
+    color: var(--gold-primary);
+}
+.btn-action-edit:hover {
+    background: var(--gold-primary);
+    color: var(--espresso-dark);
+}
+
+.btn-action-delete {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+.btn-action-delete:hover {
+    background: var(--danger);
+    color: #fff;
+}
+
+.btn-action-restore {
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: var(--status-approved);
+}
+.btn-action-restore:hover {
+    background: var(--status-approved);
+    color: #090706;
+}
+
+.checkbox-multi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.5rem;
+    max-height: 175px;
+    overflow-y: auto;
+    padding: 0.75rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--gold-border);
+    border-radius: var(--radius-sm);
+}
+
+.checkbox-item-card {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.65rem;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 208, 0, 0.14);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.checkbox-item-card input[type="checkbox"] {
+    accent-color: var(--gold-primary);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+

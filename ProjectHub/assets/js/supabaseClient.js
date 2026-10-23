@@ -1,5 +1,6 @@
 /* ==========================================================================
-   PROJECTHUB - Cliente Oficial Supabase & Servicio Seguro de Identidad/Roles
+   PROJECTHUB - Cliente Oficial Supabase & Servicio Seguro de Identidad,
+   Roles y Supervisión Integral de Administrador
    Centro Educativo Nonogasta (C.E.N.) - 5° Año T.I.P.P.
    ========================================================================== */
 
@@ -18,7 +19,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 });
 
 /**
- * Servicio relacional de Autenticación, Autorización Multirrol y Auditoría
+ * Servicio relacional de Autenticación, Autorización Multirrol, Auditoría
+ * y Supervisión Integral de Entidades (3FN + Baja Lógica Booleana)
  */
 const ProjectHubAuthService = {
     client: supabase,
@@ -61,10 +63,7 @@ const ProjectHubAuthService = {
     },
 
     /**
-     * 3. Obtiene la ficha relacional completa del usuario autenticado:
-     *    - Entidad `public.usuarios`
-     *    - Lista de todos sus roles en `public.usuarios_roles` + `public.roles`
-     *    - Fichas específicas: `public.administradores`, `public.docentes`, `public.alumnos`
+     * 3. Obtiene la ficha relacional completa del usuario autenticado
      */
     async fetchCurrentUserProfile() {
         const { data, error } = await supabase.rpc('obtener_perfil_completo_actual');
@@ -79,7 +78,6 @@ const ProjectHubAuthService = {
      * 4. Flujo completo de Login Unificado con Correo, Usuario o DNI + Contraseña
      */
     async signInUnified(identifier, password) {
-        // Paso A: Resolver identificador (Email, Username o DNI) y revisar estado de bloqueo en BD
         const resolution = await this.resolveLoginIdentifier(identifier);
 
         if (!resolution || !resolution.encontrado) {
@@ -100,7 +98,6 @@ const ProjectHubAuthService = {
             };
         }
 
-        // Paso B: Autenticar con el motor criptográfico oficial de Supabase Auth (bcrypt + JWT)
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
             email: resolution.email,
             password: password
@@ -122,7 +119,6 @@ const ProjectHubAuthService = {
             };
         }
 
-        // Paso C: Registrar acceso exitoso y recuperar todas las entidades relacionales del usuario
         await this.recordLoginAttempt(
             identifier,
             true,
@@ -143,10 +139,85 @@ const ProjectHubAuthService = {
      */
     async signOut() {
         await supabase.auth.signOut();
+    },
+
+    /* ======================================================================
+       MÉTODOS DE SUPERVISIÓN Y GESTIÓN RELACIONAL (ADMINISTRADOR / SISTEMA)
+       ====================================================================== */
+
+    /**
+     * 6. Obtiene en una sola consulta relacional todas las entidades y vínculos:
+     *    usuarios, docentes, alumnos, proyectos y asignaturas.
+     */
+    async fetchSystemSupervisionData() {
+        const { data, error } = await supabase.rpc('obtener_datos_supervision_sistema');
+        if (error) {
+            console.error('[Supabase Supervision] Error al cargar datos del sistema:', error.message);
+            throw error;
+        }
+        return data;
+    },
+
+    /**
+     * 7. Baja / Alta Lógica (Booleano `activo`) sin borrar información física
+     */
+    async toggleEntityBooleanState(entidad, id, nuevoEstadoActivo) {
+        const { data, error } = await supabase.rpc('admin_cambiar_estado_booleano', {
+            p_entidad: entidad,
+            p_id: id,
+            p_activo: Boolean(nuevoEstadoActivo)
+        });
+        if (error) {
+            console.error('[Supabase Admin] Error al cambiar estado booleano:', error.message);
+            throw error;
+        }
+        return data;
+    },
+
+    /**
+     * 8. Crear o Modificar Usuario + Roles + Ficha (Admin/Docente/Alumno) + Relaciones N:M
+     */
+    async saveUserIntegral(payload) {
+        const { data, error } = await supabase.rpc('admin_guardar_usuario_integral', {
+            p_datos: payload
+        });
+        if (error) {
+            console.error('[Supabase Admin] Error al guardar usuario integral:', error.message);
+            throw error;
+        }
+        return data;
+    },
+
+    /**
+     * 9. Crear o Modificar Proyecto Relacional + Alumnos + Docentes + Asignaturas
+     */
+    async saveProjectRelational(payload) {
+        const { data, error } = await supabase.rpc('guardar_proyecto_relacional', {
+            p_datos: payload
+        });
+        if (error) {
+            console.error('[Supabase Proyectos] Error al guardar proyecto relacional:', error.message);
+            throw error;
+        }
+        return data;
+    },
+
+    /**
+     * 10. Crear o Modificar Asignatura Relacional + Docentes + Alumnos + Proyectos
+     */
+    async saveAsignaturaRelational(payload) {
+        const { data, error } = await supabase.rpc('admin_guardar_asignatura_relacional', {
+            p_datos: payload
+        });
+        if (error) {
+            console.error('[Supabase Asignaturas] Error al guardar asignatura relacional:', error.message);
+            throw error;
+        }
+        return data;
     }
 };
 
-// Exponer de forma controlada para la interfaz App-Shell
 window.supabaseClient = supabase;
 window.ProjectHubAuth = ProjectHubAuthService;
-console.info('✔ [C.E.N. Shield] Supabase conectado y esquema relacional listo.');
+window.dispatchEvent(new CustomEvent('supabase-ready'));
+console.info('✔ [C.E.N. Shield] Supabase conectado: Autenticación y Supervisión Relacional activas.');
