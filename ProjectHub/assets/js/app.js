@@ -4868,25 +4868,25 @@ const selectedAlumnoIds = {
 
 function jumpToAlumnoModule(tabName) {
     handleProtectedNavigation('cargar');
-    const targetBtn = document.querySelector(`#alumnoModuleTabs .pill-btn[data-alumnotab="${tabName}"]`);
+    const targetBtn = document.querySelector(`#alumnoModuleTabs .admin-tab-btn[data-alumnotab="${tabName}"]`);
     switchAlumnoTab(tabName, targetBtn);
 }
 
 function switchAlumnoTab(tabName, btnEl) {
     activeAlumnoTab = tabName;
-    document.querySelectorAll('#alumnoModuleTabs .pill-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#alumnoModuleTabs .admin-tab-btn').forEach(b => b.classList.remove('active'));
     if (btnEl) {
         btnEl.classList.add('active');
     } else {
-        const fallbackBtn = document.querySelector(`#alumnoModuleTabs .pill-btn[data-alumnotab="${tabName}"]`);
+        const fallbackBtn = document.querySelector(`#alumnoModuleTabs .admin-tab-btn[data-alumnotab="${tabName}"]`);
         if (fallbackBtn) fallbackBtn.classList.add('active');
     }
 
-    document.querySelectorAll('.alumno-subview').forEach(v => {
-        v.style.display = 'none';
+    document.querySelectorAll('#section-cargar .admin-subview').forEach(v => {
+        v.classList.remove('active');
     });
     const targetView = document.getElementById(`alumno-subview-${tabName}`);
-    if (targetView) targetView.style.display = 'block';
+    if (targetView) targetView.classList.add('active');
 
     updateAlumnoBulkActionBar();
 }
@@ -4906,22 +4906,30 @@ function getAlumnoScopedData() {
         ? systemDB.proyectos
         : systemDB.proyectos.filter(p => (p.alumnos_rel || []).some(a => String(a.usuario_id) === userId));
 
-    // Si por algún motivo un alumno de demostración no tuviera proyectos en proyectos_rel, mostrar los de su división o equipo
-    const proyectosFinales = (misProyectos.length > 0 || isAdmin)
+    // Si por algún motivo un alumno de demostración no tuviera proyectos en proyectos_rel, mostrar los de su apellido o todos los de 5° año
+    let proyectosFinales = (misProyectos.length > 0 || isAdmin)
         ? misProyectos
         : systemDB.proyectos.filter(p => (p.autores_resumen || '').toLowerCase().includes((currentSession.apellidos || '').toLowerCase()));
 
+    if (proyectosFinales.length === 0 && systemDB.proyectos.length > 0) {
+        proyectosFinales = systemDB.proyectos;
+    }
+
     // 2. Mis Asignaturas asignadas por el Administrador en alumnos_asignaturas
-    const misAsignaturas = isAdmin
+    let misAsignaturas = isAdmin
         ? systemDB.asignaturas
         : systemDB.asignaturas.filter(a => (a.alumnos_rel || []).some(al => String(al.usuario_id) === userId));
+
+    if (misAsignaturas.length === 0 && systemDB.asignaturas.length > 0) {
+        misAsignaturas = systemDB.asignaturas;
+    }
 
     // 3. Calcular promedio sumativo de proyectos calificados + promedio general
     const notasProyectos = proyectosFinales
         .map(p => parseFloat(p.calificacion))
         .filter(n => !isNaN(n) && n > 0);
 
-    let promedioGeneral = miFichaAlumno?.promedio_general ? String(miFichaAlumno.promedio_general) : 'S/C';
+    let promedioGeneral = miFichaAlumno?.promedio_general ? `${miFichaAlumno.promedio_general} / 10` : 'S/C';
     if (notasProyectos.length > 0) {
         const avg = notasProyectos.reduce((acc, v) => acc + v, 0) / notasProyectos.length;
         promedioGeneral = `${avg.toFixed(2)} / 10`;
@@ -4991,19 +4999,21 @@ function clearAlumnoSelection() {
 
 function updateAlumnoBulkActionBar() {
     const bar = document.getElementById('alumnoBulkActionBar');
+    const pill = document.getElementById('alumnoBulkCountPill');
     const badge = document.getElementById('alumnoBulkCountBadge');
-    if (!bar || !badge) return;
+    if (!bar) return;
 
     const currentSet = selectedAlumnoIds[activeAlumnoTab] || new Set();
     const count = currentSet.size;
 
     if (count === 0) {
-        bar.style.display = 'none';
+        bar.classList.remove('visible');
         return;
     }
 
-    bar.style.display = 'flex';
-    badge.textContent = `${count} seleccionado${count > 1 ? 's' : ''} en ${activeAlumnoTab.toUpperCase()}`;
+    bar.classList.add('visible');
+    if (pill) pill.textContent = count;
+    if (badge) badge.textContent = `registro${count > 1 ? 's' : ''} seleccionado${count > 1 ? 's' : ''} en el módulo ${activeAlumnoTab.toUpperCase()}`;
 
     // En CALIFICACIONES y ASIGNATURAS el alumno solo puede Ver Detalle (lectura académica)
     const isReadOnlyTab = (activeAlumnoTab === 'calificaciones' || activeAlumnoTab === 'asignaturas');

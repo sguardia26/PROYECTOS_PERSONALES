@@ -540,79 +540,79 @@
                 <div class="section-header">
                     <div class="section-title-group">
                         <h2><i class="fa-solid fa-user-graduate"></i> Panel Académico y Portfolio del Alumno</h2>
-                        <p>Gestiona tus proyectos integradores (GitHub, Supabase, Vercel o Código Local), consulta tus calificaciones sumativas y devoluciones docentes, y visualiza tus asignaturas asignadas.</p>
+                        <p id="alumnoHeaderSubtitle">Espacio exclusivo del <strong>Rol ALUMNO</strong> • Gestiona tus <strong>Proyectos Integradores</strong> (GitHub, Supabase, Vercel o Código Local), consulta tus <strong>Calificaciones y Devoluciones</strong> y visualiza tus <strong>Asignaturas Asignadas</strong>.</p>
                     </div>
-                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
-                        <button class="btn btn-gold-outline" onclick="exportAlumnoReportPDF('INTEGRAL_ALUMNO')">
+                    <div style="display:flex; gap:0.65rem; flex-wrap:wrap;">
+                        <button class="btn btn-outline" onclick="exportAlumnoReportPDF('INTEGRAL_ALUMNO')">
                             <i class="fa-solid fa-file-pdf"></i> Exportar Mi Portfolio / Calificaciones (.PDF)
                         </button>
                         <button class="btn btn-primary" onclick="refreshSystemDataFromSupabase(true)">
-                            <i class="fa-solid fa-rotate"></i> Sincronizar Mis Datos
+                            <i class="fa-solid fa-arrows-rotate"></i> Sincronizar Mis Datos
                         </button>
                     </div>
                 </div>
 
-                <!-- Tarjetas de Resumen del Alumno -->
-                <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.5rem;">
-                    <div class="kpi-card">
-                        <div class="kpi-icon"><i class="fa-solid fa-diagram-project"></i></div>
-                        <div class="kpi-info">
+                <!-- KPIs Exclusivos del Alumno Logueado -->
+                <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchAlumnoTab('proyectos')">
+                        <div class="stat-icon"><i class="fa-solid fa-diagram-project"></i></div>
+                        <div class="stat-info">
                             <h3 id="alumnoKpiProyectos">0</h3>
-                            <span>Mis Proyectos (En Red y Locales)</span>
+                            <p>Mis Proyectos (En Red y Locales)</p>
                         </div>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon"><i class="fa-solid fa-award"></i></div>
-                        <div class="kpi-info">
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchAlumnoTab('calificaciones')">
+                        <div class="stat-icon"><i class="fa-solid fa-award"></i></div>
+                        <div class="stat-info">
                             <h3 id="alumnoKpiPromedio">S/C</h3>
-                            <span>Promedio Sumativo / Devoluciones</span>
+                            <p>Promedio Sumativo / Devoluciones</p>
                         </div>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon"><i class="fa-solid fa-book-bookmark"></i></div>
-                        <div class="kpi-info">
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchAlumnoTab('asignaturas')">
+                        <div class="stat-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+                        <div class="stat-info">
                             <h3 id="alumnoKpiAsignaturas">0</h3>
-                            <span>Mis Asignaturas Asignadas</span>
+                            <p>Mis Asignaturas Asignadas</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sub-Navegación de los 3 Módulos del Alumno -->
-                <div class="category-pills" id="alumnoModuleTabs" style="margin-bottom: 1.25rem; border-bottom: 1px solid var(--gold-border); padding-bottom: 1rem;">
-                    <button class="pill-btn active" data-alumnotab="proyectos" onclick="switchAlumnoTab('proyectos', this)">
-                        <i class="fa-solid fa-diagram-project"></i> 1. Mis Proyectos (GitHub / Supabase / Vercel / Local)
+                <!-- Barra de los 3 Módulos del Alumno -->
+                <div class="admin-tabs-bar" id="alumnoModuleTabs">
+                    <button class="admin-tab-btn active" data-alumnotab="proyectos" onclick="switchAlumnoTab('proyectos')">
+                        <i class="fa-solid fa-diagram-project"></i> 1. Módulo Mis Proyectos (GitHub / Supabase / Vercel / Local)
                     </button>
-                    <button class="pill-btn" data-alumnotab="calificaciones" onclick="switchAlumnoTab('calificaciones', this)">
-                        <i class="fa-solid fa-award"></i> 2. Mis Calificaciones y Devoluciones Docentes
+                    <button class="admin-tab-btn" data-alumnotab="calificaciones" onclick="switchAlumnoTab('calificaciones')">
+                        <i class="fa-solid fa-award"></i> 2. Módulo Mis Calificaciones y Devoluciones
                     </button>
-                    <button class="pill-btn" data-alumnotab="asignaturas" onclick="switchAlumnoTab('asignaturas', this)">
-                        <i class="fa-solid fa-book-bookmark"></i> 3. Mis Asignaturas Asignadas
+                    <button class="admin-tab-btn" data-alumnotab="asignaturas" onclick="switchAlumnoTab('asignaturas')">
+                        <i class="fa-solid fa-book-bookmark"></i> 3. Módulo Mis Asignaturas (Asignadas por Admin)
                     </button>
                 </div>
 
-                <!-- BARRA FLOTANTE DE ACCIÓN MÚLTIPLE DEL ALUMNO -->
-                <div id="alumnoBulkActionBar" class="admin-bulk-bar" style="display:none;">
-                    <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-                        <span class="badge-category" id="alumnoBulkCountBadge" style="font-size:0.85rem; padding:0.35rem 0.75rem;">0 seleccionados</span>
-                        <span style="font-size:0.82rem; color:var(--text-secondary);">Acciones sobre los registros seleccionados:</span>
+                <!-- BARRA FLOTANTE DE ACCIONES POR SELECCIÓN MÚLTIPLE DEL ALUMNO -->
+                <div class="bulk-action-bar" id="alumnoBulkActionBar">
+                    <div class="bulk-selection-info">
+                        <span class="bulk-count-pill" id="alumnoBulkCountPill">0</span>
+                        <span id="alumnoBulkCountBadge">registros seleccionados en tu módulo de alumno</span>
                     </div>
-                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                        <button class="btn btn-ghost" style="padding:0.4rem 0.75rem; font-size:0.78rem;" onclick="handleAlumnoBulkAction('VER_INFO')">
-                            <i class="fa-solid fa-eye" style="color:var(--gold-primary);"></i> Ver Detalle
+                    <div class="action-btns-group">
+                        <button type="button" class="btn-action-sm btn-action-info" onclick="handleAlumnoBulkAction('VER_INFO')">
+                            <i class="fa-solid fa-circle-info"></i> Ver Detalle de Selección
                         </button>
-                        <button class="btn btn-ghost" id="alumnoBulkEditBtn" style="padding:0.4rem 0.75rem; font-size:0.78rem;" onclick="handleAlumnoBulkAction('MODIFICAR')">
-                            <i class="fa-solid fa-pen-to-square" style="color:#60A5FA;"></i> Editar
+                        <button type="button" class="btn-action-sm btn-action-edit" id="alumnoBulkEditBtn" onclick="handleAlumnoBulkAction('MODIFICAR')">
+                            <i class="fa-solid fa-pen-to-square"></i> Editar Seleccionado
                         </button>
-                        <button class="btn btn-ghost" id="alumnoBulkDeactivateBtn" style="padding:0.4rem 0.75rem; font-size:0.78rem;" onclick="handleAlumnoBulkAction('DESACTIVAR')">
-                            <i class="fa-solid fa-ban" style="color:var(--status-review);"></i> Desactivar (Inactivo)
+                        <button type="button" class="btn-action-sm btn-action-delete" id="alumnoBulkDeactivateBtn" onclick="handleAlumnoBulkAction('DESACTIVAR')">
+                            <i class="fa-solid fa-power-off"></i> Desactivar (Inactivo)
                         </button>
-                        <button class="btn btn-ghost" id="alumnoBulkActivateBtn" style="padding:0.4rem 0.75rem; font-size:0.78rem;" onclick="handleAlumnoBulkAction('ACTIVAR')">
-                            <i class="fa-solid fa-rotate-left" style="color:var(--status-approved);"></i> Reactivar
+                        <button type="button" class="btn-action-sm btn-action-restore" id="alumnoBulkActivateBtn" onclick="handleAlumnoBulkAction('ACTIVAR')">
+                            <i class="fa-solid fa-rotate-left"></i> Reactivar (Activo)
                         </button>
-                        <button class="btn btn-ghost" id="alumnoBulkDeletePermBtn" style="padding:0.4rem 0.75rem; font-size:0.78rem; border-color:rgba(239,68,68,0.45);" onclick="handleAlumnoBulkAction('ELIMINAR_DEFINITIVO')">
-                            <i class="fa-solid fa-trash-can" style="color:var(--status-danger);"></i> Eliminar Definitivo (BD)
+                        <button type="button" class="btn-action-sm btn-action-hard-delete" id="alumnoBulkDeletePermBtn" onclick="handleAlumnoBulkAction('ELIMINAR_DEFINITIVO')" title="Elimina físicamente de la BD los proyectos seleccionados que ya estén en estado Inactivo">
+                            <i class="fa-solid fa-trash-can"></i> Eliminar Definitivo (Solo Inactivos)
                         </button>
-                        <button class="btn btn-ghost" style="padding:0.4rem 0.65rem; font-size:0.76rem;" onclick="clearAlumnoSelection()">
+                        <button type="button" class="btn-action-sm" style="background:rgba(255,255,255,0.08); color:var(--text-secondary);" onclick="clearAlumnoSelection()">
                             <i class="fa-solid fa-xmark"></i> Limpiar Selección
                         </button>
                     </div>
@@ -621,48 +621,48 @@
                 <!-- ==========================================================
                      SUB-VISTA ALUMNO 1: MIS PROYECTOS (GITHUB / SUPABASE / VERCEL / CÓDIGO LOCAL)
                      ========================================================== -->
-                <div id="alumno-subview-proyectos" class="alumno-subview">
-                    <div class="admin-module-utilities">
-                        <div class="admin-util-left">
-                            <div class="topbar-search" style="max-width: 280px; width:100%;">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                                <input type="text" id="alumnoSearchProyectos" placeholder="Buscar en mis proyectos (título, repo, BD)..." oninput="renderAlumnoProyectosTable()">
-                            </div>
-                            <select id="alumnoFilterEstadoProyectos" class="filter-select" onchange="renderAlumnoProyectosTable()">
-                                <option value="TODOS">Todos los Estados</option>
-                                <option value="ACTIVOS">Solo Activos</option>
-                                <option value="INACTIVOS">Solo Inactivos (Para Eliminar Definitivo)</option>
-                            </select>
-                        </div>
-                        <div class="admin-util-right">
-                            <button class="btn btn-primary" onclick="openAlumnoProjectModal()">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> Subir / Registrar Proyecto
-                            </button>
-                            <button class="btn btn-gold-outline" onclick="openBatchAddModal('PROYECTOS')">
-                                <i class="fa-solid fa-layer-group"></i> Carga Múltiple
-                            </button>
-                            <button class="btn btn-ghost" onclick="openCsvImportModal('PROYECTOS')">
-                                <i class="fa-solid fa-file-csv" style="color:var(--status-approved);"></i> Importar .CSV / Estructura
-                            </button>
-                            <button class="btn btn-ghost" onclick="exportAlumnoReportPDF('PROYECTOS')">
-                                <i class="fa-solid fa-file-pdf" style="color:var(--status-danger);"></i> Exportar PDF
-                            </button>
-                        </div>
-                    </div>
-
+                <div id="alumno-subview-proyectos" class="admin-subview active">
                     <div class="panel-card">
-                        <div class="panel-card-header">
+                        <div class="admin-toolbar">
                             <div>
-                                <h3><i class="fa-solid fa-laptop-code"></i> 1. Mis Proyectos Integradores (Despliegue Cloud, Base de Datos y Código Fuente)</h3>
-                                <p style="font-size:0.82rem; color:var(--text-secondary);">Comparte tu proyecto desde GitHub, vincula tu base de datos (ej. Supabase), publica tu dominio en vivo (ej. Vercel) o adjunta fragmentos de código e instrucciones si se ejecuta en entorno local/offline.</p>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-laptop-code"></i> 1. Mis Proyectos Integradores (Despliegue Cloud, Base de Datos y Código Fuente)
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Comparte tu proyecto desde un repositorio externo (<strong>GitHub</strong>), vincula tu base de datos (ej. <strong>Supabase</strong>), publica tu dominio en vivo (ej. <strong>Vercel</strong>) o comparte tu código fuente e instrucciones de ejecución local/offline.</p>
+                            </div>
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="alumnoSearchProyectos" class="form-control" style="max-width:250px; padding:0.5rem 0.85rem;" placeholder="Buscar proyecto, repo, Vercel o BD..." oninput="renderAlumnoProyectosTable()">
+                                <select id="alumnoFilterEstadoProyectos" class="select-filter" onchange="renderAlumnoProyectosTable()">
+                                    <option value="TODOS">Todos los Estados</option>
+                                    <option value="ACTIVOS">Solo Activos</option>
+                                    <option value="INACTIVOS">Solo Inactivos (Para Eliminar Definitivo)</option>
+                                </select>
                             </div>
                         </div>
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap;">
+                                <button class="btn btn-primary" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openAlumnoProjectModal(null)">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Subir / Registrar Proyecto
+                                </button>
+                                <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openBatchAddModal('PROYECTOS')">
+                                    <i class="fa-solid fa-layer-group"></i> Carga Múltiple de Proyectos
+                                </button>
+                                <button class="btn btn-ghost" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openCsvImportModal('PROYECTOS')">
+                                    <i class="fa-solid fa-file-csv"></i> Importar .CSV / Ver Estructura
+                                </button>
+                            </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportAlumnoReportPDF('PROYECTOS')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar PDF de Mis Proyectos
+                            </button>
+                        </div>
+
                         <div class="table-responsive">
                             <table class="hub-table">
                                 <thead>
                                     <tr>
-                                        <th style="width:36px; text-align:center;">
-                                            <input type="checkbox" id="selectAllAlumnoProyectos" onchange="toggleSelectAllAlumno('proyectos', this.checked)" title="Seleccionar todos">
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="selectAllAlumnoProyectos" onchange="toggleSelectAllAlumno('proyectos', this.checked)" title="Seleccionar todos mis proyectos">
                                         </th>
                                         <th>Código / Proyecto</th>
                                         <th>Despliegue (Vercel / Red o Local)</th>
@@ -670,7 +670,7 @@
                                         <th>Asignaturas y Docentes</th>
                                         <th>Estado y Nota</th>
                                         <th>Visibilidad</th>
-                                        <th style="text-align:right;">Acciones</th>
+                                        <th>Acciones disponibles</th>
                                     </tr>
                                 </thead>
                                 <tbody id="alumnoProyectosTableBody"></tbody>
@@ -682,43 +682,43 @@
                 <!-- ==========================================================
                      SUB-VISTA ALUMNO 2: MIS CALIFICACIONES Y DEVOLUCIONES DOCENTES
                      ========================================================== -->
-                <div id="alumno-subview-calificaciones" class="alumno-subview" style="display:none;">
-                    <div class="admin-module-utilities">
-                        <div class="admin-util-left">
-                            <div class="topbar-search" style="max-width: 320px; width:100%;">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                                <input type="text" id="alumnoSearchCalificaciones" placeholder="Buscar por proyecto, docente o devolución..." oninput="renderAlumnoCalificacionesTable()">
+                <div id="alumno-subview-calificaciones" class="admin-subview">
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-award"></i> 2. Mis Calificaciones Sumativas y Devoluciones Pedagógicas
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Seguimiento personalizado de las notas sumativas (escala 1 a 10), dictámenes de aprobación y devoluciones técnicas generadas por tus docentes evaluadores.</p>
                             </div>
-                            <select id="alumnoFilterEstadoCalificaciones" class="filter-select" onchange="renderAlumnoCalificacionesTable()">
-                                <option value="TODOS">Todas las Evaluaciones</option>
-                                <option value="Aprobado">✔ Aprobados</option>
-                                <option value="En Revisión">⏳ En Revisión</option>
-                                <option value="En Desarrollo">⚙️ En Desarrollo</option>
-                            </select>
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="alumnoSearchCalificaciones" class="form-control" style="max-width:250px; padding:0.5rem 0.85rem;" placeholder="Buscar por proyecto o devolución..." oninput="renderAlumnoCalificacionesTable()">
+                                <select id="alumnoFilterEstadoCalificaciones" class="select-filter" onchange="renderAlumnoCalificacionesTable()">
+                                    <option value="TODOS">Todas las Evaluaciones</option>
+                                    <option value="Aprobado">✔ Aprobados</option>
+                                    <option value="En Revisión">⏳ En Revisión</option>
+                                    <option value="En Desarrollo">⚙️ En Desarrollo</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="admin-util-right">
-                            <span class="badge-category" style="padding:0.45rem 0.85rem;">
-                                <i class="fa-solid fa-chalkboard-user"></i> Evaluación Oficial Generada por el Cuerpo Docente
-                            </span>
-                            <button class="btn btn-gold-outline" onclick="exportAlumnoReportPDF('CALIFICACIONES')">
-                                <i class="fa-solid fa-file-pdf" style="color:var(--status-danger);"></i> Exportar Boletín de Calificaciones (.PDF)
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <span class="badge-category" style="padding:0.45rem 0.85rem;">
+                                    <i class="fa-solid fa-chalkboard-user"></i> Evaluaciones Oficiales del Cuerpo Docente • Selecciona filas para comparar dictámenes
+                                </span>
+                            </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportAlumnoReportPDF('CALIFICACIONES')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar Boletín de Calificaciones (.PDF)
                             </button>
                         </div>
-                    </div>
 
-                    <div class="panel-card">
-                        <div class="panel-card-header">
-                            <div>
-                                <h3><i class="fa-solid fa-award"></i> 2. Mis Calificaciones Sumativas y Devoluciones Pedagógicas</h3>
-                                <p style="font-size:0.82rem; color:var(--text-secondary);">Seguimiento personalizado de las notas numéricas (escala 1 a 10), dictámenes de aprobación y observaciones técnicas redactadas por tus docentes evaluadores.</p>
-                            </div>
-                        </div>
                         <div class="table-responsive">
                             <table class="hub-table">
                                 <thead>
                                     <tr>
-                                        <th style="width:36px; text-align:center;">
-                                            <input type="checkbox" id="selectAllAlumnoCalificaciones" onchange="toggleSelectAllAlumno('calificaciones', this.checked)" title="Seleccionar todos">
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="selectAllAlumnoCalificaciones" onchange="toggleSelectAllAlumno('calificaciones', this.checked)" title="Seleccionar todas mis calificaciones">
                                         </th>
                                         <th>Proyecto Evaluado</th>
                                         <th>Asignaturas Articuladas</th>
@@ -726,7 +726,7 @@
                                         <th>Estado Académico</th>
                                         <th>Nota Sumativa</th>
                                         <th>Devolución Pedagógica del Docente</th>
-                                        <th style="text-align:right;">Inspección</th>
+                                        <th>Inspección</th>
                                     </tr>
                                 </thead>
                                 <tbody id="alumnoCalificacionesTableBody"></tbody>
@@ -738,45 +738,45 @@
                 <!-- ==========================================================
                      SUB-VISTA ALUMNO 3: MIS ASIGNATURAS ASIGNADAS (SOLO LECTURA)
                      ========================================================== -->
-                <div id="alumno-subview-asignaturas" class="alumno-subview" style="display:none;">
-                    <div class="admin-module-utilities">
-                        <div class="admin-util-left">
-                            <div class="topbar-search" style="max-width: 320px; width:100%;">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                                <input type="text" id="alumnoSearchAsignaturas" placeholder="Buscar en mis asignaturas (código, nombre, docente)..." oninput="renderAlumnoAsignaturasTable()">
+                <div id="alumno-subview-asignaturas" class="admin-subview">
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-book-bookmark"></i> 3. Mis Asignaturas Asignadas en el Ciclo Lectivo
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Espacios curriculares en los que fuiste matriculado por el Administrador del sistema, junto con tus docentes a cargo, condición de cursada y proyectos articulados.</p>
+                            </div>
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="alumnoSearchAsignaturas" class="form-control" style="max-width:260px; padding:0.5rem 0.85rem;" placeholder="Buscar asignatura, código o docente..." oninput="renderAlumnoAsignaturasTable()">
                             </div>
                         </div>
-                        <div class="admin-util-right">
-                            <span class="badge-category" style="padding:0.45rem 0.85rem;">
-                                <i class="fa-solid fa-lock"></i> Asignación Oficial por Administración C.E.N.
-                            </span>
-                            <button class="btn btn-ghost" onclick="exportAlumnoReportPDF('ASIGNATURAS')">
-                                <i class="fa-solid fa-file-pdf" style="color:var(--status-danger);"></i> Exportar PDF de Mis Asignaturas
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <span class="badge-category" style="padding:0.45rem 0.85rem;">
+                                    <i class="fa-solid fa-lock"></i> Asignación Oficial por Administración C.E.N. (Modo Consulta)
+                                </span>
+                            </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportAlumnoReportPDF('ASIGNATURAS')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar PDF de Mis Asignaturas
                             </button>
                         </div>
-                    </div>
 
-                    <div class="panel-card">
-                        <div class="panel-card-header">
-                            <div>
-                                <h3><i class="fa-solid fa-book-bookmark"></i> 3. Mis Asignaturas Asignadas en el Ciclo Lectivo</h3>
-                                <p style="font-size:0.82rem; color:var(--text-secondary);">Espacios curriculares en los que fuiste matriculado por el Administrador del sistema, junto con tus docentes titulares, horarios de cursada y proyectos vinculados.</p>
-                            </div>
-                        </div>
                         <div class="table-responsive">
                             <table class="hub-table">
                                 <thead>
                                     <tr>
-                                        <th style="width:36px; text-align:center;">
-                                            <input type="checkbox" id="selectAllAlumnoAsignaturas" onchange="toggleSelectAllAlumno('asignaturas', this.checked)" title="Seleccionar todas">
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="selectAllAlumnoAsignaturas" onchange="toggleSelectAllAlumno('asignaturas', this.checked)" title="Seleccionar todas mis asignaturas">
                                         </th>
                                         <th>Código</th>
-                                        <th>Asignatura y Tipo</th>
-                                        <th>Curso / Turno y Horario</th>
+                                        <th>Asignatura y Campo Formativo</th>
+                                        <th>Curso / Carga Horaria</th>
                                         <th>Mi Condición y Nota de Cursada</th>
                                         <th>Docentes a Cargo</th>
                                         <th>Mis Proyectos en la Materia</th>
-                                        <th style="text-align:right;">Detalle</th>
+                                        <th>Detalle</th>
                                     </tr>
                                 </thead>
                                 <tbody id="alumnoAsignaturasTableBody"></tbody>
