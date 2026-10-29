@@ -214,6 +214,52 @@ const ProjectHubAuthService = {
             throw error;
         }
         return data;
+    },
+
+    /**
+     * 11. Eliminación Definitiva de la Base de Datos (Solo permitida si el registro ya está Inactivo)
+     */
+    async hardDeleteInactiveEntity(entidad, id) {
+        const { data, error } = await supabase.rpc('admin_eliminar_definitivo', {
+            p_entidad: entidad,
+            p_id: id
+        });
+        if (error) {
+            console.error('[Supabase Hard Delete] Error al eliminar definitivamente:', error.message);
+            throw error;
+        }
+        return data;
+    },
+
+    /**
+     * 12. Operación Masiva en Lote sobre Registros Seleccionados (DESACTIVAR | REACTIVAR | ELIMINAR_DEFINITIVO)
+     */
+    async executeBatchOperation(entidad, idsArray, accion) {
+        const { data, error } = await supabase.rpc('admin_operacion_lote', {
+            p_entidad: entidad,
+            p_ids: idsArray,
+            p_accion: accion
+        });
+        if (error) {
+            console.error('[Supabase Batch Operation] Error en lote:', error.message);
+            throw error;
+        }
+        return data;
+    },
+
+    /**
+     * 13. Carga Masiva Múltiple o Importación .CSV en cualquiera de los 5 módulos
+     */
+    async importBatchEntities(entidad, registrosArray) {
+        const { data, error } = await supabase.rpc('admin_importar_lote_entidad', {
+            p_entidad: entidad,
+            p_registros: registrosArray
+        });
+        if (error) {
+            console.error('[Supabase Batch Import] Error en importación masiva:', error.message);
+            throw error;
+        }
+        return data;
     }
 };
 

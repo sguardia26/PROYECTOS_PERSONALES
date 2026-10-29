@@ -52,9 +52,19 @@
         <div class="topbar-center">
             <div class="global-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="globalSearchInput" placeholder="Buscar proyectos de 5° Año, alumnos o tecnologías..." oninput="handleGlobalSearch(this.value)">
+                <input type="text" id="globalSearchInput" placeholder="Buscar proyectos, tecnologías o autores..." oninput="handleGlobalSearch(this.value)">
             </div>
         </div>
+
+        <!-- Navegación Rápida Personalizada en el Topbar según el Rol del Usuario -->
+        <nav class="topbar-role-nav" id="topbarRoleQuickNav" aria-label="Accesos rápidos del rol activo">
+            <button type="button" class="topbar-nav-pill active" onclick="navigateToSection('inicio')">
+                <i class="fa-solid fa-house"></i> <span>Inicio</span>
+            </button>
+            <button type="button" class="topbar-nav-pill" onclick="navigateToSection('vitrina')">
+                <i class="fa-solid fa-compass"></i> <span>Catálogo</span>
+            </button>
+        </nav>
 
         <div class="topbar-right">
             <!-- Escudo de Ciberseguridad -->
@@ -102,36 +112,101 @@
     <div class="app-shell">
 
         <!-- ==================================================================
-             SIDEBAR PRINCIPAL VINCULADO A TODA LA PLATAFORMA
+             SIDEBAR PRINCIPAL ADAPTATIVO SEGÚN EL ROL DEL USUARIO
              ================================================================== -->
         <aside class="app-sidebar" id="appSidebar">
             <div>
                 <div class="sidebar-nav-group">
-                    <div class="sidebar-section-title">Navegación Principal</div>
+                    <div class="sidebar-section-title" id="sidebarNavGroupTitle">Navegación Principal</div>
+                    <div id="sidebarRoleContextChip" class="sidebar-role-chip" style="display:none;">
+                        <i class="fa-solid fa-user-check"></i> <span id="sidebarRoleContextText">MODO VISITANTE</span>
+                    </div>
 
-                    <button class="sidebar-link active" data-section="inicio" onclick="navigateToSection('inicio')">
+                    <button class="sidebar-link active" id="sidebarHomeBtn" data-section="inicio" onclick="navigateToSection('inicio')">
                         <i class="fa-solid fa-house"></i>
-                        <span class="sidebar-label">Página Principal</span>
+                        <span class="sidebar-label">Inicio Institucional</span>
                     </button>
 
-                    <button class="sidebar-link" data-section="vitrina" onclick="navigateToSection('vitrina')">
+                    <button class="sidebar-link" id="sidebarVitrinaBtn" data-section="vitrina" onclick="navigateToSection('vitrina')">
                         <i class="fa-solid fa-compass"></i>
-                        <span class="sidebar-label">Vitrina de Proyectos</span>
+                        <span class="sidebar-label">Catálogo de Proyectos</span>
                     </button>
 
-                    <button class="sidebar-link" data-section="cargar" onclick="handleProtectedNavigation('cargar')">
-                        <i class="fa-solid fa-square-plus"></i>
-                        <span class="sidebar-label">Adjuntar Proyecto</span>
+                    <button class="sidebar-link" id="sidebarUploadBtn" data-section="cargar" onclick="handleProtectedNavigation('cargar')">
+                        <i class="fa-solid fa-user-graduate"></i>
+                        <span class="sidebar-label" id="sidebarUploadLabel">Panel del Alumno</span>
                     </button>
 
                     <button class="sidebar-link" id="sidebarEvaluationBtn" data-section="evaluacion" onclick="handleProtectedNavigation('evaluacion')">
-                        <i class="fa-solid fa-clipboard-check"></i>
-                        <span class="sidebar-label">Evaluación Docente</span>
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                        <span class="sidebar-label" id="sidebarEvalLabel">Panel Docente</span>
                     </button>
 
                     <button class="sidebar-link" id="sidebarAdminBtn" data-section="administracion" onclick="handleProtectedNavigation('administracion')">
                         <i class="fa-solid fa-sliders"></i>
-                        <span class="sidebar-label">Supervisión Admin</span>
+                        <span class="sidebar-label" id="sidebarAdminLabel">Panel de Administración</span>
+                    </button>
+                </div>
+
+                <!-- Sub-Accesos Rápidos Exclusivos cuando el usuario está en Rol ALUMNO -->
+                <div class="sidebar-nav-group" id="sidebarAlumnoQuickGroup" style="display:none;">
+                    <div class="sidebar-section-title">Módulos del Alumno</div>
+
+                    <button class="sidebar-link" onclick="navigateToSection('cargar'); switchAlumnoTab('proyectos');">
+                        <i class="fa-solid fa-diagram-project"></i>
+                        <span class="sidebar-label">Mis Proyectos</span>
+                    </button>
+                    <button class="sidebar-link" onclick="navigateToSection('cargar'); switchAlumnoTab('calificaciones');">
+                        <i class="fa-solid fa-award"></i>
+                        <span class="sidebar-label">Mis Calificaciones</span>
+                    </button>
+                    <button class="sidebar-link" onclick="navigateToSection('cargar'); switchAlumnoTab('asignaturas');">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                        <span class="sidebar-label">Mis Asignaturas</span>
+                    </button>
+                </div>
+
+                <!-- Sub-Accesos Rápidos Exclusivos cuando el usuario está en Rol DOCENTE -->
+                <div class="sidebar-nav-group" id="sidebarDocenteQuickGroup" style="display:none;">
+                    <div class="sidebar-section-title">Módulos del Docente</div>
+
+                    <button class="sidebar-link" onclick="navigateToSection('evaluacion'); switchDocenteTab('estudiantes');">
+                        <i class="fa-solid fa-user-graduate"></i>
+                        <span class="sidebar-label">Estudiantes</span>
+                    </button>
+                    <button class="sidebar-link" onclick="navigateToSection('evaluacion'); switchDocenteTab('proyectos');">
+                        <i class="fa-solid fa-diagram-project"></i>
+                        <span class="sidebar-label">Proyectos</span>
+                    </button>
+                    <button class="sidebar-link" onclick="navigateToSection('evaluacion'); switchDocenteTab('asignaturas');">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                        <span class="sidebar-label">Asignaturas Asignadas</span>
+                    </button>
+                </div>
+
+                <!-- Sub-Accesos Rápidos Exclusivos cuando el usuario está en Rol ADMINISTRADOR -->
+                <div class="sidebar-nav-group" id="sidebarAdminQuickGroup" style="display:none;">
+                    <div class="sidebar-section-title">Módulos del Administrador</div>
+
+                    <button class="sidebar-link" onclick="navigateToSection('administracion'); switchAdminTab('usuarios');">
+                        <i class="fa-solid fa-users-gear"></i>
+                        <span class="sidebar-label">Gestión de Usuarios</span>
+                    </button>
+                    <button class="sidebar-link" onclick="navigateToSection('administracion'); switchAdminTab('docentes');">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                        <span class="sidebar-label">Gestión de Docentes</span>
+                    </button>
+                    <button class="sidebar-link" onclick="navigateToSection('administracion'); switchAdminTab('alumnos');">
+                        <i class="fa-solid fa-user-graduate"></i>
+                        <span class="sidebar-label">Gestión de Alumnos</span>
+                    </button>
+                    <button class="sidebar-link" onclick="navigateToSection('administracion'); switchAdminTab('proyectos');">
+                        <i class="fa-solid fa-diagram-project"></i>
+                        <span class="sidebar-label">Gestión de Proyectos</span>
+                    </button>
+                    <button class="sidebar-link" onclick="navigateToSection('administracion'); switchAdminTab('asignaturas');">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                        <span class="sidebar-label">Gestión de Asignaturas</span>
                     </button>
                 </div>
 
@@ -456,174 +531,528 @@
             </section>
 
             <!-- ==============================================================
-                 SECCIÓN 3: ADJUNTAR PROYECTO Y MIS ENTREGAS (SECCIÓN ALUMNOS)
+                 SECCIÓN 3: PANEL INTEGRAL DEL ALUMNO (3 MÓDULOS RELACIONALES)
+                 1) MIS PROYECTOS (Agregar, Modificar, Ver Detalle, Desactivar/Eliminar, Lote, CSV, PDF + GitHub/Supabase/Vercel/Código Local)
+                 2) MIS CALIFICACIONES (Devoluciones pedagógicas docentes y notas sumativas + Ver Detalle y Boletín PDF)
+                 3) MIS ASIGNATURAS (Consulta exclusiva de las asignaturas donde fue asignado por el Administrador + Ver Detalle y PDF)
                  ============================================================== -->
             <section id="section-cargar" class="app-section">
                 <div class="section-header">
                     <div class="section-title-group">
-                        <h2><i class="fa-solid fa-square-plus"></i> Adjuntar Proyecto Integrador (5° Año)</h2>
-                        <p>Completa la información técnica de Prácticas Profesionalizantes y el análisis organizacional de Tecnología de Gestión.</p>
+                        <h2><i class="fa-solid fa-user-graduate"></i> Panel Académico y Portfolio del Alumno</h2>
+                        <p>Gestiona tus proyectos integradores (GitHub, Supabase, Vercel o Código Local), consulta tus calificaciones sumativas y devoluciones docentes, y visualiza tus asignaturas asignadas.</p>
                     </div>
-                    <button class="btn btn-ghost" onclick="navigateToSection('vitrina')">
-                        <i class="fa-solid fa-layer-group"></i> Ver en Vitrina
-                    </button>
-                </div>
-
-                <div class="panel-card">
-                    <div class="panel-card-header">
-                        <h3><i class="fa-solid fa-cloud-arrow-up"></i> Formulario Oficial de Presentación</h3>
-                        <span class="badge-category">5° Año Informática P. y P.</span>
-                    </div>
-
-                    <form id="projectUploadForm" onsubmit="handleProjectSubmit(event)">
-                        <input type="hidden" id="csrfTokenUpload" value="">
-
-                        <div class="form-grid">
-                            <div class="form-group full-width">
-                                <label>Título del Proyecto de Desarrollo <span>*</span></label>
-                                <input type="text" id="projTitle" class="form-control" maxlength="140" placeholder="Ej: Sistema de Control de Stock e Inventario para PyME Regional" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Categoría Tecnológica <span>*</span></label>
-                                <select id="projCategory" class="form-control" required>
-                                    <option value="Sistema Web">Sistema Web Full / Frontend</option>
-                                    <option value="Software de Gestión">Software de Gestión (ERP / Ventas / Turnos)</option>
-                                    <option value="IoT y Hardware">Automatización, IoT y Hardware</option>
-                                    <option value="App Móvil">Aplicación Móvil / Multiplataforma</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label>División / Curso <span>*</span></label>
-                                <input type="text" id="projDivision" class="form-control" maxlength="80" value="5° Año - Informática P. y P." required>
-                            </div>
-
-                            <div class="form-group full-width">
-                                <label>Integrantes del Equipo Desarrollador (Alumnos) <span>*</span></label>
-                                <input type="text" id="projAuthors" class="form-control" maxlength="200" placeholder="Ej: Carrizo Mateo, Bazán Valentina, Vega Santiago" required>
-                            </div>
-
-                            <div class="form-group full-width">
-                                <label>Descripción Técnica (Prácticas Profesionalizantes) <span>*</span></label>
-                                <textarea id="projDescription" class="form-control" maxlength="1500" placeholder="Describe qué problema resuelve el proyecto, sus módulos principales, arquitectura y funcionalidades desarrolladas..." required></textarea>
-                            </div>
-
-                            <div class="form-group full-width">
-                                <label>Articulación con Tecnología de Gestión (Viabilidad y Gestión Organizacional) <span>*</span></label>
-                                <textarea id="projManagement" class="form-control" maxlength="1500" placeholder="Explica el diagnóstico organizacional, optimización de tiempos, matriz FODA o beneficio administrativo que aporta..." required></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Tecnologías y Herramientas Utilizadas <span>*</span></label>
-                                <input type="text" id="projTechs" class="form-control" maxlength="200" placeholder="Ej: HTML5, CSS3, JavaScript, MySQL, PHP" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Enlace a Repositorio / Demo Web (Opcional)</label>
-                                <input type="url" id="projRepo" class="form-control" maxlength="250" placeholder="https://github.com/usuario/proyecto" pattern="https?://.+">
-                            </div>
-
-                            <div class="form-group full-width">
-                                <label>Adjuntar Informe Técnico + Carpeta de Campo (.PDF, .ZIP, .DOCX)</label>
-                                <div class="file-drop-zone" onclick="document.getElementById('projFileInput').click()">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <p id="fileDropText">Haz clic aquí para seleccionar el documento del proyecto (Informe PDF, Manual de Usuario o Código .ZIP)</p>
-                                    <small style="color: var(--text-muted);"><i class="fa-solid fa-shield-halved" style="color:var(--status-approved);"></i> Verificación Antimalware Activa: solo formatos .PDF, .DOCX, .ZIP, .PPTX (Máx 25MB)</small>
-                                    <input type="file" id="projFileInput" accept=".pdf,.docx,.zip,.pptx" style="display:none;" onchange="updateFileLabel(this)">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
-                            <button type="reset" class="btn btn-ghost">Limpiar Formulario</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fa-solid fa-paper-plane"></i> Publicar Proyecto en PROJECTHUB
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Historial de Entregas y Devoluciones -->
-                <div class="panel-card">
-                    <div class="panel-card-header">
-                        <h3><i class="fa-solid fa-list-check"></i> Estado de Entregas y Devoluciones Docentes</h3>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="hub-table">
-                            <thead>
-                                <tr>
-                                    <th>Proyecto</th>
-                                    <th>Equipo 5° Año</th>
-                                    <th>Archivo Adjunto</th>
-                                    <th>Estado</th>
-                                    <th>Calificación y Devolución</th>
-                                </tr>
-                            </thead>
-                            <tbody id="studentSubmissionsTable">
-                                <!-- Dinámico desde app.js -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ==============================================================
-                 SECCIÓN 4: PANEL DE EVALUACIÓN DOCENTE (SECCIÓN INDEPENDIENTE)
-                 ============================================================== -->
-            <section id="section-evaluacion" class="app-section">
-                <div class="section-header">
-                    <div class="section-title-group">
-                        <h2><i class="fa-solid fa-chalkboard-user"></i> Evaluación y Seguimiento Docente</h2>
-                        <p>Supervisión colegiada: <strong>Prácticas Profesionalizantes</strong> & <strong>Tecnología de Gestión</strong> (5° Año C.E.N.)</p>
-                    </div>
-                    <div style="display: flex; gap: 0.75rem;">
-                        <button class="btn btn-outline" onclick="exportProjectsSummary()">
-                            <i class="fa-solid fa-file-export"></i> Exportar Planilla
+                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                        <button class="btn btn-gold-outline" onclick="exportAlumnoReportPDF('INTEGRAL_ALUMNO')">
+                            <i class="fa-solid fa-file-pdf"></i> Exportar Mi Portfolio / Calificaciones (.PDF)
+                        </button>
+                        <button class="btn btn-primary" onclick="refreshSystemDataFromSupabase(true)">
+                            <i class="fa-solid fa-rotate"></i> Sincronizar Mis Datos
                         </button>
                     </div>
                 </div>
 
-                <div class="panel-card">
-                    <div class="panel-card-header">
-                        <h3><i class="fa-solid fa-clipboard-check"></i> Bandeja de Proyectos Adjuntados por 5° Año</h3>
-                        <span class="badge-category">Rol Docente</span>
+                <!-- Tarjetas de Resumen del Alumno -->
+                <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.5rem;">
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="fa-solid fa-diagram-project"></i></div>
+                        <div class="kpi-info">
+                            <h3 id="alumnoKpiProyectos">0</h3>
+                            <span>Mis Proyectos (En Red y Locales)</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="fa-solid fa-award"></i></div>
+                        <div class="kpi-info">
+                            <h3 id="alumnoKpiPromedio">S/C</h3>
+                            <span>Promedio Sumativo / Devoluciones</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+                        <div class="kpi-info">
+                            <h3 id="alumnoKpiAsignaturas">0</h3>
+                            <span>Mis Asignaturas Asignadas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-Navegación de los 3 Módulos del Alumno -->
+                <div class="category-pills" id="alumnoModuleTabs" style="margin-bottom: 1.25rem; border-bottom: 1px solid var(--gold-border); padding-bottom: 1rem;">
+                    <button class="pill-btn active" data-alumnotab="proyectos" onclick="switchAlumnoTab('proyectos', this)">
+                        <i class="fa-solid fa-diagram-project"></i> 1. Mis Proyectos (GitHub / Supabase / Vercel / Local)
+                    </button>
+                    <button class="pill-btn" data-alumnotab="calificaciones" onclick="switchAlumnoTab('calificaciones', this)">
+                        <i class="fa-solid fa-award"></i> 2. Mis Calificaciones y Devoluciones Docentes
+                    </button>
+                    <button class="pill-btn" data-alumnotab="asignaturas" onclick="switchAlumnoTab('asignaturas', this)">
+                        <i class="fa-solid fa-book-bookmark"></i> 3. Mis Asignaturas Asignadas
+                    </button>
+                </div>
+
+                <!-- BARRA FLOTANTE DE ACCIÓN MÚLTIPLE DEL ALUMNO -->
+                <div id="alumnoBulkActionBar" class="admin-bulk-bar" style="display:none;">
+                    <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                        <span class="badge-category" id="alumnoBulkCountBadge" style="font-size:0.85rem; padding:0.35rem 0.75rem;">0 seleccionados</span>
+                        <span style="font-size:0.82rem; color:var(--text-secondary);">Acciones sobre los registros seleccionados:</span>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        <button class="btn btn-ghost" style="padding:0.4rem 0.75rem; font-size:0.78rem;" onclick="handleAlumnoBulkAction('VER_INFO')">
+                            <i class="fa-solid fa-eye" style="color:var(--gold-primary);"></i> Ver Detalle
+                        </button>
+                        <button class="btn btn-ghost" id="alumnoBulkEditBtn" style="padding:0.4rem 0.75rem; font-size:0.78rem;" onclick="handleAlumnoBulkAction('MODIFICAR')">
+                            <i class="fa-solid fa-pen-to-square" style="color:#60A5FA;"></i> Editar
+                        </button>
+                        <button class="btn btn-ghost" id="alumnoBulkDeactivateBtn" style="padding:0.4rem 0.75rem; font-size:0.78rem;" onclick="handleAlumnoBulkAction('DESACTIVAR')">
+                            <i class="fa-solid fa-ban" style="color:var(--status-review);"></i> Desactivar (Inactivo)
+                        </button>
+                        <button class="btn btn-ghost" id="alumnoBulkActivateBtn" style="padding:0.4rem 0.75rem; font-size:0.78rem;" onclick="handleAlumnoBulkAction('ACTIVAR')">
+                            <i class="fa-solid fa-rotate-left" style="color:var(--status-approved);"></i> Reactivar
+                        </button>
+                        <button class="btn btn-ghost" id="alumnoBulkDeletePermBtn" style="padding:0.4rem 0.75rem; font-size:0.78rem; border-color:rgba(239,68,68,0.45);" onclick="handleAlumnoBulkAction('ELIMINAR_DEFINITIVO')">
+                            <i class="fa-solid fa-trash-can" style="color:var(--status-danger);"></i> Eliminar Definitivo (BD)
+                        </button>
+                        <button class="btn btn-ghost" style="padding:0.4rem 0.65rem; font-size:0.76rem;" onclick="clearAlumnoSelection()">
+                            <i class="fa-solid fa-xmark"></i> Limpiar Selección
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     SUB-VISTA ALUMNO 1: MIS PROYECTOS (GITHUB / SUPABASE / VERCEL / CÓDIGO LOCAL)
+                     ========================================================== -->
+                <div id="alumno-subview-proyectos" class="alumno-subview">
+                    <div class="admin-module-utilities">
+                        <div class="admin-util-left">
+                            <div class="topbar-search" style="max-width: 280px; width:100%;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="alumnoSearchProyectos" placeholder="Buscar en mis proyectos (título, repo, BD)..." oninput="renderAlumnoProyectosTable()">
+                            </div>
+                            <select id="alumnoFilterEstadoProyectos" class="filter-select" onchange="renderAlumnoProyectosTable()">
+                                <option value="TODOS">Todos los Estados</option>
+                                <option value="ACTIVOS">Solo Activos</option>
+                                <option value="INACTIVOS">Solo Inactivos (Para Eliminar Definitivo)</option>
+                            </select>
+                        </div>
+                        <div class="admin-util-right">
+                            <button class="btn btn-primary" onclick="openAlumnoProjectModal()">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Subir / Registrar Proyecto
+                            </button>
+                            <button class="btn btn-gold-outline" onclick="openBatchAddModal('PROYECTOS')">
+                                <i class="fa-solid fa-layer-group"></i> Carga Múltiple
+                            </button>
+                            <button class="btn btn-ghost" onclick="openCsvImportModal('PROYECTOS')">
+                                <i class="fa-solid fa-file-csv" style="color:var(--status-approved);"></i> Importar .CSV / Estructura
+                            </button>
+                            <button class="btn btn-ghost" onclick="exportAlumnoReportPDF('PROYECTOS')">
+                                <i class="fa-solid fa-file-pdf" style="color:var(--status-danger);"></i> Exportar PDF
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="hub-table">
-                            <thead>
-                                <tr>
-                                    <th>Proyecto / Categoría</th>
-                                    <th>Alumnos Integrantes</th>
-                                    <th>Documentación</th>
-                                    <th>Estado</th>
-                                    <th>Calificación</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="teacherEvaluationTable">
-                                <!-- Dinámico desde app.js -->
-                            </tbody>
-                        </table>
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <div>
+                                <h3><i class="fa-solid fa-laptop-code"></i> 1. Mis Proyectos Integradores (Despliegue Cloud, Base de Datos y Código Fuente)</h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Comparte tu proyecto desde GitHub, vincula tu base de datos (ej. Supabase), publica tu dominio en vivo (ej. Vercel) o adjunta fragmentos de código e instrucciones si se ejecuta en entorno local/offline.</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:36px; text-align:center;">
+                                            <input type="checkbox" id="selectAllAlumnoProyectos" onchange="toggleSelectAllAlumno('proyectos', this.checked)" title="Seleccionar todos">
+                                        </th>
+                                        <th>Código / Proyecto</th>
+                                        <th>Despliegue (Vercel / Red o Local)</th>
+                                        <th>Repositorio & Base de Datos</th>
+                                        <th>Asignaturas y Docentes</th>
+                                        <th>Estado y Nota</th>
+                                        <th>Visibilidad</th>
+                                        <th style="text-align:right;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="alumnoProyectosTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     SUB-VISTA ALUMNO 2: MIS CALIFICACIONES Y DEVOLUCIONES DOCENTES
+                     ========================================================== -->
+                <div id="alumno-subview-calificaciones" class="alumno-subview" style="display:none;">
+                    <div class="admin-module-utilities">
+                        <div class="admin-util-left">
+                            <div class="topbar-search" style="max-width: 320px; width:100%;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="alumnoSearchCalificaciones" placeholder="Buscar por proyecto, docente o devolución..." oninput="renderAlumnoCalificacionesTable()">
+                            </div>
+                            <select id="alumnoFilterEstadoCalificaciones" class="filter-select" onchange="renderAlumnoCalificacionesTable()">
+                                <option value="TODOS">Todas las Evaluaciones</option>
+                                <option value="Aprobado">✔ Aprobados</option>
+                                <option value="En Revisión">⏳ En Revisión</option>
+                                <option value="En Desarrollo">⚙️ En Desarrollo</option>
+                            </select>
+                        </div>
+                        <div class="admin-util-right">
+                            <span class="badge-category" style="padding:0.45rem 0.85rem;">
+                                <i class="fa-solid fa-chalkboard-user"></i> Evaluación Oficial Generada por el Cuerpo Docente
+                            </span>
+                            <button class="btn btn-gold-outline" onclick="exportAlumnoReportPDF('CALIFICACIONES')">
+                                <i class="fa-solid fa-file-pdf" style="color:var(--status-danger);"></i> Exportar Boletín de Calificaciones (.PDF)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <div>
+                                <h3><i class="fa-solid fa-award"></i> 2. Mis Calificaciones Sumativas y Devoluciones Pedagógicas</h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Seguimiento personalizado de las notas numéricas (escala 1 a 10), dictámenes de aprobación y observaciones técnicas redactadas por tus docentes evaluadores.</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:36px; text-align:center;">
+                                            <input type="checkbox" id="selectAllAlumnoCalificaciones" onchange="toggleSelectAllAlumno('calificaciones', this.checked)" title="Seleccionar todos">
+                                        </th>
+                                        <th>Proyecto Evaluado</th>
+                                        <th>Asignaturas Articuladas</th>
+                                        <th>Docentes Evaluadores</th>
+                                        <th>Estado Académico</th>
+                                        <th>Nota Sumativa</th>
+                                        <th>Devolución Pedagógica del Docente</th>
+                                        <th style="text-align:right;">Inspección</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="alumnoCalificacionesTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     SUB-VISTA ALUMNO 3: MIS ASIGNATURAS ASIGNADAS (SOLO LECTURA)
+                     ========================================================== -->
+                <div id="alumno-subview-asignaturas" class="alumno-subview" style="display:none;">
+                    <div class="admin-module-utilities">
+                        <div class="admin-util-left">
+                            <div class="topbar-search" style="max-width: 320px; width:100%;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="alumnoSearchAsignaturas" placeholder="Buscar en mis asignaturas (código, nombre, docente)..." oninput="renderAlumnoAsignaturasTable()">
+                            </div>
+                        </div>
+                        <div class="admin-util-right">
+                            <span class="badge-category" style="padding:0.45rem 0.85rem;">
+                                <i class="fa-solid fa-lock"></i> Asignación Oficial por Administración C.E.N.
+                            </span>
+                            <button class="btn btn-ghost" onclick="exportAlumnoReportPDF('ASIGNATURAS')">
+                                <i class="fa-solid fa-file-pdf" style="color:var(--status-danger);"></i> Exportar PDF de Mis Asignaturas
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-card-header">
+                            <div>
+                                <h3><i class="fa-solid fa-book-bookmark"></i> 3. Mis Asignaturas Asignadas en el Ciclo Lectivo</h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Espacios curriculares en los que fuiste matriculado por el Administrador del sistema, junto con tus docentes titulares, horarios de cursada y proyectos vinculados.</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:36px; text-align:center;">
+                                            <input type="checkbox" id="selectAllAlumnoAsignaturas" onchange="toggleSelectAllAlumno('asignaturas', this.checked)" title="Seleccionar todas">
+                                        </th>
+                                        <th>Código</th>
+                                        <th>Asignatura y Tipo</th>
+                                        <th>Curso / Turno y Horario</th>
+                                        <th>Mi Condición y Nota de Cursada</th>
+                                        <th>Docentes a Cargo</th>
+                                        <th>Mis Proyectos en la Materia</th>
+                                        <th style="text-align:right;">Detalle</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="alumnoAsignaturasTableBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <!-- ==============================================================
-                 SECCIÓN 5: PANEL DE SUPERVISIÓN INTEGRAL (ROL ADMINISTRADOR)
-                 1) Usuarios | 2) Docentes | 3) Alumnos | 4) Proyectos | 5) Asignaturas
-                 Con Agregar, Modificar, VerInfo y Baja/Alta Lógica (Booleano activo)
+                 SECCIÓN 4: PANEL INTEGRAL DEL DOCENTE (3 MÓDULOS RELACIONALES)
+                 1) ESTUDIANTES (Agregar, Modificar, Ver Detalle, Desactivar/Eliminar, Lote, CSV, PDF)
+                 2) PROYECTOS (Agregar, Modificar, Evaluar, Ver Detalle, Desactivar/Eliminar, Lote, CSV, PDF)
+                 3) ASIGNATURAS (Consulta exclusiva de las asignaturas donde fue asignado por el Administrador + Ver Detalle y PDF)
+                 ============================================================== -->
+            <section id="section-evaluacion" class="app-section">
+                <div class="section-header">
+                    <div class="section-title-group">
+                        <h2><i class="fa-solid fa-chalkboard-user"></i> Panel de Gestión y Supervisión Docente</h2>
+                        <p id="docenteHeaderSubtitle">Espacio exclusivo del <strong>Rol DOCENTE</strong> • Gestión de tus <strong>Estudiantes</strong>, tus <strong>Proyectos</strong> y consulta de tus <strong>Asignaturas Asignadas</strong>.</p>
+                    </div>
+                    <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+                        <button class="btn btn-outline" onclick="exportDocenteReportPDF('INTEGRAL_DOCENTE')">
+                            <i class="fa-solid fa-file-pdf"></i> Exportar Informe Docente (.PDF)
+                        </button>
+                        <button class="btn btn-primary" onclick="refreshSystemDataFromSupabase(true)">
+                            <i class="fa-solid fa-arrows-rotate"></i> Sincronizar Mis Datos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPIs Exclusivos del Docente Logueado -->
+                <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchDocenteTab('estudiantes')">
+                        <div class="stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
+                        <div class="stat-info">
+                            <h3 id="docenteKpiEstudiantes">0</h3>
+                            <p>Mis Estudiantes Asignados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchDocenteTab('proyectos')">
+                        <div class="stat-icon"><i class="fa-solid fa-diagram-project"></i></div>
+                        <div class="stat-info">
+                            <h3 id="docenteKpiProyectos">0</h3>
+                            <p>Mis Proyectos Supervisados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchDocenteTab('asignaturas')">
+                        <div class="stat-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+                        <div class="stat-info">
+                            <h3 id="docenteKpiAsignaturas">0</h3>
+                            <p>Mis Asignaturas Asignadas</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de los 3 Módulos del Docente -->
+                <div class="admin-tabs-bar">
+                    <button class="admin-tab-btn active" data-docentetab="estudiantes" onclick="switchDocenteTab('estudiantes')">
+                        <i class="fa-solid fa-user-graduate"></i> Módulo Estudiantes
+                    </button>
+                    <button class="admin-tab-btn" data-docentetab="proyectos" onclick="switchDocenteTab('proyectos')">
+                        <i class="fa-solid fa-diagram-project"></i> Módulo Proyectos
+                    </button>
+                    <button class="admin-tab-btn" data-docentetab="asignaturas" onclick="switchDocenteTab('asignaturas')">
+                        <i class="fa-solid fa-book-bookmark"></i> Módulo Asignaturas (Asignadas por Admin)
+                    </button>
+                </div>
+
+                <!-- BARRA FLOTANTE DE ACCIONES POR SELECCIÓN MÚLTIPLE DEL DOCENTE -->
+                <div class="bulk-action-bar" id="docenteBulkActionBar">
+                    <div class="bulk-selection-info">
+                        <span class="bulk-count-pill" id="docenteBulkCountPill">0</span>
+                        <span id="docenteBulkLabelText">registros seleccionados en tu módulo docente</span>
+                    </div>
+                    <div class="action-btns-group">
+                        <button type="button" class="btn-action-sm btn-action-info" onclick="handleDocenteBulkAction('VER_DETALLE')">
+                            <i class="fa-solid fa-circle-info"></i> Ver Detalle de Selección
+                        </button>
+                        <button type="button" class="btn-action-sm btn-action-edit" id="docenteBulkEditBtn" onclick="handleDocenteBulkAction('EDITAR')">
+                            <i class="fa-solid fa-pen-to-square"></i> Editar Seleccionado
+                        </button>
+                        <button type="button" class="btn-action-sm btn-action-delete" id="docenteBulkDeactivateBtn" onclick="handleDocenteBulkAction('DESACTIVAR')">
+                            <i class="fa-solid fa-power-off"></i> Desactivar (Inactivo)
+                        </button>
+                        <button type="button" class="btn-action-sm btn-action-restore" id="docenteBulkRestoreBtn" onclick="handleDocenteBulkAction('REACTIVAR')">
+                            <i class="fa-solid fa-rotate-left"></i> Reactivar (Activo)
+                        </button>
+                        <button type="button" class="btn-action-sm btn-action-hard-delete" id="docenteBulkHardDeleteBtn" onclick="handleDocenteBulkAction('ELIMINAR_DEFINITIVO')" title="Elimina físicamente de la BD los registros seleccionados que ya estén en estado Inactivo">
+                            <i class="fa-solid fa-trash-can"></i> Eliminar Definitivamente (Solo Inactivos)
+                        </button>
+                        <button type="button" class="btn-action-sm" style="background:rgba(255,255,255,0.08); color:var(--text-secondary);" onclick="clearDocenteModuleSelection()">
+                            <i class="fa-solid fa-xmark"></i> Limpiar Selección
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     MÓDULO DOCENTE 1: ESTUDIANTES (ALUMNOS ASIGNADOS AL DOCENTE)
+                     ========================================================== -->
+                <div id="docente-subview-estudiantes" class="admin-subview active">
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-user-graduate"></i> Mis Estudiantes Asignados (5° Año C.E.N.)
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Supervisa tus estudiantes bajo tutoría o cátedra con selección múltiple, alta individual o en lote, edición, baja lógica/definitiva, importación <code>.CSV</code> y exportación <code>.PDF</code>.</p>
+                            </div>
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="docenteSearchEstudiantes" class="form-control" style="max-width:230px; padding:0.5rem 0.85rem;" placeholder="Buscar estudiante, matrícula o DNI..." oninput="renderDocenteEstudiantesTable()">
+                                <select id="docenteFilterEstadoEstudiantes" class="select-filter" onchange="renderDocenteEstudiantesTable()">
+                                    <option value="TODOS">Todos los Estados</option>
+                                    <option value="ACTIVOS">Solo Activos</option>
+                                    <option value="INACTIVOS">Solo Inactivos (Para Eliminar Definitivo)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap;">
+                                <button class="btn btn-primary" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openDocenteStudentModal(null)">
+                                    <i class="fa-solid fa-user-plus"></i> Agregar Estudiante
+                                </button>
+                                <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openBatchAddModal('ALUMNO')">
+                                    <i class="fa-solid fa-users-line"></i> Carga Múltiple de Estudiantes
+                                </button>
+                                <button class="btn btn-ghost" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openCsvImportModal('ALUMNO')">
+                                    <i class="fa-solid fa-file-csv"></i> Importar .CSV / Ver Estructura
+                                </button>
+                            </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportDocenteReportPDF('ESTUDIANTES')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar PDF de Mis Estudiantes
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="docenteSelectAll_ESTUDIANTES" onchange="toggleDocenteSelectAll('ESTUDIANTES', this.checked)" title="Seleccionar todos mis estudiantes">
+                                        </th>
+                                        <th>Estudiante / Matrícula & Curso</th>
+                                        <th>Proyectos donde Participa</th>
+                                        <th>Asignaturas que Cursa</th>
+                                        <th>Vínculo Docente</th>
+                                        <th>Estado en Sistema</th>
+                                        <th>Acciones disponibles</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="docenteEstudiantesTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     MÓDULO DOCENTE 2: PROYECTOS (PROYECTOS ASIGNADOS / SUPERVISADOS)
+                     ========================================================== -->
+                <div id="docente-subview-proyectos" class="admin-subview">
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-diagram-project"></i> Mis Proyectos Supervisados y Cargados
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Gestiona y califica tus proyectos asignados con todas las funciones de agregar, editar, evaluar nota, ver detalle, desactivar/eliminar, carga múltiple, <code>.CSV</code> y <code>.PDF</code>.</p>
+                            </div>
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="docenteSearchProyectos" class="form-control" style="max-width:230px; padding:0.5rem 0.85rem;" placeholder="Buscar proyecto, código o categoría..." oninput="renderDocenteProyectosTable()">
+                                <select id="docenteFilterEstadoProyectos" class="select-filter" onchange="renderDocenteProyectosTable()">
+                                    <option value="TODOS">Todos los Estados</option>
+                                    <option value="ACTIVOS">Solo Activos</option>
+                                    <option value="INACTIVOS">Solo Inactivos (Para Eliminar Definitivo)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap;">
+                                <button class="btn btn-primary" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openAdminProjectModal(null)">
+                                    <i class="fa-solid fa-folder-plus"></i> Agregar Proyecto
+                                </button>
+                                <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openBatchAddModal('PROYECTO')">
+                                    <i class="fa-solid fa-layer-group"></i> Carga Múltiple de Proyectos
+                                </button>
+                                <button class="btn btn-ghost" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openCsvImportModal('PROYECTO')">
+                                    <i class="fa-solid fa-file-csv"></i> Importar .CSV / Ver Estructura
+                                </button>
+                            </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportDocenteReportPDF('PROYECTOS')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar PDF de Mis Proyectos
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="docenteSelectAll_PROYECTOS" onchange="toggleDocenteSelectAll('PROYECTOS', this.checked)" title="Seleccionar todos mis proyectos">
+                                        </th>
+                                        <th>Código / Proyecto & Categoría</th>
+                                        <th>Estudiantes Integrantes</th>
+                                        <th>Asignaturas Articuladas</th>
+                                        <th>Dictamen / Calificación</th>
+                                        <th>Estado en Sistema</th>
+                                        <th>Acciones disponibles</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="docenteProyectosTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     MÓDULO DOCENTE 3: ASIGNATURAS (SOLO LECTURA DE LAS ASIGNADAS POR EL ADMIN)
+                     ========================================================== -->
+                <div id="docente-subview-asignaturas" class="admin-subview">
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-book-bookmark"></i> Mis Asignaturas Asignadas por el Administrador
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Visualización oficial de los espacios curriculares donde fuiste designado por la Administración del C.E.N., incluyendo tus estudiantes inscriptos y proyectos articulados.</p>
+                            </div>
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="docenteSearchAsignaturas" class="form-control" style="max-width:230px; padding:0.5rem 0.85rem;" placeholder="Buscar en mis asignaturas..." oninput="renderDocenteAsignaturasTable()">
+                                <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportDocenteReportPDF('ASIGNATURAS')">
+                                    <i class="fa-solid fa-file-pdf"></i> Exportar PDF de Mis Asignaturas
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="docenteSelectAll_ASIGNATURAS" onchange="toggleDocenteSelectAll('ASIGNATURAS', this.checked)" title="Seleccionar mis asignaturas para ver detalle">
+                                        </th>
+                                        <th>Código / Asignatura & Campo</th>
+                                        <th>Curso / Carga Horaria & Rol Cátedra</th>
+                                        <th>Estudiantes Inscriptos</th>
+                                        <th>Proyectos Articulados</th>
+                                        <th>Estado Curricular</th>
+                                        <th>Consulta</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="docenteAsignaturasTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==============================================================
+                 SECCIÓN 5: PANEL DE ADMINISTRACIÓN GENERAL (ROL ADMINISTRADOR)
+                 1) Gestión de Usuarios | 2) Gestión de Docentes | 3) Gestión de Alumnos
+                 4) Gestión de Proyectos | 5) Gestión de Asignaturas
                  ============================================================== -->
             <section id="section-administracion" class="app-section">
                 <div class="section-header">
                     <div class="section-title-group">
-                        <h2><i class="fa-solid fa-user-shield"></i> Centro de Supervisión y Control Integral (Rol Administrador)</h2>
-                        <p>Gestión relacional en tiempo real conectada con <strong>Supabase PostgreSQL (3FN)</strong> • Baja lógica mediante estado booleano (<code>activo: true/false</code>).</p>
+                        <h2><i class="fa-solid fa-user-shield"></i> Panel de Administración General</h2>
+                        <p>Control relacional en tiempo real conectado con <strong>Supabase PostgreSQL</strong> • Selección múltiple, alta individual o masiva, importación <code>.CSV</code> y reporte oficial <code>.PDF</code>.</p>
                     </div>
-                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                        <button class="btn btn-outline" onclick="refreshSystemDataFromSupabase(true)">
-                            <i class="fa-solid fa-arrows-rotate"></i> Sincronizar BD
+                    <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+                        <button class="btn btn-outline" onclick="exportAdminReportPDF(' INTEGRAL')">
+                            <i class="fa-solid fa-file-pdf"></i> Exportar Informe General (.PDF)
+                        </button>
+                        <button class="btn btn-primary" onclick="refreshSystemDataFromSupabase(true)">
+                            <i class="fa-solid fa-arrows-rotate"></i> Sincronizar Base de Datos
                         </button>
                     </div>
                 </div>
@@ -634,86 +1063,131 @@
                         <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
                         <div class="stat-info">
                             <h3 id="adminKpiUsuarios">0</h3>
-                            <p>Usuarios Registrados</p>
+                            <p>Gestión de Usuarios</p>
                         </div>
                     </div>
                     <div class="stat-card" style="cursor:pointer;" onclick="switchAdminTab('docentes')">
                         <div class="stat-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
                         <div class="stat-info">
                             <h3 id="adminKpiDocentes">0</h3>
-                            <p>Docentes Supervisados</p>
+                            <p>Gestión de Docentes</p>
                         </div>
                     </div>
                     <div class="stat-card" style="cursor:pointer;" onclick="switchAdminTab('alumnos')">
                         <div class="stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
                         <div class="stat-info">
                             <h3 id="adminKpiAlumnos">0</h3>
-                            <p>Alumnos 5° Año</p>
+                            <p>Gestión de Alumnos</p>
                         </div>
                     </div>
                     <div class="stat-card" style="cursor:pointer;" onclick="switchAdminTab('asignaturas')">
                         <div class="stat-icon"><i class="fa-solid fa-book-open-reader"></i></div>
                         <div class="stat-info">
                             <h3 id="adminKpiAsignaturas">0</h3>
-                            <p>Asignaturas Relacionales</p>
+                            <p>Gestión de Asignaturas</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Barra de 5 Pestañas de Supervisión del Administrador -->
+                <!-- Barra de 5 Módulos Normalizados del Administrador -->
                 <div class="admin-tabs-bar">
                     <button class="admin-tab-btn active" data-admintab="usuarios" onclick="switchAdminTab('usuarios')">
-                        <i class="fa-solid fa-users-gear"></i> 1. Usuarios y Roles
+                        <i class="fa-solid fa-users-gear"></i> Gestión de Usuarios
                     </button>
                     <button class="admin-tab-btn" data-admintab="docentes" onclick="switchAdminTab('docentes')">
-                        <i class="fa-solid fa-chalkboard-user"></i> 2. Docentes (Proyectos / Alumnos)
+                        <i class="fa-solid fa-chalkboard-user"></i> Gestión de Docentes
                     </button>
                     <button class="admin-tab-btn" data-admintab="alumnos" onclick="switchAdminTab('alumnos')">
-                        <i class="fa-solid fa-user-graduate"></i> 3. Alumnos (Proyectos / Docentes / Asignaturas)
+                        <i class="fa-solid fa-user-graduate"></i> Gestión de Alumnos
                     </button>
                     <button class="admin-tab-btn" data-admintab="proyectos" onclick="switchAdminTab('proyectos')">
-                        <i class="fa-solid fa-diagram-project"></i> 4. Proyectos Integradores
+                        <i class="fa-solid fa-diagram-project"></i> Gestión de Proyectos
                     </button>
                     <button class="admin-tab-btn" data-admintab="asignaturas" onclick="switchAdminTab('asignaturas')">
-                        <i class="fa-solid fa-book-bookmark"></i> 5. Entidad Asignaturas
+                        <i class="fa-solid fa-book-bookmark"></i> Gestión de Asignaturas
                     </button>
                 </div>
 
+                <!-- BARRA FLOTANTE DE ACCIONES POR SELECCIÓN (UNO O MÁS PARÁMETROS SELECCIONADOS) -->
+                <div class="bulk-action-bar" id="adminBulkActionBar">
+                    <div class="bulk-selection-info">
+                        <span class="bulk-count-pill" id="adminBulkCountPill">0</span>
+                        <span id="adminBulkLabelText">registros seleccionados en este módulo</span>
+                    </div>
+                    <div class="action-btns-group">
+                        <button type="button" class="btn-action-sm btn-action-info" onclick="handleBulkAction('VER_DETALLE')">
+                            <i class="fa-solid fa-circle-info"></i> Ver Detalle de Selección
+                        </button>
+                        <button type="button" class="btn-action-sm btn-action-edit" id="adminBulkEditBtn" onclick="handleBulkAction('EDITAR')">
+                            <i class="fa-solid fa-pen-to-square"></i> Editar Seleccionado
+                        </button>
+                        <button type="button" class="btn-action-sm btn-action-delete" onclick="handleBulkAction('DESACTIVAR')">
+                            <i class="fa-solid fa-power-off"></i> Desactivar (Inactivo)
+                        </button>
+                        <button type="button" class="btn-action-sm btn-action-restore" onclick="handleBulkAction('REACTIVAR')">
+                            <i class="fa-solid fa-rotate-left"></i> Reactivar (Activo)
+                        </button>
+                        <button type="button" class="btn-action-sm btn-action-hard-delete" onclick="handleBulkAction('ELIMINAR_DEFINITIVO')" title="Elimina físicamente de la BD los registros seleccionados que ya estén en estado Inactivo">
+                            <i class="fa-solid fa-trash-can"></i> Eliminar Definitivamente (Solo Inactivos)
+                        </button>
+                        <button type="button" class="btn-action-sm" style="background:rgba(255,255,255,0.08); color:var(--text-secondary);" onclick="clearModuleSelection()">
+                            <i class="fa-solid fa-xmark"></i> Limpiar Selección
+                        </button>
+                    </div>
+                </div>
+
                 <!-- ==========================================================
-                     SUB-MÓDULO 1: SUPERVISIÓN DE TODOS LOS USUARIOS
+                     MÓDULO 1: GESTIÓN DE USUARIOS
                      ========================================================== -->
                 <div id="admin-subview-usuarios" class="admin-subview active">
                     <div class="panel-card">
                         <div class="admin-toolbar">
                             <div>
                                 <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
-                                    <i class="fa-solid fa-users-gear"></i> 1. Supervisión General de Usuarios (Entidad <code>public.usuarios</code> + <code>usuarios_roles</code>)
+                                    <i class="fa-solid fa-users-gear"></i> Gestión de Usuarios y Roles del Sistema
                                 </h3>
-                                <p style="font-size:0.82rem; color:var(--text-secondary);">Control de cuentas, asignación de múltiples roles y estado booleano de actividad.</p>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Selecciona uno o varios usuarios con las casillas para ver detalle, editar, cambiar estado o eliminar definitivamente si ya están inactivos.</p>
                             </div>
-                            <div style="display:flex; gap:0.65rem; flex-wrap:wrap; align-items:center;">
-                                <input type="text" id="adminSearchUsuarios" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar por nombre, DNI o correo..." oninput="renderAdminUsuariosTable()">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="adminSearchUsuarios" class="form-control" style="max-width:220px; padding:0.5rem 0.85rem;" placeholder="Buscar por nombre, DNI o correo..." oninput="renderAdminUsuariosTable()">
                                 <select id="adminFilterEstadoUsuarios" class="select-filter" onchange="renderAdminUsuariosTable()">
-                                    <option value="TODOS">Todos (Activos + Inactivos)</option>
-                                    <option value="ACTIVOS">Solo Activos (activo = true)</option>
-                                    <option value="INACTIVOS">Solo Inactivos / Baja Lógica (activo = false)</option>
+                                    <option value="TODOS">Todos los Estados</option>
+                                    <option value="ACTIVOS">Solo Activos</option>
+                                    <option value="INACTIVOS">Solo Inactivos (Para Eliminar Definitivo)</option>
                                 </select>
-                                <button class="btn btn-primary" onclick="openAdminUserModal(null, 'ADMINISTRADOR')">
-                                    <i class="fa-solid fa-user-plus"></i> Agregar Usuario
+                            </div>
+                        </div>
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap;">
+                                <button class="btn btn-primary" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openAdminUserModal(null, 'ADMINISTRADOR')">
+                                    <i class="fa-solid fa-user-plus"></i> Nuevo Usuario
+                                </button>
+                                <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openBatchAddModal('USUARIO')">
+                                    <i class="fa-solid fa-users-line"></i> Carga Múltiple (Agregar Varios)
+                                </button>
+                                <button class="btn btn-ghost" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openCsvImportModal('USUARIO')">
+                                    <i class="fa-solid fa-file-csv"></i> Importar .CSV / Ver Estructura
                                 </button>
                             </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportAdminReportPDF('USUARIO')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar PDF de Usuarios
+                            </button>
                         </div>
 
                         <div class="table-responsive">
                             <table class="hub-table">
                                 <thead>
                                     <tr>
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="selectAll_USUARIO" onchange="toggleSelectAllInModule('USUARIO', this.checked)" title="Seleccionar todos">
+                                        </th>
                                         <th>Usuario / Identificación</th>
                                         <th>Contacto & Localidad</th>
-                                        <th>Roles Asignados (N:M)</th>
-                                        <th>Fichas Especializadas</th>
-                                        <th>Estado Booleano</th>
-                                        <th>Acciones (VerInfo / Modificar / Estado)</th>
+                                        <th>Roles Asignados</th>
+                                        <th>Perfiles Vinculados</th>
+                                        <th>Estado en Sistema</th>
+                                        <th>Acciones disponibles</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adminUsuariosTableBody"></tbody>
@@ -723,35 +1197,52 @@
                 </div>
 
                 <!-- ==========================================================
-                     SUB-MÓDULO 2: SUPERVISIÓN DE DOCENTES (PROYECTOS + ALUMNOS + ASIGNATURAS)
+                     MÓDULO 2: GESTIÓN DE DOCENTES (PROYECTOS + ALUMNOS + ASIGNATURAS)
                      ========================================================== -->
                 <div id="admin-subview-docentes" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
                             <div>
                                 <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
-                                    <i class="fa-solid fa-chalkboard-user"></i> 2. Supervisión de Docentes (Proyectos, Alumnos y Asignaturas Asignadas)
+                                    <i class="fa-solid fa-chalkboard-user"></i> Gestión de Docentes (Proyectos, Alumnos y Asignaturas Asignadas)
                                 </h3>
-                                <p style="font-size:0.82rem; color:var(--text-secondary);">Entidad <code>public.docentes</code> vinculada con <code>proyectos_docentes</code>, <code>docentes_alumnos</code> y <code>docentes_asignaturas</code>.</p>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Supervisión del plantel docente, sus cátedras, proyectos evaluados y alumnos bajo tutoría.</p>
                             </div>
-                            <div style="display:flex; gap:0.65rem; flex-wrap:wrap; align-items:center;">
-                                <input type="text" id="adminSearchDocentes" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar docente, legajo o proyecto..." oninput="renderAdminDocentesTable()">
-                                <button class="btn btn-primary" onclick="openAdminUserModal(null, 'DOCENTE')">
-                                    <i class="fa-solid fa-user-plus"></i> Agregar Docente
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="adminSearchDocentes" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar docente, legajo o especialidad..." oninput="renderAdminDocentesTable()">
+                            </div>
+                        </div>
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap;">
+                                <button class="btn btn-primary" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openAdminUserModal(null, 'DOCENTE')">
+                                    <i class="fa-solid fa-user-plus"></i> Nuevo Docente
+                                </button>
+                                <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openBatchAddModal('DOCENTE')">
+                                    <i class="fa-solid fa-users-line"></i> Carga Múltiple de Docentes
+                                </button>
+                                <button class="btn btn-ghost" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openCsvImportModal('DOCENTE')">
+                                    <i class="fa-solid fa-file-csv"></i> Importar .CSV / Ver Estructura
                                 </button>
                             </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportAdminReportPDF('DOCENTE')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar PDF de Docentes
+                            </button>
                         </div>
 
                         <div class="table-responsive">
                             <table class="hub-table">
                                 <thead>
                                     <tr>
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="selectAll_DOCENTE" onchange="toggleSelectAllInModule('DOCENTE', this.checked)" title="Seleccionar todos">
+                                        </th>
                                         <th>Docente / Legajo & Título</th>
                                         <th>Asignaturas que Dicta</th>
                                         <th>Proyectos que Supervisa</th>
-                                        <th>Alumnos Asignados (Tutoría)</th>
-                                        <th>Estado Booleano</th>
-                                        <th>Acciones (VerInfo / Modificar / Estado)</th>
+                                        <th>Alumnos Asignados</th>
+                                        <th>Estado en Sistema</th>
+                                        <th>Acciones disponibles</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adminDocentesTableBody"></tbody>
@@ -761,35 +1252,52 @@
                 </div>
 
                 <!-- ==========================================================
-                     SUB-MÓDULO 3: SUPERVISIÓN DE ALUMNOS (PROYECTOS + DOCENTES + ASIGNATURAS)
+                     MÓDULO 3: GESTIÓN DE ALUMNOS (PROYECTOS + DOCENTES + ASIGNATURAS)
                      ========================================================== -->
                 <div id="admin-subview-alumnos" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
                             <div>
                                 <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
-                                    <i class="fa-solid fa-user-graduate"></i> 3. Supervisión de Alumnos (Proyectos, Docentes Asignados y Asignaturas)
+                                    <i class="fa-solid fa-user-graduate"></i> Gestión de Alumnos (Proyectos, Docentes Asignados y Asignaturas)
                                 </h3>
-                                <p style="font-size:0.82rem; color:var(--text-secondary);">Entidad <code>public.alumnos</code> vinculada con <code>proyectos_alumnos</code>, <code>docentes_alumnos</code> y <code>alumnos_asignaturas</code>.</p>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Supervisión de los estudiantes de 5° Año, sus equipos de proyecto, docentes tutores y asignaturas cursadas.</p>
                             </div>
-                            <div style="display:flex; gap:0.65rem; flex-wrap:wrap; align-items:center;">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
                                 <input type="text" id="adminSearchAlumnos" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar alumno, matrícula o curso..." oninput="renderAdminAlumnosTable()">
-                                <button class="btn btn-primary" onclick="openAdminUserModal(null, 'ALUMNO')">
-                                    <i class="fa-solid fa-user-plus"></i> Agregar Alumno
+                            </div>
+                        </div>
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap;">
+                                <button class="btn btn-primary" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openAdminUserModal(null, 'ALUMNO')">
+                                    <i class="fa-solid fa-user-plus"></i> Nuevo Alumno
+                                </button>
+                                <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openBatchAddModal('ALUMNO')">
+                                    <i class="fa-solid fa-users-line"></i> Carga Múltiple de Alumnos
+                                </button>
+                                <button class="btn btn-ghost" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openCsvImportModal('ALUMNO')">
+                                    <i class="fa-solid fa-file-csv"></i> Importar .CSV / Ver Estructura
                                 </button>
                             </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportAdminReportPDF('ALUMNO')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar PDF de Alumnos
+                            </button>
                         </div>
 
                         <div class="table-responsive">
                             <table class="hub-table">
                                 <thead>
                                     <tr>
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="selectAll_ALUMNO" onchange="toggleSelectAllInModule('ALUMNO', this.checked)" title="Seleccionar todos">
+                                        </th>
                                         <th>Alumno / Matrícula & Curso</th>
                                         <th>Proyectos Integradores</th>
                                         <th>Docentes Asignados</th>
                                         <th>Asignaturas Cursadas</th>
-                                        <th>Estado Booleano</th>
-                                        <th>Acciones (VerInfo / Modificar / Estado)</th>
+                                        <th>Estado en Sistema</th>
+                                        <th>Acciones disponibles</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adminAlumnosTableBody"></tbody>
@@ -799,36 +1307,53 @@
                 </div>
 
                 <!-- ==========================================================
-                     SUB-MÓDULO 4: SUPERVISIÓN DE PROYECTOS (DOCENTES + ALUMNOS + ASIGNATURAS)
+                     MÓDULO 4: GESTIÓN DE PROYECTOS (DOCENTES + ALUMNOS + ASIGNATURAS)
                      ========================================================== -->
                 <div id="admin-subview-proyectos" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
                             <div>
                                 <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
-                                    <i class="fa-solid fa-diagram-project"></i> 4. Supervisión de Proyectos (Docentes, Alumnos y Asignaturas Articuladas)
+                                    <i class="fa-solid fa-diagram-project"></i> Gestión de Proyectos (Docentes, Alumnos y Asignaturas Articuladas)
                                 </h3>
-                                <p style="font-size:0.82rem; color:var(--text-secondary);">Entidad <code>public.proyectos</code> vinculada con equipos de alumnos, docentes evaluadores y asignaturas.</p>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Supervisión de entregas técnicas, equipos desarrolladores, docentes evaluadores y calificaciones.</p>
                             </div>
-                            <div style="display:flex; gap:0.65rem; flex-wrap:wrap; align-items:center;">
-                                <input type="text" id="adminSearchProyectos" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar proyecto, código o tecnología..." oninput="renderAdminProyectosTable()">
-                                <button class="btn btn-primary" onclick="openAdminProjectModal(null)">
-                                    <i class="fa-solid fa-folder-plus"></i> Agregar Proyecto
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="adminSearchProyectos" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar proyecto, código o categoría..." oninput="renderAdminProyectosTable()">
+                            </div>
+                        </div>
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap;">
+                                <button class="btn btn-primary" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openAdminProjectModal(null)">
+                                    <i class="fa-solid fa-folder-plus"></i> Nuevo Proyecto
+                                </button>
+                                <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openBatchAddModal('PROYECTO')">
+                                    <i class="fa-solid fa-layer-group"></i> Carga Múltiple de Proyectos
+                                </button>
+                                <button class="btn btn-ghost" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openCsvImportModal('PROYECTO')">
+                                    <i class="fa-solid fa-file-csv"></i> Importar .CSV / Ver Estructura
                                 </button>
                             </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportAdminReportPDF('PROYECTO')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar PDF de Proyectos
+                            </button>
                         </div>
 
                         <div class="table-responsive">
                             <table class="hub-table">
                                 <thead>
                                     <tr>
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="selectAll_PROYECTO" onchange="toggleSelectAllInModule('PROYECTO', this.checked)" title="Seleccionar todos">
+                                        </th>
                                         <th>Código / Proyecto & Categoría</th>
                                         <th>Alumnos Integrantes</th>
                                         <th>Docentes Evaluadores</th>
                                         <th>Asignaturas Articuladas</th>
                                         <th>Dictamen / Nota</th>
-                                        <th>Estado Booleano</th>
-                                        <th>Acciones (VerInfo / Modificar / Estado)</th>
+                                        <th>Estado en Sistema</th>
+                                        <th>Acciones disponibles</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adminProyectosTableBody"></tbody>
@@ -838,36 +1363,53 @@
                 </div>
 
                 <!-- ==========================================================
-                     SUB-MÓDULO 5: SUPERVISIÓN DE ASIGNATURAS (DOCENTES + ALUMNOS + PROYECTOS)
+                     MÓDULO 5: GESTIÓN DE ASIGNATURAS (DOCENTES + ALUMNOS + PROYECTOS)
                      ========================================================== -->
                 <div id="admin-subview-asignaturas" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
                             <div>
                                 <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
-                                    <i class="fa-solid fa-book-bookmark"></i> 5. Supervisión de Asignaturas (Entidad Relacional <code>public.asignaturas</code>)
+                                    <i class="fa-solid fa-book-bookmark"></i> Gestión de Asignaturas (Espacios Curriculares de 5° Año)
                                 </h3>
-                                <p style="font-size:0.82rem; color:var(--text-secondary);">Espacios curriculares de 5° Año T.I.P.P. vinculados con docentes de cátedra, alumnos y proyectos.</p>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Supervisión curricular relacional con los docentes de cátedra, alumnos inscriptos y proyectos articulados.</p>
                             </div>
-                            <div style="display:flex; gap:0.65rem; flex-wrap:wrap; align-items:center;">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
                                 <input type="text" id="adminSearchAsignaturas" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar asignatura o código..." oninput="renderAdminAsignaturasTable()">
-                                <button class="btn btn-primary" onclick="openAdminAsignaturaModal(null)">
-                                    <i class="fa-solid fa-book-medical"></i> Agregar Asignatura
+                            </div>
+                        </div>
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap;">
+                                <button class="btn btn-primary" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openAdminAsignaturaModal(null)">
+                                    <i class="fa-solid fa-book-medical"></i> Nueva Asignatura
+                                </button>
+                                <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openBatchAddModal('ASIGNATURA')">
+                                    <i class="fa-solid fa-layer-group"></i> Carga Múltiple de Asignaturas
+                                </button>
+                                <button class="btn btn-ghost" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openCsvImportModal('ASIGNATURA')">
+                                    <i class="fa-solid fa-file-csv"></i> Importar .CSV / Ver Estructura
                                 </button>
                             </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportAdminReportPDF('ASIGNATURA')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar PDF de Asignaturas
+                            </button>
                         </div>
 
                         <div class="table-responsive">
                             <table class="hub-table">
                                 <thead>
                                     <tr>
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="selectAll_ASIGNATURA" onchange="toggleSelectAllInModule('ASIGNATURA', this.checked)" title="Seleccionar todos">
+                                        </th>
                                         <th>Código / Asignatura & Campo</th>
                                         <th>Curso / Carga Horaria</th>
                                         <th>Docentes a Cargo</th>
                                         <th>Alumnos Inscriptos</th>
                                         <th>Proyectos Articulados</th>
-                                        <th>Estado Booleano</th>
-                                        <th>Acciones (VerInfo / Modificar / Estado)</th>
+                                        <th>Estado en Sistema</th>
+                                        <th>Acciones disponibles</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adminAsignaturasTableBody"></tbody>
@@ -1198,7 +1740,7 @@
                     </div>
 
                     <!-- Selección de Múltiples Roles (Tabla Intermedia usuarios_roles) -->
-                    <div class="form-group full-width" style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
+                    <div id="admSectionRolesSelectorBox" class="form-group full-width" style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
                         <label style="color:var(--gold-primary);"><i class="fa-solid fa-layer-group"></i> Roles Asignados en <code>public.usuarios_roles</code> (Puedes marcar uno o varios) <span>*</span></label>
                         <div style="display:flex; flex-wrap:wrap; gap:1.2rem; margin-top:0.5rem;">
                             <label class="checkbox-item-card">
@@ -1377,32 +1919,88 @@
                         <label>Articulación con Tecnología de Gestión <span>*</span></label>
                         <textarea id="admProjGestion" class="form-control" required></textarea>
                     </div>
+
+                    <!-- BLOQUE DE DESPLIEGUE, REPOSITORIO EXTERNO, BASE DE DATOS Y CÓDIGO FUENTE -->
+                    <div class="form-group full-width" style="border-top:1px solid var(--gold-border); padding-top:0.85rem; margin-top:0.35rem;">
+                        <label style="color:var(--gold-primary); font-size:0.9rem;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Opciones de Entrega, Repositorio (GitHub), Base de Datos (Supabase) y Despliegue (Vercel / Local)
+                        </label>
+                        <small style="color:var(--text-secondary); display:block;">Completa cómo está compartido tu proyecto: tanto si se encuentra desplegado públicamente en la red (ej. Vercel + Supabase) como si se ejecuta de forma local/offline.</small>
+                    </div>
+
                     <div class="form-group">
-                        <label>Estado de Evaluación</label>
-                        <select id="admProjEstado" class="form-control">
-                            <option value="Aprobado">✔ Aprobado</option>
-                            <option value="En Revisión">⏳ En Revisión</option>
-                            <option value="En Desarrollo">⚙️ En Desarrollo</option>
+                        <label>Modalidad de Entrega del Sistema</label>
+                        <select id="admProjModalidad" class="form-control">
+                            <option value="Despliegue Cloud + GitHub + Base de Datos">☁️ Despliegue Cloud (Vercel/Web) + GitHub + Base de Datos</option>
+                            <option value="Repositorio GitHub + Base de Datos Cloud">🐙 Repositorio GitHub + Base de Datos (Supabase/SQL)</option>
+                            <option value="Ejecución Local / Offline + Código Fuente">💻 Ejecución Local / Offline + Código Fuente Compartido</option>
+                            <option value="Prototipo Hardware / IoT + Firmware">🔌 Prototipo Hardware / IoT + Código Firmware</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Calificación (1 a 10)</label>
-                        <input type="number" id="admProjCalificacion" class="form-control" min="1" max="10" step="0.25" placeholder="Ej: 9.5">
-                    </div>
-                    <div class="form-group">
-                        <label>URL Repositorio / Demo</label>
-                        <input type="url" id="admProjRepo" class="form-control" placeholder="https://github.com/...">
-                    </div>
-                    <div class="form-group">
-                        <label>Estado Booleano (<code>activo</code>)</label>
-                        <select id="admProjActivo" class="form-control">
-                            <option value="true">✔ ACTIVO (true - Visible)</option>
-                            <option value="false">✖ INACTIVO / BAJA LÓGICA (false)</option>
+                        <label>¿En Funcionamiento Público en la Red?</label>
+                        <select id="admProjEnProduccion" class="form-control">
+                            <option value="true">🌐 SÍ - Publicado con Dominio en Vivo (Ej: Vercel / Netlify)</option>
+                            <option value="false">🏠 NO - Ejecución Local / Offline / Solo Repositorio</option>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-brands fa-github"></i> URL de Repositorio Externo (GitHub / GitLab)</label>
+                        <input type="url" id="admProjRepo" class="form-control" placeholder="https://github.com/usuario/mi-proyecto">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-globe"></i> URL de Dominio Público en Vivo (Ej: Vercel)</label>
+                        <input type="url" id="admProjDemoUrl" class="form-control" placeholder="https://mi-proyecto-cen.vercel.app">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-server"></i> Plataforma de Hosting / Despliegue</label>
+                        <input type="text" id="admProjPlataforma" class="form-control" value="Vercel" placeholder="Ej: Vercel, Netlify, GitHub Pages, Railway o Servidor Local">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-database"></i> Motor de Base de Datos Utilizado</label>
+                        <input type="text" id="admProjMotorBd" class="form-control" value="Supabase (PostgreSQL)" placeholder="Ej: Supabase PostgreSQL, MySQL, Firebase, SQLite">
                     </div>
                     <div class="form-group full-width">
-                        <label>Devolución Pedagógica Docente</label>
-                        <textarea id="admProjDevolucion" class="form-control"></textarea>
+                        <label><i class="fa-solid fa-link"></i> Referencia / URL de Proyecto de Base de Datos (Ej: Supabase Project URL o Esquema)</label>
+                        <input type="text" id="admProjDatabaseUrl" class="form-control" placeholder="Ej: https://xyzproject.supabase.co (Esquema public relacional 3FN)">
+                    </div>
+                    <div class="form-group full-width">
+                        <label><i class="fa-solid fa-terminal"></i> Instrucciones de Ejecución / Credenciales de Prueba (Para Red o Entorno Local)</label>
+                        <textarea id="admProjInstrucciones" class="form-control" rows="2" placeholder="Ej: Acceder a la URL de Vercel o clonar el repo de GitHub, configurar variables de Supabase y ejecutar npm run dev..."></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label><i class="fa-solid fa-code"></i> Fragmento de Código Fuente / Arquitectura Principal (Para inspeccionar en el sistema esté o no en la red)</label>
+                        <textarea id="admProjSnippetCodigo" class="form-control" rows="4" style="font-family:monospace; font-size:0.8rem;" placeholder="// Pega aquí el bloque clave de tu código (conexión a Supabase, controlador backend, consulta SQL o firmware)..."></textarea>
+                    </div>
+
+                    <!-- BLOQUE EXCLUSIVO DE EVALUACIÓN DOCENTE / ADMIN -->
+                    <div id="admProjEvaluationFieldsGroup" class="form-group full-width" style="border-top:1px solid var(--gold-border); padding-top:0.85rem; margin-top:0.35rem;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Estado de Evaluación (Docente / Admin)</label>
+                                <select id="admProjEstado" class="form-control">
+                                    <option value="Aprobado">✔ Aprobado</option>
+                                    <option value="En Revisión">⏳ En Revisión</option>
+                                    <option value="En Desarrollo">⚙️ En Desarrollo</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Calificación Sumativa (1 a 10)</label>
+                                <input type="number" id="admProjCalificacion" class="form-control" min="1" max="10" step="0.25" placeholder="Ej: 9.5">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Devolución Pedagógica Docente</label>
+                                <textarea id="admProjDevolucion" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Estado Booleano del Registro (<code>activo</code>)</label>
+                        <select id="admProjActivo" class="form-control">
+                            <option value="true">✔ ACTIVO (true - Visible en ProjectHub)</option>
+                            <option value="false">✖ INACTIVO / BAJA LÓGICA (false)</option>
+                        </select>
                     </div>
 
                     <!-- Relaciones N:M del Proyecto -->
@@ -1511,6 +2109,97 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 11: CARGA MÚLTIPLE DE REGISTROS (AGREGAR UNO O MÁS EN CUALQUIER MÓDULO)
+         ====================================================================== -->
+    <div class="modal-overlay" id="adminBatchAddModal">
+        <div class="modal-box modal-lg">
+            <button class="modal-close" onclick="closeModal('adminBatchAddModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="login-header" style="text-align:left; border-bottom:1px solid var(--gold-border); padding-bottom:0.85rem; margin-bottom:1rem;">
+                <span class="badge-category" id="batchAddSubtitle">Alta Múltiple en Lote</span>
+                <h3 style="color:var(--gold-primary); font-size:1.3rem; margin-top:0.25rem;" id="batchAddTitle">
+                    <i class="fa-solid fa-layer-group"></i> Agregar Uno o Más Registros Simultáneamente
+                </h3>
+                <p style="font-size:0.83rem; color:var(--text-secondary);">Puedes añadir tantas filas como necesites y guardarlas todas juntas en una sola transacción en Supabase.</p>
+            </div>
+
+            <form id="adminBatchAddForm" onsubmit="submitBatchAddForm(event)">
+                <input type="hidden" id="batchAddEntityType" value="USUARIO">
+                <div id="batchAddRowsContainer" style="max-height: 410px; overflow-y: auto; padding-right: 0.3rem; margin-bottom: 1rem;"></div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; padding-top:0.9rem; border-top:1px solid var(--gold-border);">
+                    <button type="button" class="btn btn-outline" onclick="addNewRowToBatchModal()">
+                        <i class="fa-solid fa-plus"></i> Añadir Otra Fila
+                    </button>
+                    <div style="display:flex; gap:0.75rem;">
+                        <button type="button" class="btn btn-ghost" onclick="closeModal('adminBatchAddModal')">Cancelar</button>
+                        <button type="submit" id="batchAddSubmitBtn" class="btn btn-primary">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar Todos los Registros
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 12: IMPORTACIÓN .CSV Y ESTRUCTURA DE COLUMNAS PARA CADA MÓDULO
+         ====================================================================== -->
+    <div class="modal-overlay" id="adminCsvImportModal">
+        <div class="modal-box modal-lg">
+            <button class="modal-close" onclick="closeModal('adminCsvImportModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="login-header" style="text-align:left; border-bottom:1px solid var(--gold-border); padding-bottom:0.85rem; margin-bottom:1rem;">
+                <span class="badge-category" id="csvModalBadge">Importador Masivo .CSV</span>
+                <h3 style="color:var(--gold-primary); font-size:1.3rem; margin-top:0.25rem;" id="csvModalTitle">
+                    <i class="fa-solid fa-file-csv"></i> Importar Base de Datos (.CSV) y Estructura Oficial
+                </h3>
+            </div>
+
+            <input type="hidden" id="csvImportEntityType" value="USUARIO">
+
+            <div class="csv-structure-box">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.65rem;">
+                    <strong style="color:var(--gold-primary); font-size:0.88rem;">
+                        <i class="fa-solid fa-table-columns"></i> Estructura Exacta de Columnas Requerida para el Archivo <code>.CSV</code>:
+                    </strong>
+                    <button type="button" class="btn btn-outline" style="padding:0.4rem 0.85rem; font-size:0.78rem;" onclick="downloadCsvTemplateForCurrentEntity()">
+                        <i class="fa-solid fa-download"></i> Descargar Plantilla .CSV Lista para Completar
+                    </button>
+                </div>
+                <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.35rem;" id="csvStructureExplanation"></p>
+                <code class="csv-columns-code" id="csvColumnsHeaderPreview"></code>
+                <div style="margin-top:0.55rem; font-size:0.76rem; color:var(--text-muted);" id="csvExampleRowPreview"></div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label>Seleccionar Archivo <code>.CSV</code> desde tu Dispositivo (Separado por comas <code>,</code> o punto y coma <code>;</code>)</label>
+                <div class="file-drop-zone" onclick="document.getElementById('csvFileInput').click()" style="padding:1.25rem;">
+                    <i class="fa-solid fa-file-csv" style="font-size:2rem; color:var(--gold-primary); margin-bottom:0.4rem;"></i>
+                    <p id="csvFileDropLabel" style="font-size:0.86rem;">Haz clic aquí para cargar tu archivo <strong>.csv</strong></p>
+                    <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none;" onchange="handleCsvFileSelected(this)">
+                </div>
+            </div>
+
+            <div id="csvPreviewContainer" style="display:none; margin-bottom:1.1rem;">
+                <strong style="color:var(--status-approved); font-size:0.84rem; display:block; margin-bottom:0.45rem;" id="csvPreviewSummary"></strong>
+                <div class="table-responsive" style="max-height:200px; overflow-y:auto;">
+                    <table class="hub-table" id="csvPreviewTable"></table>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('adminCsvImportModal')">Cancelar</button>
+                <button type="button" id="csvConfirmImportBtn" class="btn btn-primary" onclick="executeCsvDatabaseImport()" disabled>
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Importar Registros a Supabase
+                </button>
+            </div>
         </div>
     </div>
 

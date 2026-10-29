@@ -1954,3 +1954,329 @@ textarea.form-control {
     cursor: pointer;
 }
 
+/* ==========================================================================
+   SELECCIÓN MÚLTIPLE, BARRA DE LOTE, ELIMINACIÓN DEFINITIVA Y REPORTE PDF
+   ========================================================================== */
+.table-select-checkbox {
+    accent-color: var(--gold-primary);
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+}
+
+.row-selected {
+    background: rgba(255, 208, 0, 0.08) !important;
+}
+
+.bulk-action-bar {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    padding: 0.85rem 1.15rem;
+    margin-bottom: 1.1rem;
+    background: linear-gradient(90deg, rgba(255, 208, 0, 0.14), rgba(35, 17, 7, 0.85));
+    border: 1.5px solid var(--gold-primary);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 22px rgba(255, 208, 0, 0.18);
+    animation: sectionEnter 0.2s ease;
+}
+
+.bulk-action-bar.visible {
+    display: flex;
+}
+
+.bulk-selection-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.bulk-count-pill {
+    background: var(--gold-primary);
+    color: var(--espresso-dark);
+    font-family: var(--font-heading);
+    font-weight: 900;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 50px;
+}
+
+.btn-action-hard-delete {
+    background: rgba(220, 38, 38, 0.22);
+    border-color: #ef4444;
+    color: #fecaca;
+}
+
+.btn-action-hard-delete:hover {
+    background: #dc2626;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(220, 38, 38, 0.55);
+}
+
+.module-utilities-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: var(--bg-surface);
+    border: 1px dashed var(--gold-border);
+    border-radius: var(--radius-sm);
+}
+
+.csv-structure-box {
+    background: var(--bg-surface);
+    border: 1px solid var(--gold-border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.csv-columns-code {
+    display: block;
+    background: #090706;
+    border: 1px solid var(--gold-border);
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: var(--gold-primary);
+    overflow-x: auto;
+    margin-top: 0.45rem;
+    white-space: nowrap;
+}
+
+.multi-row-entry-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--gold-border);
+    border-radius: var(--radius-sm);
+    padding: 0.9rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+}
+
+.sidebar-role-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.28rem 0.7rem;
+    margin: 0 0.85rem 0.65rem;
+    border-radius: 50px;
+    background: rgba(255, 208, 0, 0.12);
+    border: 1px solid var(--gold-border);
+    color: var(--gold-primary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+/* ==========================================================================
+   TOPBAR ADAPTATIVA POR ROL Y RESPONSIVE MULTI-PANTALLA (DESDE 320px HASTA 4K)
+   ========================================================================== */
+.topbar-role-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.35rem;
+    background: rgba(255, 208, 0, 0.05);
+    border: 1px solid var(--gold-border);
+    border-radius: 50px;
+}
+
+.topbar-nav-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.38rem 0.75rem;
+    border-radius: 50px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.topbar-nav-pill i {
+    color: var(--gold-primary);
+    font-size: 0.82rem;
+}
+
+.topbar-nav-pill:hover {
+    background: rgba(255, 208, 0, 0.12);
+    color: var(--text-primary);
+    border-color: rgba(255, 208, 0, 0.25);
+}
+
+.topbar-nav-pill.active {
+    background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-secondary) 100%);
+    color: var(--espresso-dark);
+    font-weight: 800;
+    box-shadow: 0 3px 10px rgba(255, 208, 0, 0.25);
+}
+
+.topbar-nav-pill.active i {
+    color: var(--espresso-dark);
+}
+
+/* Badges de Despliegue Cloud / Local / Base de Datos en Proyectos */
+.deploy-badge-online {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.58rem;
+    border-radius: 6px;
+    font-size: 0.71rem;
+    font-weight: 800;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    color: var(--status-approved);
+}
+
+.deploy-badge-local {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.58rem;
+    border-radius: 6px;
+    font-size: 0.71rem;
+    font-weight: 800;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    color: #93c5fd;
+}
+
+.code-snippet-box {
+    background: #080604;
+    border: 1px solid var(--gold-border);
+    border-left: 4px solid var(--gold-primary);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #fde68a;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.45;
+}
+
+/* Escalado Ultra-Wide y 4K (2560px - 3840px+) */
+@media (min-width: 1800px) {
+    :root {
+        --sidebar-width: 290px;
+        --topbar-height: 78px;
+    }
+    html {
+        font-size: 17px;
+    }
+    .app-main {
+        max-width: 2200px;
+        margin-right: auto;
+    }
+    .projects-grid {
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    }
+}
+
+@media (min-width: 2400px) {
+    html {
+        font-size: 18.5px;
+    }
+    .app-main {
+        max-width: 2800px;
+    }
+}
+
+/* Optimización de Topbar para Notebooks medianas (1024px - 1380px) */
+@media (max-width: 1380px) {
+    .app-topbar {
+        padding: 0 1rem;
+        gap: 0.55rem;
+    }
+    .topbar-center {
+        max-width: 240px;
+        margin: 0 0.35rem;
+    }
+    .security-badge span,
+    .btn-install-app span {
+        display: none;
+    }
+    .security-badge,
+    .btn-install-app {
+        padding: 0.48rem 0.65rem;
+    }
+    .topbar-nav-pill {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.74rem;
+    }
+}
+
+@media (max-width: 1120px) {
+    .topbar-role-nav {
+        display: none !important;
+    }
+    .topbar-center {
+        max-width: 280px;
+    }
+}
+
+/* Optimización para Celulares Pequeños y Medianos (320px - 600px) */
+@media (max-width: 600px) {
+    .app-topbar {
+        height: 62px;
+        padding: 0 0.65rem;
+        gap: 0.4rem;
+    }
+    .sidebar-toggle-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+    .brand-logo {
+        width: 36px;
+        height: 36px;
+    }
+    .brand-title {
+        font-size: 0.96rem;
+    }
+    .user-badge strong {
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        vertical-align: bottom;
+    }
+    #roleSwitcherSelect {
+        max-width: 105px;
+        padding: 0.25rem 0.4rem !important;
+        font-size: 0.68rem !important;
+    }
+    .admin-tab-btn {
+        min-width: 100%;
+        justify-content: flex-start;
+    }
+    .bulk-action-bar {
+        padding: 0.75rem;
+    }
+    .modal-box {
+        padding: 1.15rem;
+        width: 96%;
+        max-height: 92vh;
+    }
+}
+
+
+
