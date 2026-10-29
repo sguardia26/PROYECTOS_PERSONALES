@@ -72,9 +72,9 @@
                 <i class="fa-solid fa-shield-halved"></i> <span>Seguridad</span>
             </button>
 
-            <!-- Botón Descargar / Instalar App (PWA) -->
-            <button class="btn-install-app" id="installAppBtn" onclick="triggerAppInstall()" title="Descargar e Instalar en tu Dispositivo">
-                <i class="fa-solid fa-download"></i> <span>Instalar App</span>
+            <!-- Botón Descargar .APK Móvil (Preferencial Android + Modo Vitrina App) -->
+            <button class="btn-install-app" id="installAppBtn" onclick="openApkDownloadModal()" title="Descargar Aplicativo .APK para Android y Vista Móvil">
+                <i class="fa-brands fa-android"></i> <span>Descargar .APK</span>
             </button>
 
             <!-- Cambio de Tema Oscuro / Claro -->
@@ -178,6 +178,10 @@
                         <i class="fa-solid fa-diagram-project"></i>
                         <span class="sidebar-label">Proyectos</span>
                     </button>
+                    <button class="sidebar-link" onclick="navigateToSection('evaluacion'); switchDocenteTab('calificaciones');">
+                        <i class="fa-solid fa-star-half-stroke"></i>
+                        <span class="sidebar-label">Calificar Proyectos y Alumnos</span>
+                    </button>
                     <button class="sidebar-link" onclick="navigateToSection('evaluacion'); switchDocenteTab('asignaturas');">
                         <i class="fa-solid fa-book-bookmark"></i>
                         <span class="sidebar-label">Asignaturas Asignadas</span>
@@ -207,6 +211,10 @@
                     <button class="sidebar-link" onclick="navigateToSection('administracion'); switchAdminTab('asignaturas');">
                         <i class="fa-solid fa-book-bookmark"></i>
                         <span class="sidebar-label">Gestión de Asignaturas</span>
+                    </button>
+                    <button class="sidebar-link" onclick="navigateToSection('administracion'); switchAdminTab('seguridad');">
+                        <i class="fa-solid fa-shield-virus"></i>
+                        <span class="sidebar-label">Módulo de Seguridad</span>
                     </button>
                 </div>
 
@@ -251,9 +259,9 @@
                         <span class="sidebar-label">Ciberseguridad C.E.N.</span>
                     </button>
 
-                    <button class="sidebar-link" onclick="triggerAppInstall()">
-                        <i class="fa-solid fa-download"></i>
-                        <span class="sidebar-label">Descargar en Dispositivo</span>
+                    <button class="sidebar-link" onclick="openApkDownloadModal()">
+                        <i class="fa-brands fa-android"></i>
+                        <span class="sidebar-label">Descargar App .APK (Móvil)</span>
                     </button>
                 </div>
             </div>
@@ -306,6 +314,10 @@
                         <div class="story-ring"><div class="story-inner"><i class="fa-solid fa-lock"></i></div></div>
                         <span>Ciberseguridad</span>
                     </button>
+                    <button class="story-item" onclick="openApkDownloadModal()">
+                        <div class="story-ring"><div class="story-inner"><i class="fa-brands fa-android"></i></div></div>
+                        <span>App .APK</span>
+                    </button>
                 </div>
 
                 <!-- Portada Institucional C.E.N. -->
@@ -319,13 +331,16 @@
                             Plataforma Interactiva <span class="highlight">PROJECTHUB</span>
                         </h1>
                         <p class="home-hero-desc">
-                            Bienvenidos al espacio oficial de proyectos de desarrollo de los alumnos de <strong>5° Año</strong> del <strong>Centro Educativo Nonogasta (La Rioja)</strong>. Selecciona cualquiera de los accesos personalizados o navega desde el <strong>Sidebar lateral</strong> para ingresar a cada módulo.
+                            Bienvenidos al espacio oficial de proyectos de desarrollo de los alumnos de <strong>5° Año</strong> del <strong>Centro Educativo Nonogasta (La Rioja)</strong>. Explora la finalidad institucional y la <strong>Vitrina Pública de Proyectos</strong>, descarga nuestra <strong>App Móvil (.APK Android)</strong> o inicia sesión según tu rol.
                         </p>
                         <div style="display: flex; flex-wrap: wrap; gap: 0.9rem;">
                             <button class="btn btn-primary" onclick="navigateToSection('vitrina')">
                                 <i class="fa-solid fa-compass"></i> Ir a la Vitrina de Proyectos
                             </button>
-                            <button class="btn btn-outline" onclick="openLoginModal()">
+                            <button class="btn btn-outline" onclick="openApkDownloadModal()" style="border-color: #10b981; color: #10b981;">
+                                <i class="fa-brands fa-android"></i> Descargar App Móvil (.APK Android)
+                            </button>
+                            <button class="btn btn-outline" id="heroLoginActionBtn" onclick="openLoginModal()">
                                 <i class="fa-solid fa-right-to-bracket"></i> Ingresar a la Plataforma (Login)
                             </button>
                         </div>
@@ -387,11 +402,11 @@
                 </div>
 
                 <!-- BOTONES PERSONALIZADOS PARA ACCEDER A LAS DEMÁS FUNCIONALIDADES -->
-                <div class="section-heading-bar">
+                <div class="section-heading-bar" id="homeQuickAccessHeader">
                     <h2><i class="fa-solid fa-grip"></i> Accesos Directos a las Funcionalidades</h2>
                 </div>
 
-                <div class="quick-access-grid">
+                <div class="quick-access-grid" id="homeQuickAccessGrid">
                     <!-- Acceso 1: Vitrina de Proyectos -->
                     <div class="access-action-card" onclick="navigateToSection('vitrina')">
                         <div class="access-card-header">
@@ -404,51 +419,63 @@
                         </div>
                     </div>
 
-                    <!-- Acceso 2: Login Único (Docente y Alumno) -->
-                    <div class="access-action-card" onclick="openLoginModal()">
+                    <!-- Acceso 2: Descargar Aplicación Móvil .APK (Preferencial Android) -->
+                    <div class="access-action-card" onclick="openApkDownloadModal()">
+                        <div class="access-card-header">
+                            <div class="access-icon-box" style="color:#10b981; border-color:rgba(16,185,129,0.4);"><i class="fa-brands fa-android"></i></div>
+                            <div class="access-arrow"><i class="fa-solid fa-download"></i></div>
+                        </div>
+                        <div>
+                            <h4>Descargar App Móvil (.APK Android)</h4>
+                            <p>Descarga el instalador <strong>.APK</strong> oficial para celulares <strong>Android</strong> (abierto a iOS/HarmonyOS) con la información de la plataforma y vitrina de proyectos.</p>
+                        </div>
+                    </div>
+
+                    <!-- Acceso 3: Login Único (Docente y Alumno) -->
+                    <div class="access-action-card" data-role-card="AUTH" onclick="openLoginModal()">
                         <div class="access-card-header">
                             <div class="access-icon-box"><i class="fa-solid fa-user-lock"></i></div>
                             <div class="access-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                         </div>
                         <div>
                             <h4>Iniciar Sesión (Acceso Único)</h4>
-                            <p>Portal único de autenticación para <strong>Docentes y Alumnos</strong>. El sistema identifica automáticamente tus permisos según tus credenciales.</p>
+                            <p>Portal único de autenticación para <strong>Docentes, Alumnos y Administradores</strong>. Las calificaciones son privadas para cada alumno.</p>
                         </div>
                     </div>
 
-                    <!-- Acceso 3: Adjuntar Proyecto -->
-                    <div class="access-action-card" onclick="handleProtectedNavigation('cargar')">
+                    <!-- Acceso 4: Adjuntar Proyecto -->
+                    <div class="access-action-card" data-role-card="PROTECTED" onclick="handleProtectedNavigation('cargar')">
                         <div class="access-card-header">
                             <div class="access-icon-box"><i class="fa-solid fa-cloud-arrow-up"></i></div>
                             <div class="access-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                         </div>
                         <div>
-                            <h4>Adjuntar Nuevo Proyecto</h4>
-                            <p>Sección exclusiva para que los equipos de 5° Año suban la ficha técnica, articulación de gestión y archivos del proyecto.</p>
+                            <h4>Panel del Alumno y Proyectos</h4>
+                            <p>Sección exclusiva para que los estudiantes de 5° Año suban su proyecto (GitHub, Supabase, Vercel o Local) y vean sus calificaciones privadas.</p>
                         </div>
                     </div>
 
-                    <!-- Acceso 4: Panel de Evaluación -->
-                    <div class="access-action-card" onclick="handleProtectedNavigation('evaluacion')">
+                    <!-- Acceso 5: Panel de Evaluación -->
+                    <div class="access-action-card" data-role-card="PROTECTED" onclick="handleProtectedNavigation('evaluacion')">
                         <div class="access-card-header">
                             <div class="access-icon-box"><i class="fa-solid fa-chalkboard-user"></i></div>
                             <div class="access-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                         </div>
                         <div>
-                            <h4>Panel de Evaluación y Seguimiento</h4>
-                            <p>Módulo para supervisar las entregas, asignar calificaciones integradas y redactar devoluciones pedagógicas.</p>
+                            <h4>Panel Docente y Clasificación</h4>
+                            <p>Módulo exclusivo del Docente para clasificar y calificar proyectos en general e individualmente por alumno con notas sumativas.</p>
                         </div>
                     </div>
 
-                    <!-- Acceso 5: Supervisión Integral Administrador -->
-                    <div class="access-action-card" onclick="handleProtectedNavigation('administracion')">
+                    <!-- Acceso 6: Supervisión Integral Administrador + Ciberseguridad -->
+                    <div class="access-action-card" data-role-card="PROTECTED" onclick="handleProtectedNavigation('administracion')">
                         <div class="access-card-header">
                             <div class="access-icon-box"><i class="fa-solid fa-user-shield"></i></div>
                             <div class="access-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                         </div>
                         <div>
-                            <h4>Supervisión General (Rol Administrador)</h4>
-                            <p>Control relacional de <strong>Usuarios, Docentes, Alumnos, Proyectos y Asignaturas</strong> con alta, edición, ficha detallada y baja lógica booleana.</p>
+                            <h4>Supervisión Admin y Ciberseguridad</h4>
+                            <p>Control relacional de <strong>Usuarios, Docentes, Alumnos, Proyectos, Asignaturas</strong> y el nuevo <strong>Módulo de Seguridad (SOC)</strong>.</p>
                         </div>
                     </div>
                 </div>
@@ -787,16 +814,17 @@
             </section>
 
             <!-- ==============================================================
-                 SECCIÓN 4: PANEL INTEGRAL DEL DOCENTE (3 MÓDULOS RELACIONALES)
+                 SECCIÓN 4: PANEL INTEGRAL DEL DOCENTE (4 MÓDULOS RELACIONALES)
                  1) ESTUDIANTES (Agregar, Modificar, Ver Detalle, Desactivar/Eliminar, Lote, CSV, PDF)
                  2) PROYECTOS (Agregar, Modificar, Evaluar, Ver Detalle, Desactivar/Eliminar, Lote, CSV, PDF)
-                 3) ASIGNATURAS (Consulta exclusiva de las asignaturas donde fue asignado por el Administrador + Ver Detalle y PDF)
+                 3) CALIFICAR PROYECTOS Y ALUMNOS (Exclusivo Docente: Calificación General del Proyecto + Individual por Alumno con Notas Sumativas y Devolución)
+                 4) ASIGNATURAS (Consulta exclusiva de las asignaturas donde fue asignado por el Administrador + Ver Detalle y PDF)
                  ============================================================== -->
             <section id="section-evaluacion" class="app-section">
                 <div class="section-header">
                     <div class="section-title-group">
-                        <h2><i class="fa-solid fa-chalkboard-user"></i> Panel de Gestión y Supervisión Docente</h2>
-                        <p id="docenteHeaderSubtitle">Espacio exclusivo del <strong>Rol DOCENTE</strong> • Gestión de tus <strong>Estudiantes</strong>, tus <strong>Proyectos</strong> y consulta de tus <strong>Asignaturas Asignadas</strong>.</p>
+                        <h2><i class="fa-solid fa-chalkboard-user"></i> Panel de Gestión y Clasificación Docente</h2>
+                        <p id="docenteHeaderSubtitle">Espacio exclusivo del <strong>Rol DOCENTE</strong> • Gestión de tus <strong>Estudiantes</strong>, tus <strong>Proyectos</strong>, módulo exclusivo para <strong>Clasificar / Calificar Proyectos e Individualmente por Alumno</strong> y consulta de tus <strong>Asignaturas Asignadas</strong>.</p>
                     </div>
                     <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
                         <button class="btn btn-outline" onclick="exportDocenteReportPDF('INTEGRAL_DOCENTE')">
@@ -824,6 +852,13 @@
                             <p>Mis Proyectos Supervisados</p>
                         </div>
                     </div>
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchDocenteTab('calificaciones')">
+                        <div class="stat-icon"><i class="fa-solid fa-star-half-stroke"></i></div>
+                        <div class="stat-info">
+                            <h3 id="docenteKpiCalificaciones">0</h3>
+                            <p>Clasificación y Notas Sumativas</p>
+                        </div>
+                    </div>
                     <div class="stat-card" style="cursor:pointer;" onclick="switchDocenteTab('asignaturas')">
                         <div class="stat-icon"><i class="fa-solid fa-book-bookmark"></i></div>
                         <div class="stat-info">
@@ -833,16 +868,19 @@
                     </div>
                 </div>
 
-                <!-- Barra de los 3 Módulos del Docente -->
+                <!-- Barra de los 4 Módulos del Docente -->
                 <div class="admin-tabs-bar">
                     <button class="admin-tab-btn active" data-docentetab="estudiantes" onclick="switchDocenteTab('estudiantes')">
-                        <i class="fa-solid fa-user-graduate"></i> Módulo Estudiantes
+                        <i class="fa-solid fa-user-graduate"></i> 1. Módulo Estudiantes
                     </button>
                     <button class="admin-tab-btn" data-docentetab="proyectos" onclick="switchDocenteTab('proyectos')">
-                        <i class="fa-solid fa-diagram-project"></i> Módulo Proyectos
+                        <i class="fa-solid fa-diagram-project"></i> 2. Módulo Proyectos
+                    </button>
+                    <button class="admin-tab-btn" data-docentetab="calificaciones" onclick="switchDocenteTab('calificaciones')">
+                        <i class="fa-solid fa-star-half-stroke"></i> 3. Módulo Clasificar / Calificar (Proyecto e Individual)
                     </button>
                     <button class="admin-tab-btn" data-docentetab="asignaturas" onclick="switchDocenteTab('asignaturas')">
-                        <i class="fa-solid fa-book-bookmark"></i> Módulo Asignaturas (Asignadas por Admin)
+                        <i class="fa-solid fa-book-bookmark"></i> 4. Módulo Asignaturas (Asignadas por Admin)
                     </button>
                 </div>
 
@@ -995,7 +1033,60 @@
                 </div>
 
                 <!-- ==========================================================
-                     MÓDULO DOCENTE 3: ASIGNATURAS (SOLO LECTURA DE LAS ASIGNADAS POR EL ADMIN)
+                     MÓDULO DOCENTE 3: CLASIFICAR Y CALIFICAR PROYECTOS E INDIVIDUALMENTE POR ALUMNO
+                     (EXCLUSIVO DEL ROL DOCENTE)
+                     ========================================================== -->
+                <div id="docente-subview-calificaciones" class="admin-subview">
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-star-half-stroke"></i> Módulo Exclusivo de Clasificación y Calificación Docente (Proyecto General + Individual por Alumno)
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">El <strong>DOCENTE</strong> es el único rol autorizado en ProjectHub para asignar dictámenes, notas sumativas (1 a 10) y devoluciones pedagógicas tanto al <strong>proyecto en general</strong> como de forma <strong>individual a cada alumno integrante</strong>.</p>
+                            </div>
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="docenteSearchCalificaciones" class="form-control" style="max-width:240px; padding:0.5rem 0.85rem;" placeholder="Buscar proyecto o alumno a calificar..." oninput="renderDocenteCalificacionesTable()">
+                                <select id="docenteFilterDictamenCalificaciones" class="select-filter" onchange="renderDocenteCalificacionesTable()">
+                                    <option value="TODOS">Todos los Dictámenes</option>
+                                    <option value="Aprobado">✔ Aprobados</option>
+                                    <option value="En Revisión">⏳ En Revisión</option>
+                                    <option value="En Desarrollo">⚙️ En Desarrollo</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <span class="badge-category" style="padding:0.45rem 0.85rem; background:rgba(255,208,0,0.14); border-color:var(--gold-primary);">
+                                    <i class="fa-solid fa-user-check"></i> Potestad Exclusiva Docente: Haz clic en <strong>"Clasificar / Calificar"</strong> para evaluar al equipo y a cada estudiante individualmente.
+                                </span>
+                            </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportDocenteReportPDF('CALIFICACIONES_DOCENTE')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar Acta de Calificaciones y Devoluciones (.PDF)
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th>Código / Proyecto Integrador</th>
+                                        <th>Asignaturas Articuladas</th>
+                                        <th>Clasificación General del Proyecto</th>
+                                        <th>Devolución General al Equipo</th>
+                                        <th>Calificaciones y Devoluciones Individuales por Alumno</th>
+                                        <th>Acción Exclusiva Docente</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="docenteCalificacionesTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     MÓDULO DOCENTE 4: ASIGNATURAS (SOLO LECTURA DE LAS ASIGNADAS POR EL ADMIN)
                      ========================================================== -->
                 <div id="docente-subview-asignaturas" class="admin-subview">
                     <div class="panel-card">
@@ -1039,16 +1130,16 @@
             <!-- ==============================================================
                  SECCIÓN 5: PANEL DE ADMINISTRACIÓN GENERAL (ROL ADMINISTRADOR)
                  1) Gestión de Usuarios | 2) Gestión de Docentes | 3) Gestión de Alumnos
-                 4) Gestión de Proyectos | 5) Gestión de Asignaturas
+                 4) Gestión de Proyectos (Sin Calificación, exclusiva Docente) | 5) Gestión de Asignaturas | 6) Módulo de Seguridad (Ciberseguridad SOC)
                  ============================================================== -->
             <section id="section-administracion" class="app-section">
                 <div class="section-header">
                     <div class="section-title-group">
-                        <h2><i class="fa-solid fa-user-shield"></i> Panel de Administración General</h2>
-                        <p>Control relacional en tiempo real conectado con <strong>Supabase PostgreSQL</strong> • Selección múltiple, alta individual o masiva, importación <code>.CSV</code> y reporte oficial <code>.PDF</code>.</p>
+                        <h2><i class="fa-solid fa-user-shield"></i> Panel de Administración General y Ciberseguridad</h2>
+                        <p>Control relacional en tiempo real conectado con <strong>Supabase PostgreSQL</strong> • Supervisión integral de los 6 módulos (incluyendo <strong>Módulo de Seguridad / SOC</strong>), selección múltiple, alta individual/masiva, importación <code>.CSV</code> y reporte oficial <code>.PDF</code>.</p>
                     </div>
                     <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
-                        <button class="btn btn-outline" onclick="exportAdminReportPDF(' INTEGRAL')">
+                        <button class="btn btn-outline" onclick="exportAdminReportPDF('INTEGRAL')">
                             <i class="fa-solid fa-file-pdf"></i> Exportar Informe General (.PDF)
                         </button>
                         <button class="btn btn-primary" onclick="refreshSystemDataFromSupabase(true)">
@@ -1080,6 +1171,13 @@
                             <p>Gestión de Alumnos</p>
                         </div>
                     </div>
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchAdminTab('proyectos')">
+                        <div class="stat-icon"><i class="fa-solid fa-diagram-project"></i></div>
+                        <div class="stat-info">
+                            <h3 id="adminKpiProyectos">0</h3>
+                            <p>Gestión de Proyectos</p>
+                        </div>
+                    </div>
                     <div class="stat-card" style="cursor:pointer;" onclick="switchAdminTab('asignaturas')">
                         <div class="stat-icon"><i class="fa-solid fa-book-open-reader"></i></div>
                         <div class="stat-info">
@@ -1087,24 +1185,34 @@
                             <p>Gestión de Asignaturas</p>
                         </div>
                     </div>
+                    <div class="stat-card" style="cursor:pointer;" onclick="switchAdminTab('seguridad')">
+                        <div class="stat-icon" style="color:#10b981;"><i class="fa-solid fa-shield-virus"></i></div>
+                        <div class="stat-info">
+                            <h3 id="adminKpiSeguridad">0</h3>
+                            <p>Módulo de Seguridad (SOC)</p>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Barra de 5 Módulos Normalizados del Administrador -->
+                <!-- Barra de 6 Módulos Normalizados del Administrador -->
                 <div class="admin-tabs-bar">
                     <button class="admin-tab-btn active" data-admintab="usuarios" onclick="switchAdminTab('usuarios')">
-                        <i class="fa-solid fa-users-gear"></i> Gestión de Usuarios
+                        <i class="fa-solid fa-users-gear"></i> 1. Gestión de Usuarios
                     </button>
                     <button class="admin-tab-btn" data-admintab="docentes" onclick="switchAdminTab('docentes')">
-                        <i class="fa-solid fa-chalkboard-user"></i> Gestión de Docentes
+                        <i class="fa-solid fa-chalkboard-user"></i> 2. Gestión de Docentes
                     </button>
                     <button class="admin-tab-btn" data-admintab="alumnos" onclick="switchAdminTab('alumnos')">
-                        <i class="fa-solid fa-user-graduate"></i> Gestión de Alumnos
+                        <i class="fa-solid fa-user-graduate"></i> 3. Gestión de Alumnos
                     </button>
                     <button class="admin-tab-btn" data-admintab="proyectos" onclick="switchAdminTab('proyectos')">
-                        <i class="fa-solid fa-diagram-project"></i> Gestión de Proyectos
+                        <i class="fa-solid fa-diagram-project"></i> 4. Gestión de Proyectos
                     </button>
                     <button class="admin-tab-btn" data-admintab="asignaturas" onclick="switchAdminTab('asignaturas')">
-                        <i class="fa-solid fa-book-bookmark"></i> Gestión de Asignaturas
+                        <i class="fa-solid fa-book-bookmark"></i> 5. Gestión de Asignaturas
+                    </button>
+                    <button class="admin-tab-btn" data-admintab="seguridad" onclick="switchAdminTab('seguridad')">
+                        <i class="fa-solid fa-shield-virus"></i> 6. Módulo de Seguridad (Ciberseguridad)
                     </button>
                 </div>
 
@@ -1417,6 +1525,150 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- ==========================================================
+                     MÓDULO 6: MÓDULO DE SEGURIDAD Y CIBERSEGURIDAD (SOC ADMINISTRADOR)
+                     (Accesos, Acciones, Vulnerabilidades, Avisos y Bloqueos contra Hacks, Virus, SQLi/XSS)
+                     ========================================================== -->
+                <div id="admin-subview-seguridad" class="admin-subview">
+                    <!-- Panel de Estado Activo del Escudo de Ciberseguridad -->
+                    <div class="panel-card" style="margin-bottom: 1.25rem; border-color: rgba(16, 185, 129, 0.45); background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(14, 14, 18, 0.96));">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                            <div style="display:flex; align-items:center; gap:0.95rem;">
+                                <div style="width:52px; height:52px; border-radius:14px; background:rgba(16,185,129,0.18); border:1.5px solid #10b981; display:flex; align-items:center; justify-content:center; font-size:1.55rem; color:#10b981;">
+                                    <i class="fa-solid fa-shield-virus"></i>
+                                </div>
+                                <div>
+                                    <span class="badge-category" style="background:rgba(16,185,129,0.18); color:#10b981; border-color:#10b981;">C.E.N. CYBERSECURITY SOC • MONITOR EN TIEMPO REAL</span>
+                                    <h3 style="color:var(--text-primary); font-family:var(--font-heading); font-size:1.08rem; margin-top:0.2rem;">
+                                        Centro de Operaciones de Ciberseguridad, Detección de Vulnerabilidades y Bloqueo Anti-Hacks / Virus
+                                    </h3>
+                                    <p style="font-size:0.81rem; color:var(--text-secondary);">Supervisa accesos autenticados, auditoría de acciones, escaneo de vulnerabilidades, cortafuegos WAF (Anti-XSS / Anti-SQLi), filtro antivirus de archivos y bloqueos preventivos.</p>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                                <button type="button" class="btn btn-primary" style="background:#10b981; color:#09090b; border-color:#10b981;" onclick="runAdminCybersecurityScan()">
+                                    <i class="fa-solid fa-radar"></i> Ejecutar Escaneo de Vulnerabilidades y Virus
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="openAdminSecurityModal(null)">
+                                    <i class="fa-solid fa-ban"></i> Emitir Aviso / Bloqueo Anti-Hack
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Indicadores Rápidos de Seguridad -->
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap:0.8rem; margin-top:1.1rem;">
+                            <div style="background:rgba(0,0,0,0.35); border:1px solid var(--gold-border); border-radius:var(--radius-sm); padding:0.75rem;">
+                                <div style="font-size:0.73rem; color:var(--text-secondary);"><i class="fa-solid fa-code" style="color:#10b981;"></i> Escudo WAF Anti-XSS / SQLi</div>
+                                <strong style="color:#10b981; font-size:0.95rem;" id="secShieldStatusWaf">ACTIVO • 0 Brechas</strong>
+                            </div>
+                            <div style="background:rgba(0,0,0,0.35); border:1px solid var(--gold-border); border-radius:var(--radius-sm); padding:0.75rem;">
+                                <div style="font-size:0.73rem; color:var(--text-secondary);"><i class="fa-solid fa-bug-slash" style="color:var(--gold-primary);"></i> Antivirus / Filtro Ejecutables</div>
+                                <strong style="color:var(--gold-primary); font-size:0.95rem;" id="secShieldStatusVirus">PROTEGIDO (.exe/.bat/.php)</strong>
+                            </div>
+                            <div style="background:rgba(0,0,0,0.35); border:1px solid var(--gold-border); border-radius:var(--radius-sm); padding:0.75rem;">
+                                <div style="font-size:0.73rem; color:var(--text-secondary);"><i class="fa-solid fa-user-lock" style="color:#38bdf8;"></i> Privacidad de Notas (RLS)</div>
+                                <strong style="color:#38bdf8; font-size:0.95rem;" id="secShieldStatusPrivacy">OCULTAS AL PÚBLICO (100%)</strong>
+                            </div>
+                            <div style="background:rgba(0,0,0,0.35); border:1px solid var(--gold-border); border-radius:var(--radius-sm); padding:0.75rem;">
+                                <div style="font-size:0.73rem; color:var(--text-secondary);"><i class="fa-solid fa-ban" style="color:#f59e0b;"></i> Amenazas / Hacks Bloqueados</div>
+                                <strong style="color:#f59e0b; font-size:0.95rem;" id="secShieldBlockedCount">0 Bloqueos Activos</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla Principal de Eventos de Ciberseguridad, Vulnerabilidades, Avisos y Bloqueos -->
+                    <div class="panel-card" style="margin-bottom: 1.25rem;">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.05rem;">
+                                    <i class="fa-solid fa-shield-halved"></i> 6.1 Registro de Eventos de Ciberseguridad, Vulnerabilidades, Avisos y Bloqueos (<code>public.seguridad_eventos_sistema</code>)
+                                </h3>
+                                <p style="font-size:0.82rem; color:var(--text-secondary);">Selecciona uno o más eventos para inspeccionar, modificar estado de bloqueo/mitigación, desactivar, eliminar definitivamente, importar <code>.CSV</code> o exportar auditoría <code>.PDF</code>.</p>
+                            </div>
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="adminSearchSeguridad" class="form-control" style="max-width:230px; padding:0.5rem 0.85rem;" placeholder="Buscar amenaza, IP, código o módulo..." oninput="renderAdminSeguridadTable()">
+                                <select id="adminFilterSeveridadSeguridad" class="select-filter" onchange="renderAdminSeguridadTable()">
+                                    <option value="TODOS">Todas las Severidades</option>
+                                    <option value="CRITICA">🚨 Crítica</option>
+                                    <option value="ALTA">🔥 Alta</option>
+                                    <option value="MEDIA">⚠️ Media</option>
+                                    <option value="BAJA">🛡️ Baja</option>
+                                    <option value="INFO">ℹ️ Informativa</option>
+                                </select>
+                                <select id="adminFilterEstadoSeguridad" class="select-filter" onchange="renderAdminSeguridadTable()">
+                                    <option value="TODOS">Todos los Estados</option>
+                                    <option value="ACTIVOS">Solo Activos</option>
+                                    <option value="INACTIVOS">Solo Inactivos (Para Eliminar Definitivo)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="module-utilities-bar">
+                            <div style="display:flex; gap:0.55rem; flex-wrap:wrap;">
+                                <button class="btn btn-primary" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openAdminSecurityModal(null)">
+                                    <i class="fa-solid fa-shield-plus"></i> Nuevo Aviso / Bloqueo de Seguridad
+                                </button>
+                                <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openBatchAddModal('SEGURIDAD')">
+                                    <i class="fa-solid fa-layer-group"></i> Carga Múltiple de Reglas / Bloqueos
+                                </button>
+                                <button class="btn btn-ghost" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="openCsvImportModal('SEGURIDAD')">
+                                    <i class="fa-solid fa-file-csv"></i> Importar .CSV / Ver Estructura
+                                </button>
+                            </div>
+                            <button class="btn btn-outline" style="padding:0.5rem 0.95rem; font-size:0.8rem;" onclick="exportAdminReportPDF('SEGURIDAD')">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar Auditoría de Ciberseguridad (.PDF)
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40px; text-align:center;">
+                                            <input type="checkbox" class="table-select-checkbox" id="selectAll_SEGURIDAD" onchange="toggleSelectAllInModule('SEGURIDAD', this.checked)" title="Seleccionar todos los eventos de seguridad">
+                                        </th>
+                                        <th>Código / Tipo de Evento</th>
+                                        <th>Severidad & Vector</th>
+                                        <th>Título y Descripción Técnica</th>
+                                        <th>Origen / IP & Módulo</th>
+                                        <th>Medida / Bloqueo Aplicado</th>
+                                        <th>Estado Registro</th>
+                                        <th>Acciones disponibles</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminSeguridadTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Bitácora en Vivo de Accesos y Autenticaciones (public.auditoria_accesos) -->
+                    <div class="panel-card">
+                        <div class="admin-toolbar">
+                            <div>
+                                <h3 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:1.02rem;">
+                                    <i class="fa-solid fa-fingerprint"></i> 6.2 Bitácora de Accesos, Sesiones y Acciones de Autenticación (<code>public.auditoria_accesos</code>)
+                                </h3>
+                                <p style="font-size:0.81rem; color:var(--text-secondary);">Monitoreo automático de todos los inicios de sesión exitosos, intentos fallidos y cambios de rol en la plataforma.</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="hub-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha y Hora</th>
+                                        <th>Identificador Ingresado</th>
+                                        <th>Evento de Acceso</th>
+                                        <th>Rol Solicitado / Activo</th>
+                                        <th>Resultado</th>
+                                        <th>Detalle de Auditoría y Agente</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminAuditoriaAccesosTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </section>
 
         </main>
@@ -1528,43 +1780,73 @@
     </div>
 
     <!-- ======================================================================
-         MODAL 3: EVALUACIÓN DOCENTE (CALIFICAR Y DAR DEVOLUCIÓN)
+         MODAL 3: EVALUACIÓN Y CLASIFICACIÓN EXCLUSIVA DOCENTE (PROYECTO GENERAL + INDIVIDUAL POR ALUMNO)
          ====================================================================== -->
     <div class="modal-overlay" id="evaluateModal">
-        <div class="modal-box">
+        <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('evaluateModal')">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            <div class="login-header" style="margin-bottom: 1rem;">
-                <h3 style="color: var(--gold-primary);"><i class="fa-solid fa-star-half-stroke"></i> Evaluar Proyecto</h3>
-                <p id="evalProjectTitleSubtitle">Proyecto de 5° Año</p>
+            <div class="login-header" style="margin-bottom: 1rem; text-align:left; border-bottom:1px solid var(--gold-border); padding-bottom:0.85rem;">
+                <span class="badge-category" style="background:rgba(255,208,0,0.14); color:var(--gold-primary);"><i class="fa-solid fa-chalkboard-user"></i> POTESTAD EXCLUSIVA DEL ROL DOCENTE</span>
+                <h3 style="color: var(--gold-primary); margin-top:0.25rem;"><i class="fa-solid fa-star-half-stroke"></i> Clasificar y Calificar Proyecto e Integrantes</h3>
+                <p id="evalProjectTitleSubtitle" style="font-size:0.86rem; color:var(--text-secondary);">Proyecto de 5° Año</p>
             </div>
 
             <form id="evaluateForm" onsubmit="saveTeacherEvaluation(event)">
                 <input type="hidden" id="evalProjectId">
 
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label>Dictamen / Estado del Proyecto <span>*</span></label>
-                    <select id="evalStatus" class="form-control" required>
-                        <option value="Aprobado">✔ Aprobado (Listo para Muestra Institucional)</option>
-                        <option value="En Revisión">⏳ En Revisión (Requiere correcciones menores)</option>
-                        <option value="En Desarrollo">⚙️ En Desarrollo (Avance parcial)</option>
-                    </select>
+                <!-- 1. Evaluación General del Proyecto -->
+                <div style="background:var(--bg-surface); border:1px solid var(--gold-border); border-radius:var(--radius-md); padding:1.05rem; margin-bottom:1.15rem;">
+                    <h4 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:0.9rem; margin-bottom:0.8rem;">
+                        <i class="fa-solid fa-diagram-project"></i> 1. Clasificación General del Proyecto Integrador (Equipo)
+                    </h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Dictamen / Estado del Proyecto <span>*</span></label>
+                            <select id="evalStatus" class="form-control" required>
+                                <option value="Aprobado">✔ Aprobado (Listo para Muestra Institucional)</option>
+                                <option value="En Revisión">⏳ En Revisión (Requiere correcciones menores)</option>
+                                <option value="En Desarrollo">⚙️ En Desarrollo (Avance parcial)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Calificación Sumativa General del Proyecto (Escala 1 a 10) <span>*</span></label>
+                            <input type="number" id="evalGrade" class="form-control" min="1" max="10" step="0.25" placeholder="Ej: 9.5" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Devolución Pedagógica General al Equipo (Prácticas Profesionalizantes y Tec. de Gestión) <span>*</span></label>
+                            <textarea id="evalFeedback" class="form-control" rows="3" maxlength="1500" placeholder="Escribe la devolución integral sobre la arquitectura de software, base de datos y gestión del proyecto..." required></textarea>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label>Calificación Integrada (Escala 1 a 10) <span>*</span></label>
-                    <input type="number" id="evalGrade" class="form-control" min="1" max="10" step="0.5" placeholder="Ej: 9.5" required>
+                <!-- 2. Evaluación Individual Personalizada por cada Alumno Integrante -->
+                <div style="background:rgba(16,185,129,0.04); border:1px solid rgba(16,185,129,0.35); border-radius:var(--radius-md); padding:1.05rem; margin-bottom:1.25rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
+                        <h4 style="color:#10b981; font-family:var(--font-heading); font-size:0.9rem; margin:0;">
+                            <i class="fa-solid fa-user-graduate"></i> 2. Clasificación y Devolución Individual por Alumno Integrante
+                        </h4>
+                        <button type="button" class="btn btn-outline" style="padding:0.3rem 0.7rem; font-size:0.75rem;" onclick="replicateGeneralGradeToAllStudents()">
+                            <i class="fa-solid fa-copy"></i> Replicar Nota General a Todos los Integrantes
+                        </button>
+                    </div>
+                    <p style="font-size:0.79rem; color:var(--text-secondary); margin-bottom:0.85rem;">
+                        Asigna la nota sumativa individual (1 a 10), el dictamen personal y la devolución pedagógica específica para cada alumno que participa en este proyecto. Esta calificación es privada y solo podrá verla cada estudiante en su módulo <strong>Mis Calificaciones</strong>.
+                    </p>
+                    <div id="evalIndividualStudentsContainer" style="display:flex; flex-direction:column; gap:0.85rem; max-height:320px; overflow-y:auto; padding-right:0.25rem;">
+                        <!-- Renderizado dinámico por cada alumno del proyecto -->
+                    </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label>Devolución Pedagógica (Prácticas Profesionalizantes y Tec. de Gestión) <span>*</span></label>
-                    <textarea id="evalFeedback" class="form-control" maxlength="1500" placeholder="Escribe las observaciones sobre el desarrollo de software y la gestión del proyecto..." required></textarea>
+                <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('evaluateModal')">Cancelar</button>
+                    <button type="submit" id="evalSubmitBtn" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Clasificación General e Individual
+                    </button>
                 </div>
-
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <i class="fa-solid fa-floppy-disk"></i> Guardar Evaluación Docente
-                </button>
             </form>
         </div>
     </div>
@@ -1973,24 +2255,15 @@
                         <textarea id="admProjSnippetCodigo" class="form-control" rows="4" style="font-family:monospace; font-size:0.8rem;" placeholder="// Pega aquí el bloque clave de tu código (conexión a Supabase, controlador backend, consulta SQL o firmware)..."></textarea>
                     </div>
 
-                    <!-- BLOQUE EXCLUSIVO DE EVALUACIÓN DOCENTE / ADMIN -->
+                    <!-- AVISO INSTITUCIONAL: LA CALIFICACIÓN Y DEVOLUCIÓN ES POTESTAD EXCLUSIVA DEL DOCENTE -->
                     <div id="admProjEvaluationFieldsGroup" class="form-group full-width" style="border-top:1px solid var(--gold-border); padding-top:0.85rem; margin-top:0.35rem;">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Estado de Evaluación (Docente / Admin)</label>
-                                <select id="admProjEstado" class="form-control">
-                                    <option value="Aprobado">✔ Aprobado</option>
-                                    <option value="En Revisión">⏳ En Revisión</option>
-                                    <option value="En Desarrollo">⚙️ En Desarrollo</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Calificación Sumativa (1 a 10)</label>
-                                <input type="number" id="admProjCalificacion" class="form-control" min="1" max="10" step="0.25" placeholder="Ej: 9.5">
-                            </div>
-                            <div class="form-group full-width">
-                                <label>Devolución Pedagógica Docente</label>
-                                <textarea id="admProjDevolucion" class="form-control" rows="2"></textarea>
+                        <div style="background:rgba(255,208,0,0.06); border:1px dashed var(--gold-border); border-radius:var(--radius-sm); padding:0.85rem 1rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem;">
+                            <div style="display:flex; align-items:center; gap:0.75rem;">
+                                <i class="fa-solid fa-user-lock" style="font-size:1.35rem; color:var(--gold-primary);"></i>
+                                <div>
+                                    <strong style="color:var(--gold-primary); font-size:0.86rem; display:block;">Clasificación, Nota Sumativa y Devolución: Exclusivo del Rol DOCENTE</strong>
+                                    <span style="font-size:0.78rem; color:var(--text-secondary);">El Administrador y el Alumno gestionan los datos técnicos y vinculaciones del proyecto, pero únicamente el <strong>DOCENTE</strong> puede calificar y emitir devoluciones desde su apartado de Clasificación.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2201,6 +2474,199 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 13: FORMULARIO DE EVENTO / AVISO / BLOQUEO DE CIBERSEGURIDAD (MÓDULO 6 ADMIN)
+         ====================================================================== -->
+    <div class="modal-overlay" id="adminSecurityFormModal">
+        <div class="modal-box modal-lg">
+            <button class="modal-close" onclick="closeModal('adminSecurityFormModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="login-header" style="text-align:left; border-bottom:1px solid var(--gold-border); padding-bottom:0.85rem; margin-bottom:1.1rem;">
+                <span class="badge-category" style="background:rgba(16,185,129,0.16); color:#10b981;">Entidad public.seguridad_eventos_sistema</span>
+                <h3 style="color:var(--gold-primary); font-size:1.25rem; margin-top:0.25rem;" id="adminSecurityFormTitle">
+                    <i class="fa-solid fa-shield-virus"></i> Registrar / Modificar Aviso o Bloqueo de Ciberseguridad
+                </h3>
+            </div>
+
+            <form id="adminSecurityForm" onsubmit="submitAdminSecurityForm(event)">
+                <input type="hidden" id="admSecId" value="">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Código de Evento / Regla <span>*</span></label>
+                        <input type="text" id="admSecCodigo" class="form-control" required placeholder="Ej: SEC-2026-006">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Evento / Amenaza <span>*</span></label>
+                        <select id="admSecTipo" class="form-control" required>
+                            <option value="BLOQUEO_WAF_HACK">🛡️ Bloqueo WAF Anti-Hack (XSS / SQLi / CSRF)</option>
+                            <option value="FILTRO_ANTIVIRUS_MALWARE">🦠 Filtro Antivirus / Bloqueo de Malware (.exe/.bat)</option>
+                            <option value="ESCANEO_VULNERABILIDAD">🔍 Escaneo de Vulnerabilidad / Auditoría RLS</option>
+                            <option value="CONTENCION_FUERZA_BRUTA">🔒 Contención de Fuerza Bruta / Bloqueo de Cuenta o IP</option>
+                            <option value="AVISO_SEGURIDAD_PLATAFORMA">📢 Aviso General de Ciberseguridad Institucional</option>
+                            <option value="AUDITORIA_ACCION_SISTEMA">📋 Auditoría de Acción Crítica en Sistema</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nivel de Severidad <span>*</span></label>
+                        <select id="admSecSeveridad" class="form-control" required>
+                            <option value="INFO">ℹ️ INFO (Informativo / Certificación)</option>
+                            <option value="BAJA">🛡️ BAJA (Preventivo)</option>
+                            <option value="MEDIA">⚠️ MEDIA (Advertencia / Monitoreo)</option>
+                            <option value="ALTA">🔥 ALTA (Intento de Intrusión Bloqueado)</option>
+                            <option value="CRITICA">🚨 CRÍTICA (Ataque Activo / Bloqueo Inmediato)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado de Mitigación / Bloqueo <span>*</span></label>
+                        <select id="admSecEstadoMitigacion" class="form-control" required>
+                            <option value="BLOQUEADO">🚫 BLOQUEADO (Amenaza neutralizada y bloqueada)</option>
+                            <option value="MITIGADO">✔ MITIGADO (Vulnerabilidad corregida)</option>
+                            <option value="EN_MONITOREO">👁️ EN MONITOREO (Vigilancia activa SOC)</option>
+                            <option value="AVISO_ACTIVO">📢 AVISO ACTIVO (Notificación de seguridad)</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Título del Evento, Vulnerabilidad o Bloqueo <span>*</span></label>
+                        <input type="text" id="admSecTitulo" class="form-control" required placeholder="Ej: Bloqueo de payload malicioso XSS o ejecutable sospechoso...">
+                    </div>
+                    <div class="form-group">
+                        <label>Módulo u Objetivo Afectado</label>
+                        <input type="text" id="admSecModulo" class="form-control" value="Plataforma Global ProjectHub" placeholder="Ej: Login Unificado / Subida de Archivos / API">
+                    </div>
+                    <div class="form-group">
+                        <label>Vector de Ataque / Firma Detectada</label>
+                        <input type="text" id="admSecVector" class="form-control" value="Inyección / Script / Fuerza Bruta" placeholder="Ej: Cross-Site Scripting (XSS) / Malware .EXE">
+                    </div>
+                    <div class="form-group">
+                        <label>IP / Origen Detectado</label>
+                        <input type="text" id="admSecIp" class="form-control" value="190.112.45.18" placeholder="Ej: 190.112.45.18 o Firewall Local">
+                    </div>
+                    <div class="form-group">
+                        <label>¿Aplicar Bloqueo Activo de IP / Origen?</label>
+                        <select id="admSecBloqueoActivo" class="form-control">
+                            <option value="true">🚫 SÍ - Mantener Bloqueo Activo (Anti-Hack / Anti-Virus)</option>
+                            <option value="false">ℹ️ NO - Solo Registro de Auditoría / Aviso</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Descripción Técnica del Evento o Vulnerabilidad <span>*</span></label>
+                        <textarea id="admSecDescripcion" class="form-control" rows="2" required placeholder="Detalla qué ocurrió, qué firma se detectó y cómo actuó el escudo de ciberseguridad..."></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Medida o Regla Aplicada por el Escudo / Administrador <span>*</span></label>
+                        <textarea id="admSecAccionTomada" class="form-control" rows="2" required placeholder="Ej: Sanitización DOM inmediata, rechazo de archivo ejecutable y bloqueo preventivo de IP..."></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Estado Booleano del Registro (<code>activo</code>)</label>
+                        <select id="admSecActivo" class="form-control">
+                            <option value="true">✔ ACTIVO (true - Vigente en SOC)</option>
+                            <option value="false">✖ INACTIVO / BAJA LÓGICA (false)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top:1.35rem; display:flex; justify-content:flex-end; gap:0.75rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('adminSecurityFormModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-shield-halved"></i> Guardar en Módulo de Seguridad
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 14: DESCARGA DE APLICACIÓN MÓVIL .APK (PREFERENCIAL ANDROID + FUTUROS SO)
+         Y ACTIVADOR DE LA VISTA PERSONALIZADA DE LA APP MÓVIL (SOLO INFO + VITRINA)
+         ====================================================================== -->
+    <div class="modal-overlay" id="apkDownloadModal">
+        <div class="modal-box modal-lg">
+            <button class="modal-close" onclick="closeModal('apkDownloadModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="login-header" style="text-align:left; display:flex; align-items:center; gap:1rem; border-bottom:1px solid var(--gold-border); padding-bottom:1rem; margin-bottom:1.15rem;">
+                <div style="width:60px; height:60px; border-radius:16px; background:rgba(16,185,129,0.16); border:1.5px solid #10b981; display:flex; align-items:center; justify-content:center; font-size:2rem; color:#10b981; flex-shrink:0;">
+                    <i class="fa-brands fa-android"></i>
+                </div>
+                <div>
+                    <span class="badge-category" style="background:rgba(16,185,129,0.18); color:#10b981; border-color:#10b981;">DISTRIBUCIÓN MÓVIL OFICIAL • PREFERENCIAL ANDROID</span>
+                    <h3 style="color:var(--text-primary); font-size:1.3rem; margin-top:0.2rem;">Descargar Aplicación Móvil PROJECTHUB (.APK)</h3>
+                    <p style="color:var(--text-secondary); font-size:0.84rem;">Instalador oficial para celulares <strong>Android</strong> (arquitectura preparada para iOS y HarmonyOS). Incluye exclusivamente la <strong>Información Institucional Completa</strong> y la <strong>Vitrina Interactiva de Proyectos</strong>.</p>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-bottom:1.2rem;">
+                <!-- Tarjeta Preferencial Android (.APK) -->
+                <div style="background:linear-gradient(145deg, rgba(16,185,129,0.12), rgba(15,15,20,0.95)); border:1.5px solid #10b981; border-radius:var(--radius-md); padding:1.15rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem;">
+                        <span style="font-weight:800; color:#10b981; font-size:0.95rem;"><i class="fa-brands fa-android"></i> Android OS (Preferencial)</span>
+                        <span class="badge-category" style="background:#10b981; color:#09090b; font-weight:800;">v3.0 ESTABLE</span>
+                    </div>
+                    <p style="font-size:0.81rem; color:var(--text-secondary); margin-bottom:0.85rem;">
+                        Paquete <code>ProjectHub_CEN_Android_v3.0.apk</code> firmado con verificación SHA-256. Diseñado para visualizar toda la información de la plataforma y el catálogo completo de proyectos de 5° Año sin exponer datos privados ni calificaciones.
+                    </p>
+                    <ul style="list-style:none; padding:0; margin:0 0 1rem 0; font-size:0.78rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:0.35rem;">
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Contenido:</strong> Información Completa C.E.N. + Vitrina de Proyectos.</li>
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Privacidad:</strong> Calificaciones ocultas (exclusivas del alumno en web).</li>
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Requisitos:</strong> Android 8.0+ (ARM64 / Universal).</li>
+                    </ul>
+                    <button type="button" class="btn btn-primary" style="width:100%; background:#10b981; color:#09090b; border-color:#10b981; font-weight:800;" onclick="downloadAndroidApkPackage()">
+                        <i class="fa-solid fa-download"></i> Descargar ProjectHub_CEN_v3.0.apk (Android)
+                    </button>
+                </div>
+
+                <!-- Tarjeta Otros Sistemas Operativos a Futuro + Modo Vista App Móvil -->
+                <div style="background:var(--bg-surface); border:1px solid var(--gold-border); border-radius:var(--radius-md); padding:1.15rem; display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem;">
+                            <span style="font-weight:800; color:var(--gold-primary); font-size:0.95rem;"><i class="fa-solid fa-mobile-screen-button"></i> Multi-Plataforma & Vista App</span>
+                            <span class="badge-category">Escalabilidad Futura</span>
+                        </div>
+                        <p style="font-size:0.81rem; color:var(--text-secondary); margin-bottom:0.75rem;">
+                            Arquitectura modular preparada para próximos despliegues móviles y prueba interactiva inmediata:
+                        </p>
+                        <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem; font-size:0.79rem;">
+                            <div style="padding:0.5rem 0.7rem; border-radius:var(--radius-sm); background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+                                <span><i class="fa-brands fa-apple"></i> <strong>Apple iOS (.IPA / WebApp)</strong></span>
+                                <span style="color:var(--gold-primary); font-size:0.73rem;">En Hoja de Ruta (PWA Activa)</span>
+                            </div>
+                            <div style="padding:0.5rem 0.7rem; border-radius:var(--radius-sm); background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+                                <span><i class="fa-solid fa-mobile-retro"></i> <strong>HarmonyOS / Windows Mobile (.HAP)</strong></span>
+                                <span style="color:var(--gold-primary); font-size:0.73rem;">Soporte Abierto a Futuro</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="border-top:1px solid var(--gold-border); padding-top:0.85rem;">
+                        <button type="button" class="btn btn-outline" style="width:100%; margin-bottom:0.5rem;" onclick="toggleApkMobileShowcaseMode(true)">
+                            <i class="fa-solid fa-eye"></i> Previsualizar Modo App Móvil .APK (Info + Vitrina)
+                        </button>
+                        <button type="button" class="btn btn-ghost" style="width:100%; font-size:0.78rem;" onclick="triggerAppInstall()">
+                            <i class="fa-solid fa-bolt"></i> Instalar también como Acceso Directo PWA
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; border-top:1px solid var(--gold-border); padding-top:0.9rem;">
+                <span style="font-size:0.78rem; color:var(--text-secondary);">
+                    <i class="fa-solid fa-shield-check" style="color:#10b981;"></i> Verificado por el Escudo de Ciberseguridad C.E.N. Nonogasta • Libre de virus y código malicioso.
+                </span>
+                <button type="button" class="btn btn-ghost" onclick="closeModal('apkDownloadModal')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Banner Flotante cuando el usuario activa la Previsualización del Modo App Móvil (.APK) -->
+    <div id="apkShowcaseBanner" style="display:none; position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:9999; background:linear-gradient(135deg, #064e3b, #0f172a); border:2px solid #10b981; border-radius:999px; padding:0.55rem 1.25rem; box-shadow:0 12px 32px rgba(0,0,0,0.65); align-items:center; gap:0.85rem; color:#fff; font-size:0.82rem;">
+        <span><i class="fa-brands fa-android" style="color:#10b981; font-size:1.05rem;"></i> <strong>MODO APP MÓVIL (.APK) ACTIVO:</strong> Mostrando exclusivamente Información Institucional y Vitrina de Proyectos (Notas Privadas Ocultas).</span>
+        <button type="button" class="btn btn-primary" style="padding:0.3rem 0.8rem; font-size:0.75rem;" onclick="toggleApkMobileShowcaseMode(false)">
+            <i class="fa-solid fa-rotate-left"></i> Volver a Plataforma Completa
+        </button>
     </div>
 
     <!-- Contenedor de Notificaciones Toast -->

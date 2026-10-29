@@ -248,7 +248,7 @@ const ProjectHubAuthService = {
     },
 
     /**
-     * 13. Carga Masiva Múltiple o Importación .CSV en cualquiera de los 5 módulos
+     * 13. Carga Masiva Múltiple o Importación .CSV en cualquiera de los módulos (incluyendo SEGURIDAD)
      */
     async importBatchEntities(entidad, registrosArray) {
         const { data, error } = await supabase.rpc('admin_importar_lote_entidad', {
@@ -260,6 +260,41 @@ const ProjectHubAuthService = {
             throw error;
         }
         return data;
+    },
+
+    /**
+     * 14. Calificación Exclusiva del DOCENTE: Evalúa el Proyecto en general y a cada Alumno de manera individual
+     */
+    async gradeProjectAndStudentsDocente(payload) {
+        const { data, error } = await supabase.rpc('docente_calificar_proyecto_e_individual', {
+            p_datos: payload
+        });
+        if (error) {
+            console.error('[Supabase Docente Grading] Error al calificar proyecto y alumnos:', error.message);
+            throw error;
+        }
+        return data;
+    },
+
+    /**
+     * 15. Módulo de Ciberseguridad (SOC Administrador): Registrar o actualizar evento/alerta/bloqueo
+     */
+    async saveSecurityEventAdmin(payload) {
+        const { data, error } = await supabase.rpc('admin_guardar_evento_seguridad', {
+            p_datos: payload
+        });
+        if (error) {
+            console.error('[Supabase Security SOC] Error al guardar evento de ciberseguridad:', error.message);
+            throw error;
+        }
+        return data;
+    },
+
+    /**
+     * 16. Alias compatible para operaciones masivas en lote (Admin / Docente / Alumno)
+     */
+    async bulkAdminOperation(entidad, idsArray, accion) {
+        return await this.executeBatchOperation(entidad, idsArray, accion);
     }
 };
 

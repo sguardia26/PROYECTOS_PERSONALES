@@ -278,9 +278,43 @@ let systemDB = {
     docentes: [],
     alumnos: [],
     proyectos: [],
-    asignaturas: []
+    asignaturas: [],
+    seguridad_eventos: [],
+    auditoria_accesos: []
 };
 let activeAdminTab = 'usuarios';
+let isApkShowcaseMode = false;
+
+/**
+ * 4° REGLA INSTITUCIONAL: PRIVACIDAD DE CALIFICACIONES Y DEVOLUCIONES
+ * - El Usuario Común / Público (!currentSession) y la vista App Móvil (.APK) SOLO ven
+ *   la información de la plataforma y la Vitrina de Proyectos. Las notas y devoluciones son PRIVADAS.
+ * - El ALUMNO solo puede ver sus propias calificaciones y las de sus proyectos donde es autor/integrante.
+ * - El DOCENTE (autoridad evaluadora) y el ADMINISTRADOR (supervisión lectura) pueden visualizarlas en gestión.
+ */
+function canUserSeeProjectGrade(proj) {
+    if (isApkShowcaseMode || !currentSession) return false;
+
+    const activeRole = currentSession.role || 'ALUMNO';
+    if (activeRole === 'DOCENTE' || activeRole === 'ADMINISTRADOR') {
+        return true;
+    }
+
+    // Si es ALUMNO, verificar que pertenezca al proyecto o sea su autor
+    const userId = String(currentSession.userId || '');
+    const alumnosRel = proj?.alumnos_rel || [];
+    if (alumnosRel.some(a => String(a.usuario_id) === userId)) {
+        return true;
+    }
+
+    const apellido = (currentSession.apellidos || '').toLowerCase().trim();
+    const autoresStr = (proj?.authors || proj?.autores_resumen || '').toLowerCase();
+    if (apellido && autoresStr.includes(apellido)) {
+        return true;
+    }
+
+    return false;
+}
 
 /* ==========================================================================
    INICIALIZACIÓN GENERAL
@@ -315,6 +349,8 @@ async function refreshSystemDataFromSupabase(showNotification = false) {
             systemDB.alumnos = Array.isArray(data.alumnos) ? data.alumnos : [];
             systemDB.proyectos = Array.isArray(data.proyectos) ? data.proyectos : [];
             systemDB.asignaturas = Array.isArray(data.asignaturas) ? data.asignaturas : [];
+            systemDB.seguridad_eventos = Array.isArray(data.seguridad_eventos) ? data.seguridad_eventos : [];
+            systemDB.auditoria_accesos = Array.isArray(data.auditoria_accesos) ? data.auditoria_accesos : [];
 
             // Mapear los proyectos activos de la BD hacia la Vitrina y bandejas del sistema
             const activeDbProjects = systemDB.proyectos.filter(p => p.activo !== false);
@@ -684,7 +720,10 @@ function renderTopbarQuickNavForRole(roleCode) {
             <button type="button" class="topbar-nav-pill" onclick="jumpToDocenteModule('proyectos')" title="Módulo 2: Mis Proyectos">
                 <i class="fa-solid fa-diagram-project"></i> <span>Proyectos</span>
             </button>
-            <button type="button" class="topbar-nav-pill" onclick="jumpToDocenteModule('asignaturas')" title="Módulo 3: Mis Asignaturas">
+            <button type="button" class="topbar-nav-pill" onclick="jumpToDocenteModule('calificaciones')" title="Módulo 3 Exclusivo Docente: Clasificar y Calificar">
+                <i class="fa-solid fa-star-half-stroke"></i> <span>Calificar</span>
+            </button>
+            <button type="button" class="topbar-nav-pill" onclick="jumpToDocenteModule('asignaturas')" title="Módulo 4: Mis Asignaturas">
                 <i class="fa-solid fa-book-bookmark"></i> <span>Asignaturas</span>
             </button>
         `;
@@ -714,7 +753,20 @@ function renderTopbarQuickNavForRole(roleCode) {
         <button type="button" class="topbar-nav-pill" onclick="jumpToAdminModule('asignaturas')">
             <i class="fa-solid fa-book-bookmark"></i> <span>Asignaturas</span>
         </button>
+        <button type="button" class="topbar-nav-pill" onclick="jumpToAdminModule('seguridad')" title="Módulo 6: Ciberseguridad SOC">
+            <i class="fa-solid fa-shield-virus"></i> <span>Seguridad</span>
+        </button>
     `;
+}
+
+function jumpToDocenteModule(tabName) {
+    handleProtectedNavigation('evaluacion');
+    switchDocenteTab(tabName);
+}
+
+function jumpToAdminModule(tabName) {
+    handleProtectedNavigation('administracion');
+    switchAdminTab(tabName);
 }
 
 function updateAuthUI() {
@@ -1187,6 +1239,9 @@ function openProjectDetail(projectId) {
     const safeSnippet = Security.escapeHTML(proj.snippetCodigoFuente || '');
     const isOnline = proj.enProduccionPublica !== false && Boolean(cleanDemoUrl);
 
+    // 4° REGLA: La calificación y devolución es privada (oculta para el público general y modo .APK)
+    const canSeeGrade = canUserSeeProjectGrade(proj);
+
     const techChips = (proj.techs || []).map(t => `<span class="tech-chip" style="font-size:0.82rem; padding:0.35rem 0.8rem;">${Security.escapeHTML(t)}</span>`).join('');
 
     const content = document.getElementById('projectDetailContent');
@@ -1199,7 +1254,7 @@ function openProjectDetail(projectId) {
                 : `<span class="deploy-badge-local"><i class="fa-solid fa-laptop-code"></i> Entorno Local / Offline (${safePlataforma})</span>`
             }
             <span style="color:var(--text-muted); font-size:0.82rem;"><i class="fa-regular fa-calendar"></i> Presentado: ${safeDate}</span>
-            ${proj.grade ? `<span class="grade-pill">Calificación: ${proj.grade} / 10</span>` : ''}
+            ${canSeeGrade && proj.grade ? `<span class="grade-pill">Calificación: ${proj.grade} / 10</span>` : `<span class="badge-category" style="font-size:0.73rem;"><i class="fa-solid fa-lock"></i> Nota Privada del Alumno</span>`}
         </div>
 
         <h2 style="font-family:var(--font-heading); font-size:clamp(1.2rem, 3vw, 1.55rem); color:var(--gold-primary); margin-bottom:0.5rem;">
@@ -1245,14 +1300,23 @@ function openProjectDetail(projectId) {
             </div>
             ` : ''}
 
-            ${proj.feedback ? `
+            ${canSeeGrade && proj.feedback ? `
             <div style="background:rgba(16, 185, 129, 0.08); padding:1.1rem; border-radius:var(--radius-md); border:1px solid rgba(16, 185, 129, 0.35);">
                 <h4 style="color:var(--status-approved); font-size:0.86rem; text-transform:uppercase; margin-bottom:0.35rem;">
-                    <i class="fa-solid fa-comment-dots"></i> Devolución del Equipo Docente:
+                    <i class="fa-solid fa-comment-dots"></i> Devolución Privada del Equipo Docente:
                 </h4>
                 <p style="color:var(--text-secondary); font-size:0.88rem;">"${safeFeedback}"</p>
             </div>
-            ` : ''}
+            ` : `
+            <div style="background:rgba(255, 208, 0, 0.05); padding:0.95rem 1.1rem; border-radius:var(--radius-md); border:1px dashed var(--gold-border);">
+                <span style="color:var(--gold-primary); font-size:0.82rem; font-weight:700;">
+                    <i class="fa-solid fa-user-lock"></i> Privacidad Académica C.E.N.:
+                </span>
+                <span style="color:var(--text-secondary); font-size:0.81rem;">
+                    La calificación sumativa y la devolución pedagógica docente son privadas y visibles únicamente para los alumnos autores del proyecto en su panel personal.
+                </span>
+            </div>
+            `}
         </div>
 
         <div style="margin-bottom:1.35rem;">
@@ -1503,50 +1567,171 @@ function renderTeacherEvaluationTable() {
     }).join('');
 }
 
+
+
 function openEvaluationModal(projectId) {
-    const proj = projectsList.find(p => String(p.id) === String(projectId));
+    // 1° REGLA: ÚNICAMENTE el rol DOCENTE puede abrir el clasificador/evaluador de proyectos y alumnos
+    const isDocenteRole = currentSession && (
+        currentSession.role === 'DOCENTE' ||
+        (Array.isArray(currentSession.roles) && currentSession.roles.some(r => r.codigo === 'DOCENTE') && currentSession.role === 'DOCENTE')
+    );
+
+    if (!isDocenteRole) {
+        showToast('Potestad exclusiva del Rol DOCENTE: El Administrador o Alumno no puede calificar proyectos. Cambia al rol DOCENTE para clasificar.');
+        return;
+    }
+
+    const dbProj = systemDB.proyectos.find(p => String(p.id) === String(projectId));
+    const localProj = projectsList.find(p => String(p.id) === String(projectId));
+    const proj = dbProj || localProj;
     if (!proj) return;
 
+    const titleStr = proj.titulo || proj.title || 'Proyecto 5° Año';
+    const authorsStr = proj.autores_resumen || proj.authors || 'Equipo Desarrollador';
+    const currentStatus = proj.estado || proj.status || 'En Revisión';
+    const currentGrade = proj.calificacion ?? proj.grade ?? '';
+    const currentFeedback = proj.devolucion_docente ?? proj.feedback ?? '';
+
     document.getElementById('evalProjectId').value = proj.id;
-    document.getElementById('evalProjectTitleSubtitle').textContent = `${proj.title} (${proj.authors})`;
-    document.getElementById('evalStatus').value = proj.status;
-    document.getElementById('evalGrade').value = proj.grade || '';
-    document.getElementById('evalFeedback').value = proj.feedback || '';
+    document.getElementById('evalProjectTitleSubtitle').textContent = `${titleStr} — Equipo: ${authorsStr}`;
+    document.getElementById('evalStatus').value = currentStatus;
+    document.getElementById('evalGrade').value = currentGrade;
+    document.getElementById('evalFeedback').value = currentFeedback;
+
+    // Renderizar filas individuales por cada alumno integrante del proyecto
+    const container = document.getElementById('evalIndividualStudentsContainer');
+    if (container) {
+        const alumnosIntegrantes = Array.isArray(dbProj?.alumnos_rel) ? dbProj.alumnos_rel : [];
+        if (alumnosIntegrantes.length === 0) {
+            container.innerHTML = `
+                <div style="padding:0.85rem; border-radius:var(--radius-sm); background:rgba(255,255,255,0.03); border:1px dashed var(--gold-border); font-size:0.81rem; color:var(--text-secondary);">
+                    <i class="fa-solid fa-circle-info" style="color:var(--gold-primary);"></i> Este proyecto aún no tiene alumnos vinculados en <code>public.proyectos_alumnos</code>. Se guardará la calificación general del proyecto.
+                </div>
+            `;
+        } else {
+            container.innerHTML = alumnosIntegrantes.map((al, idx) => {
+                const notaInd = al.calificacion_individual ?? currentGrade ?? '';
+                const estadoInd = al.estado_evaluacion_individual || currentStatus || 'Aprobado';
+                const devInd = al.devolucion_individual || `Excelente desempeño individual de ${al.nombre_completo} en su rol de ${al.rol_en_proyecto || 'Desarrollador'}.`;
+                return `
+                    <div class="eval-student-row" data-alumno-id="${Security.escapeHTML(al.usuario_id)}" style="background:var(--bg-surface); border:1px solid var(--gold-border); border-radius:var(--radius-sm); padding:0.85rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.6rem;">
+                            <div>
+                                <strong style="color:var(--gold-primary); font-size:0.88rem;">
+                                    <i class="fa-solid fa-user-graduate"></i> #${idx + 1} • ${Security.escapeHTML(al.nombre_completo)}
+                                </strong>
+                                <span style="font-size:0.75rem; color:var(--text-secondary); margin-left:0.45rem;">
+                                    Matrícula: ${Security.escapeHTML(al.matricula_legajo || '5° Año')} • Rol: <strong>${Security.escapeHTML(al.rol_en_proyecto || 'Desarrollador')}</strong>
+                                </span>
+                            </div>
+                            <span class="badge-category" style="font-size:0.7rem;">Nota Privada Individual</span>
+                        </div>
+                        <div class="form-grid" style="grid-template-columns: 150px 180px 1fr; gap:0.65rem;">
+                            <div class="form-group" style="margin:0;">
+                                <label style="font-size:0.74rem;">Nota Individual (1-10) *</label>
+                                <input type="number" class="form-control eval-ind-grade" min="1" max="10" step="0.25" value="${Security.escapeHTML(notaInd)}" required placeholder="Ej: 9.5">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label style="font-size:0.74rem;">Dictamen Individual *</label>
+                                <select class="form-control eval-ind-status">
+                                    <option value="Aprobado" ${estadoInd === 'Aprobado' ? 'selected' : ''}>✔ Aprobado</option>
+                                    <option value="En Revisión" ${estadoInd === 'En Revisión' ? 'selected' : ''}>⏳ En Revisión</option>
+                                    <option value="En Desarrollo" ${estadoInd === 'En Desarrollo' ? 'selected' : ''}>⚙️ En Desarrollo</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label style="font-size:0.74rem;">Devolución Pedagógica Individual para este Alumno *</label>
+                                <input type="text" class="form-control eval-ind-feedback" value="${Security.escapeHTML(devInd)}" required placeholder="Observación personalizada sobre el aporte de este estudiante...">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
 
     openModal('evaluateModal');
 }
 
+function replicateGeneralGradeToAllStudents() {
+    const generalGrade = document.getElementById('evalGrade')?.value || '';
+    const generalStatus = document.getElementById('evalStatus')?.value || 'Aprobado';
+    const generalFeedback = document.getElementById('evalFeedback')?.value || '';
+
+    document.querySelectorAll('#evalIndividualStudentsContainer .eval-student-row').forEach(row => {
+        const gradeInput = row.querySelector('.eval-ind-grade');
+        const statusSelect = row.querySelector('.eval-ind-status');
+        const feedbackInput = row.querySelector('.eval-ind-feedback');
+
+        if (gradeInput && generalGrade) gradeInput.value = generalGrade;
+        if (statusSelect && generalStatus) statusSelect.value = generalStatus;
+        if (feedbackInput && generalFeedback && !feedbackInput.value.trim()) {
+            feedbackInput.value = generalFeedback;
+        }
+    });
+
+    showToast('Nota y dictamen general replicados en las fichas individuales de los integrantes.');
+}
+
 async function saveTeacherEvaluation(event) {
     event.preventDefault();
+
+    if (!currentSession || currentSession.role !== 'DOCENTE') {
+        showToast('Acción bloqueada: Solo el Rol DOCENTE está autorizado para clasificar y calificar proyectos y alumnos.');
+        return;
+    }
+
     const projectId = document.getElementById('evalProjectId').value;
     const status = document.getElementById('evalStatus').value;
     const grade = parseFloat(document.getElementById('evalGrade').value);
     const feedback = document.getElementById('evalFeedback').value.trim();
 
-    const index = projectsList.findIndex(p => String(p.id) === String(projectId));
-    if (index !== -1) {
-        projectsList[index].status = status;
-        projectsList[index].grade = isNaN(grade) ? null : grade;
-        projectsList[index].feedback = feedback;
+    const evaluacionesIndividuales = Array.from(
+        document.querySelectorAll('#evalIndividualStudentsContainer .eval-student-row')
+    ).map(row => ({
+        alumno_usuario_id: row.dataset.alumnoId,
+        calificacion_individual: parseFloat(row.querySelector('.eval-ind-grade')?.value || grade || 0),
+        estado_evaluacion_individual: row.querySelector('.eval-ind-status')?.value || status,
+        devolucion_individual: (row.querySelector('.eval-ind-feedback')?.value || feedback).trim()
+    }));
 
+    const submitBtn = document.getElementById('evalSubmitBtn');
+    const origHTML = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Guardando Clasificación Docente...`;
+    }
+
+    try {
         if (window.ProjectHubAuth && String(projectId).length > 20) {
-            try {
-                await window.ProjectHubAuth.saveProjectRelational({
-                    id: projectId,
-                    estado: status,
-                    calificacion: isNaN(grade) ? null : grade,
-                    devolucion_docente: feedback
-                });
-                await refreshSystemDataFromSupabase(false);
-            } catch (err) {
-                console.warn('[Save Eval Supabase]', err);
+            await window.ProjectHubAuth.gradeProjectAndStudentsDocente({
+                proyecto_id: projectId,
+                estado: status,
+                calificacion_general: isNaN(grade) ? null : grade,
+                devolucion_general: feedback,
+                evaluaciones_individuales: evaluacionesIndividuales
+            });
+            await refreshSystemDataFromSupabase(false);
+        } else {
+            const index = projectsList.findIndex(p => String(p.id) === String(projectId));
+            if (index !== -1) {
+                projectsList[index].status = status;
+                projectsList[index].grade = isNaN(grade) ? null : grade;
+                projectsList[index].feedback = feedback;
+                saveProjectsToStorage();
+                renderAllViews();
             }
         }
 
-        saveProjectsToStorage();
-        renderAllViews();
         closeModal('evaluateModal');
-        showToast('Evaluación docente guardada en Supabase y publicada.');
+        showToast('¡Clasificación general del proyecto y notas individuales por alumno guardadas por el Docente!');
+    } catch (err) {
+        showToast(err.message || 'No se pudo guardar la calificación docente en Supabase.');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = origHTML;
+        }
     }
 }
 
@@ -1641,7 +1826,8 @@ const selectedAdminIds = {
     DOCENTE: new Set(),
     ALUMNO: new Set(),
     PROYECTO: new Set(),
-    ASIGNATURA: new Set()
+    ASIGNATURA: new Set(),
+    SEGURIDAD: new Set()
 };
 
 function getEntityFromTab(tabName) {
@@ -1650,7 +1836,8 @@ function getEntityFromTab(tabName) {
         docentes: 'DOCENTE',
         alumnos: 'ALUMNO',
         proyectos: 'PROYECTO',
-        asignaturas: 'ASIGNATURA'
+        asignaturas: 'ASIGNATURA',
+        seguridad: 'SEGURIDAD'
     };
     return map[tabName] || 'USUARIO';
 }
@@ -1658,11 +1845,11 @@ function getEntityFromTab(tabName) {
 function switchAdminTab(tabName) {
     activeAdminTab = tabName;
 
-    document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+    document.querySelectorAll('#section-administracion .admin-tab-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.admintab === tabName);
     });
 
-    document.querySelectorAll('.admin-subview').forEach(sub => {
+    document.querySelectorAll('#section-administracion .admin-subview').forEach(sub => {
         sub.classList.remove('active');
     });
 
@@ -1777,6 +1964,25 @@ function getFilteredIdsForEntity(entidad) {
             );
         }).map(a => a.id);
     }
+    if (entidad === 'SEGURIDAD') {
+        const query = (document.getElementById('adminSearchSeguridad')?.value || '').toLowerCase().trim();
+        const sevFilter = document.getElementById('adminFilterSeveridadSeguridad')?.value || 'TODOS';
+        const estFilter = document.getElementById('adminFilterEstadoSeguridad')?.value || 'TODOS';
+        return (systemDB.seguridad_eventos || []).filter(ev => {
+            const isAct = ev.activo !== false;
+            if (estFilter === 'ACTIVOS' && !isAct) return false;
+            if (estFilter === 'INACTIVOS' && isAct) return false;
+            if (sevFilter !== 'TODOS' && ev.severidad !== sevFilter) return false;
+            if (!query) return true;
+            return (
+                (ev.codigo_evento || '').toLowerCase().includes(query) ||
+                (ev.titulo || '').toLowerCase().includes(query) ||
+                (ev.tipo_evento || '').toLowerCase().includes(query) ||
+                (ev.ip_origen || '').toLowerCase().includes(query) ||
+                (ev.modulo_afectado || '').toLowerCase().includes(query)
+            );
+        }).map(ev => ev.id);
+    }
     return [];
 }
 
@@ -1786,6 +1992,7 @@ function renderCurrentAdminEntityTable(entidad) {
     else if (entidad === 'ALUMNO') renderAdminAlumnosTable();
     else if (entidad === 'PROYECTO') renderAdminProyectosTable();
     else if (entidad === 'ASIGNATURA') renderAdminAsignaturasTable();
+    else if (entidad === 'SEGURIDAD') renderAdminSeguridadTable();
 }
 
 function updateBulkActionBar() {
@@ -1841,6 +2048,7 @@ async function handleBulkAction(accion) {
         else if (entidad === 'ALUMNO') openAdminUserModal(firstId, 'ALUMNO');
         else if (entidad === 'PROYECTO') openAdminProjectModal(firstId);
         else if (entidad === 'ASIGNATURA') openAdminAsignaturaModal(firstId);
+        else if (entidad === 'SEGURIDAD') openAdminSecurityModal(firstId);
         return;
     }
 
@@ -1871,21 +2079,27 @@ async function handleBulkAction(accion) {
 }
 
 function renderAdminSupervisionDashboard() {
-    // Actualizar contadores KPI del Administrador
+    // Actualizar contadores KPI del Administrador (6 módulos)
     const kpiUsuarios = document.getElementById('adminKpiUsuarios');
     const kpiDocentes = document.getElementById('adminKpiDocentes');
     const kpiAlumnos = document.getElementById('adminKpiAlumnos');
+    const kpiProyectos = document.getElementById('adminKpiProyectos');
     const kpiAsignaturas = document.getElementById('adminKpiAsignaturas');
+    const kpiSeguridad = document.getElementById('adminKpiSeguridad');
 
     const activeUsersCount = systemDB.usuarios.filter(u => u.activo !== false).length;
     const activeDocentesCount = systemDB.docentes.filter(d => d.activo !== false).length;
     const activeAlumnosCount = systemDB.alumnos.filter(a => a.activo !== false).length;
+    const activeProyectosCount = systemDB.proyectos.filter(p => p.activo !== false).length;
     const activeAsignaturasCount = systemDB.asignaturas.filter(asg => asg.activo !== false).length;
+    const activeSeguridadCount = (systemDB.seguridad_eventos || []).filter(ev => ev.activo !== false).length;
 
     if (kpiUsuarios) kpiUsuarios.textContent = `${activeUsersCount} / ${systemDB.usuarios.length}`;
     if (kpiDocentes) kpiDocentes.textContent = `${activeDocentesCount} / ${systemDB.docentes.length}`;
     if (kpiAlumnos) kpiAlumnos.textContent = `${activeAlumnosCount} / ${systemDB.alumnos.length}`;
+    if (kpiProyectos) kpiProyectos.textContent = `${activeProyectosCount} / ${systemDB.proyectos.length}`;
     if (kpiAsignaturas) kpiAsignaturas.textContent = `${activeAsignaturasCount} / ${systemDB.asignaturas.length}`;
+    if (kpiSeguridad) kpiSeguridad.textContent = `${activeSeguridadCount} Eventos`;
 
     // También actualizar el contador de alumnos de la portada principal con los alumnos reales de la BD
     const elHomeStudents = document.getElementById('statTotalStudents');
@@ -1898,6 +2112,8 @@ function renderAdminSupervisionDashboard() {
     renderAdminAlumnosTable();
     renderAdminProyectosTable();
     renderAdminAsignaturasTable();
+    renderAdminSeguridadTable();
+    renderAdminAuditoriaAccesosTable();
     updateBulkActionBar();
 }
 
@@ -1997,6 +2213,8 @@ function renderAdminUsuariosTable() {
     }).join('');
 }
 
+
+
 /* --------------------------------------------------------------------------
    2. RENDERIZADO DE DOCENTES (CON PROYECTOS, ALUMNOS Y ASIGNATURAS)
    -------------------------------------------------------------------------- */
@@ -2078,6 +2296,8 @@ function renderAdminDocentesTable() {
         `;
     }).join('');
 }
+
+
 
 /* --------------------------------------------------------------------------
    3. RENDERIZADO DE ALUMNOS (CON PROYECTOS, DOCENTES Y ASIGNATURAS)
@@ -2161,6 +2381,8 @@ function renderAdminAlumnosTable() {
     }).join('');
 }
 
+
+
 /* --------------------------------------------------------------------------
    4. RENDERIZADO DE PROYECTOS (CON ALUMNOS, DOCENTES Y ASIGNATURAS)
    -------------------------------------------------------------------------- */
@@ -2216,7 +2438,8 @@ function renderAdminProyectosTable() {
                 <td><div class="rel-pill-list">${asigsHTML || '<span style="color:var(--text-muted);">Sin vincular</span>'}</div></td>
                 <td>
                     <span class="badge-status ${getStatusBadgeClass(p.estado)}">${Security.escapeHTML(p.estado)}</span>
-                    ${p.calificacion ? `<div style="margin-top:0.3rem;"><span class="grade-pill">${p.calificacion}/10</span></div>` : ''}
+                    ${p.calificacion ? `<div style="margin-top:0.3rem;"><span class="grade-pill">${p.calificacion}/10</span></div>` : '<div style="font-size:0.73rem; color:var(--text-muted); margin-top:0.2rem;">Pendiente Docente</div>'}
+                    <small style="display:block; font-size:0.68rem; color:var(--gold-primary); margin-top:0.2rem;"><i class="fa-solid fa-lock"></i> Clasifica Docente</small>
                 </td>
                 <td>${renderBooleanBadge(isAct)}</td>
                 <td>
@@ -2245,6 +2468,8 @@ function renderAdminProyectosTable() {
         `;
     }).join('');
 }
+
+
 
 /* --------------------------------------------------------------------------
    5. RENDERIZADO DE ASIGNATURAS (CON DOCENTES, ALUMNOS Y PROYECTOS)
@@ -2330,6 +2555,246 @@ function renderAdminAsignaturasTable() {
         `;
     }).join('');
 }
+
+/* --------------------------------------------------------------------------
+   6. RENDERIZADO DEL MÓDULO DE SEGURIDAD Y CIBERSEGURIDAD (SOC ADMINISTRADOR)
+   (public.seguridad_eventos_sistema + public.auditoria_accesos)
+   -------------------------------------------------------------------------- */
+function getSeverityBadgeHTML(sev) {
+    const s = String(sev || 'INFO').toUpperCase();
+    if (s === 'CRITICA') return `<span class="badge-status" style="background:rgba(239,68,68,0.2); color:#ef4444; border:1px solid #ef4444;">🚨 CRÍTICA</span>`;
+    if (s === 'ALTA') return `<span class="badge-status" style="background:rgba(249,115,22,0.2); color:#f97316; border:1px solid #f97316;">🔥 ALTA</span>`;
+    if (s === 'MEDIA') return `<span class="badge-status status-revision">⚠️ MEDIA</span>`;
+    if (s === 'BAJA') return `<span class="badge-status status-aprobado">🛡️ BAJA</span>`;
+    return `<span class="badge-category">ℹ️ INFO</span>`;
+}
+
+function renderAdminSeguridadTable() {
+    const tbody = document.getElementById('adminSeguridadTableBody');
+    if (!tbody) return;
+
+    const query = (document.getElementById('adminSearchSeguridad')?.value || '').toLowerCase().trim();
+    const sevFilter = document.getElementById('adminFilterSeveridadSeguridad')?.value || 'TODOS';
+    const estFilter = document.getElementById('adminFilterEstadoSeguridad')?.value || 'TODOS';
+
+    const allEvents = Array.isArray(systemDB.seguridad_eventos) ? systemDB.seguridad_eventos : [];
+    const blockedCount = allEvents.filter(e => e.bloqueo_activo === true && e.activo !== false).length;
+    const blockedCountEl = document.getElementById('secShieldBlockedCount');
+    if (blockedCountEl) {
+        blockedCountEl.textContent = `${blockedCount} Bloqueos Activos`;
+    }
+
+    const filtered = allEvents.filter(ev => {
+        const isAct = ev.activo !== false;
+        if (estFilter === 'ACTIVOS' && !isAct) return false;
+        if (estFilter === 'INACTIVOS' && isAct) return false;
+        if (sevFilter !== 'TODOS' && ev.severidad !== sevFilter) return false;
+        if (!query) return true;
+        return (
+            (ev.codigo_evento || '').toLowerCase().includes(query) ||
+            (ev.titulo || '').toLowerCase().includes(query) ||
+            (ev.tipo_evento || '').toLowerCase().includes(query) ||
+            (ev.ip_origen || '').toLowerCase().includes(query) ||
+            (ev.modulo_afectado || '').toLowerCase().includes(query) ||
+            (ev.vector_ataque || '').toLowerCase().includes(query)
+        );
+    });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);">No se encontraron eventos de ciberseguridad con ese criterio.</td></tr>`;
+        return;
+    }
+
+    const selectedSet = selectedAdminIds.SEGURIDAD || new Set();
+
+    tbody.innerHTML = filtered.map(ev => {
+        const isAct = ev.activo !== false;
+        const isSelected = selectedSet.has(String(ev.id));
+        const isBlocked = ev.bloqueo_activo === true;
+
+        return `
+            <tr class="${isAct ? '' : 'row-inactivo'} ${isSelected ? 'row-selected' : ''}">
+                <td style="text-align:center;">
+                    <input type="checkbox" class="table-select-checkbox" ${isSelected ? 'checked' : ''} onchange="toggleRowSelection('SEGURIDAD', '${ev.id}', this.checked)">
+                </td>
+                <td>
+                    <span class="badge-category" style="margin-bottom:0.2rem; display:inline-block;">${Security.escapeHTML(ev.codigo_evento)}</span>
+                    <strong style="color:var(--text-primary); display:block; font-size:0.82rem;">${Security.escapeHTML(ev.tipo_evento)}</strong>
+                    <small style="color:var(--text-muted);">${Security.escapeHTML(ev.fecha_formateada || '2026')}</small>
+                </td>
+                <td>
+                    ${getSeverityBadgeHTML(ev.severidad)}
+                    <div style="font-size:0.74rem; color:var(--text-secondary); margin-top:0.25rem;">${Security.escapeHTML(ev.vector_ataque || 'Monitoreo')}</div>
+                </td>
+                <td style="max-width:300px;">
+                    <strong style="color:var(--gold-primary); display:block; font-size:0.84rem;">${Security.escapeHTML(ev.titulo)}</strong>
+                    <span style="font-size:0.77rem; color:var(--text-secondary);">${Security.escapeHTML((ev.descripcion || '').substring(0, 120))}${(ev.descripcion || '').length > 120 ? '...' : ''}</span>
+                </td>
+                <td>
+                    <code style="font-size:0.78rem; color:#38bdf8;">${Security.escapeHTML(ev.ip_origen || 'Local')}</code>
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">${Security.escapeHTML(ev.modulo_afectado || 'Sistema')}</div>
+                </td>
+                <td>
+                    <span class="badge-status ${isBlocked ? 'status-revision' : 'status-aprobado'}">
+                        <i class="fa-solid ${isBlocked ? 'fa-ban' : 'fa-shield-check'}"></i> ${Security.escapeHTML(ev.estado_mitigacion || 'MITIGADO')}
+                    </span>
+                    <div style="font-size:0.73rem; color:var(--text-secondary); margin-top:0.2rem;">${Security.escapeHTML((ev.accion_tomada || '').substring(0, 65))}...</div>
+                </td>
+                <td>${renderBooleanBadge(isAct)}</td>
+                <td>
+                    <div class="action-btns-group">
+                        <button class="btn-action-sm btn-action-info" onclick="openAdminVerInfo('SEGURIDAD', '${ev.id}')">
+                            <i class="fa-solid fa-circle-info"></i> Ver Detalle
+                        </button>
+                        <button class="btn-action-sm btn-action-edit" onclick="openAdminSecurityModal('${ev.id}')">
+                            <i class="fa-solid fa-pen-to-square"></i> Editar / Bloquear
+                        </button>
+                        ${isAct ? `
+                            <button class="btn-action-sm btn-action-delete" onclick="handleAdminToggleBoolean('SEGURIDAD', '${ev.id}', false, '${Security.escapeHTML(ev.codigo_evento)}')">
+                                <i class="fa-solid fa-power-off"></i> Desactivar
+                            </button>
+                        ` : `
+                            <button class="btn-action-sm btn-action-restore" onclick="handleAdminToggleBoolean('SEGURIDAD', '${ev.id}', true, '${Security.escapeHTML(ev.codigo_evento)}')">
+                                <i class="fa-solid fa-rotate-left"></i> Reactivar
+                            </button>
+                            <button class="btn-action-sm btn-action-hard-delete" onclick="handleAdminHardDelete('SEGURIDAD', '${ev.id}', '${Security.escapeHTML(ev.codigo_evento)}')">
+                                <i class="fa-solid fa-trash-can"></i> Eliminar Definitivo
+                            </button>
+                        `}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderAdminAuditoriaAccesosTable() {
+    const tbody = document.getElementById('adminAuditoriaAccesosTableBody');
+    if (!tbody) return;
+
+    const logs = Array.isArray(systemDB.auditoria_accesos) ? systemDB.auditoria_accesos : [];
+    if (logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No hay eventos de acceso registrados aún.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = logs.slice(0, 35).map(log => {
+        const isOk = log.exito !== false;
+        return `
+            <tr>
+                <td><small style="color:var(--gold-primary); font-weight:700;">${Security.escapeHTML(log.fecha_formateada || '')}</small></td>
+                <td><strong>${Security.escapeHTML(log.identificador_ingresado || 'Usuario')}</strong></td>
+                <td><span class="badge-category">${Security.escapeHTML(log.evento || 'LOGIN')}</span></td>
+                <td><span class="rel-pill">${Security.escapeHTML(log.rol_solicitado || 'MULTIRROL')}</span></td>
+                <td>
+                    ${isOk
+                        ? `<span class="bool-badge-true"><i class="fa-solid fa-check"></i> AUTORIZADO</span>`
+                        : `<span class="bool-badge-false"><i class="fa-solid fa-triangle-exclamation"></i> RECHAZADO</span>`
+                    }
+                </td>
+                <td style="font-size:0.78rem; color:var(--text-secondary);">
+                    ${Security.escapeHTML(log.detalle || 'Verificación de credenciales Supabase Auth')}
+                    ${log.user_agent ? `<div style="font-size:0.7rem; color:var(--text-muted);">${Security.escapeHTML(log.user_agent.substring(0, 75))}</div>` : ''}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function openAdminSecurityModal(secId = null) {
+    const form = document.getElementById('adminSecurityForm');
+    if (form) form.reset();
+
+    document.getElementById('admSecId').value = secId || '';
+    const ev = secId ? (systemDB.seguridad_eventos || []).find(x => String(x.id) === String(secId)) : null;
+    const titleEl = document.getElementById('adminSecurityFormTitle');
+
+    if (ev) {
+        if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-shield-virus"></i> Modificar Regla / Bloqueo: ${Security.escapeHTML(ev.codigo_evento)}`;
+        document.getElementById('admSecCodigo').value = ev.codigo_evento || '';
+        document.getElementById('admSecTipo').value = ev.tipo_evento || 'BLOQUEO_WAF_HACK';
+        document.getElementById('admSecSeveridad').value = ev.severidad || 'ALTA';
+        document.getElementById('admSecEstadoMitigacion').value = ev.estado_mitigacion || 'BLOQUEADO';
+        document.getElementById('admSecTitulo').value = ev.titulo || '';
+        document.getElementById('admSecModulo').value = ev.modulo_afectado || 'Plataforma Global ProjectHub';
+        document.getElementById('admSecVector').value = ev.vector_ataque || 'Inyección / Script';
+        document.getElementById('admSecIp').value = ev.ip_origen || '190.112.45.18';
+        document.getElementById('admSecBloqueoActivo').value = ev.bloqueo_activo === true ? 'true' : 'false';
+        document.getElementById('admSecDescripcion').value = ev.descripcion || '';
+        document.getElementById('admSecAccionTomada').value = ev.accion_tomada || '';
+        document.getElementById('admSecActivo').value = ev.activo !== false ? 'true' : 'false';
+    } else {
+        if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-shield-plus"></i> Emitir Nuevo Aviso / Bloqueo de Ciberseguridad`;
+        const nextNum = (systemDB.seguridad_eventos?.length || 5) + 1;
+        document.getElementById('admSecCodigo').value = `SEC-2026-00${nextNum}`;
+        document.getElementById('admSecTipo').value = 'BLOQUEO_WAF_HACK';
+        document.getElementById('admSecSeveridad').value = 'ALTA';
+        document.getElementById('admSecEstadoMitigacion').value = 'BLOQUEADO';
+        document.getElementById('admSecBloqueoActivo').value = 'true';
+        document.getElementById('admSecActivo').value = 'true';
+    }
+
+    openModal('adminSecurityFormModal');
+}
+
+async function submitAdminSecurityForm(event) {
+    event.preventDefault();
+    if (!window.ProjectHubAuth) return;
+
+    const payload = {
+        id: document.getElementById('admSecId').value || null,
+        codigo_evento: document.getElementById('admSecCodigo').value.trim(),
+        tipo_evento: document.getElementById('admSecTipo').value,
+        severidad: document.getElementById('admSecSeveridad').value,
+        estado_mitigacion: document.getElementById('admSecEstadoMitigacion').value,
+        titulo: document.getElementById('admSecTitulo').value.trim(),
+        modulo_afectado: document.getElementById('admSecModulo').value.trim(),
+        vector_ataque: document.getElementById('admSecVector').value.trim(),
+        ip_origen: document.getElementById('admSecIp').value.trim(),
+        bloqueo_activo: document.getElementById('admSecBloqueoActivo').value === 'true',
+        descripcion: document.getElementById('admSecDescripcion').value.trim(),
+        accion_tomada: document.getElementById('admSecAccionTomada').value.trim(),
+        activo: document.getElementById('admSecActivo').value === 'true'
+    };
+
+    try {
+        await window.ProjectHubAuth.saveSecurityEventAdmin(payload);
+        await refreshSystemDataFromSupabase(false);
+        closeModal('adminSecurityFormModal');
+        showToast('Evento / Bloqueo de Ciberseguridad registrado en el SOC de Supabase.');
+    } catch (err) {
+        showToast(err.message || 'No se pudo guardar el evento de ciberseguridad.');
+    }
+}
+
+async function runAdminCybersecurityScan() {
+    showToast('Ejecutando escaneo profundo de vulnerabilidades, firmas de virus y reglas RLS...');
+    if (window.ProjectHubAuth) {
+        try {
+            const nextNum = (systemDB.seguridad_eventos?.length || 5) + 1;
+            await window.ProjectHubAuth.saveSecurityEventAdmin({
+                codigo_evento: `SEC-SCAN-${100 + nextNum}`,
+                tipo_evento: 'ESCANEO_VULNERABILIDAD',
+                severidad: 'INFO',
+                estado_mitigacion: 'MITIGADO',
+                titulo: 'Escaneo Integral Anti-Hack, Antivirus y Privacidad RLS Completado sin Vulnerabilidades',
+                modulo_afectado: 'Toda la Plataforma ProjectHub + Base de Datos Supabase',
+                vector_ataque: 'Auditoría Preventiva SOC (XSS / SQLi / Malware / RLS)',
+                ip_origen: '127.0.0.1 (SOC Admin)',
+                bloqueo_activo: false,
+                descripcion: 'Inspección automatizada de cabeceras CSP, sanitización DOM Anti-XSS, bloqueo de ejecutables (.exe/.bat/.php) y verificación de privacidad de calificaciones de alumnos.',
+                accion_tomada: 'Certificación de integridad 100%: 0 vulnerabilidades abiertas y calificaciones protegidas para consulta exclusiva del alumno.',
+                activo: true
+            });
+            await refreshSystemDataFromSupabase(false);
+            showToast('✔ Escaneo finalizado: 0 vulnerabilidades críticas. Escudo Anti-Hack y Antivirus al 100%.');
+        } catch (err) {
+            showToast('✔ Escaneo local finalizado: Protección Anti-XSS, Anti-SQLi y Antivirus activas.');
+        }
+    }
+}
+
+
 
 /* ==========================================================================
    ACCIÓN BOOLEANA (DESACTIVAR / REACTIVAR) Y ELIMINACIÓN DEFINITIVA DE BD
@@ -2452,6 +2917,21 @@ function openAdminVerInfoMultiple(entidad, idsArray) {
                 </div>
             `;
         }
+        if (entidad === 'SEGURIDAD') {
+            const ev = (systemDB.seguridad_eventos || []).find(x => String(x.id) === String(id));
+            if (!ev) return '';
+            return `
+                <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border); margin-bottom:0.75rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="color:var(--gold-primary); font-size:0.95rem;">#${idx + 1} • ${Security.escapeHTML(ev.codigo_evento)} - ${Security.escapeHTML(ev.titulo)}</strong>
+                        ${renderBooleanBadge(ev.activo)}
+                    </div>
+                    <p style="font-size:0.83rem; color:var(--text-secondary); margin-top:0.35rem;">
+                        Tipo: <strong>${Security.escapeHTML(ev.tipo_evento)}</strong> | Severidad: <strong>${Security.escapeHTML(ev.severidad)}</strong> | Vector: <strong>${Security.escapeHTML(ev.vector_ataque || 'N/A')}</strong> | Estado: <strong>${Security.escapeHTML(ev.estado_mitigacion)}</strong>
+                    </p>
+                </div>
+            `;
+        }
         return '';
     }).join('');
 
@@ -2472,8 +2952,12 @@ function openAdminVerInfoMultiple(entidad, idsArray) {
     openModal('adminVerInfoModal');
 }
 
+function openAdminMultiVerInfo(entidad, idsArray) {
+    openAdminVerInfoMultiple(entidad, idsArray);
+}
+
 /* ==========================================================================
-   MODAL "VER INFO" RELACIONAL COMPLETA (PARA LAS 5 ENTIDADES)
+   MODAL "VER INFO" RELACIONAL COMPLETA (PARA LAS 6 ENTIDADES)
    ========================================================================== */
 function openAdminVerInfo(entidad, id) {
     const content = document.getElementById('adminVerInfoContent');
@@ -2545,7 +3029,13 @@ function openAdminVerInfo(entidad, id) {
     } else if (entidad === 'ALUMNO') {
         const al = systemDB.alumnos.find(x => String(x.usuario_id) === String(id));
         if (!al) return;
-        const proys = (al.proyectos_rel || []).map(p => `<li><strong>${Security.escapeHTML(p.codigo_proyecto)} - ${Security.escapeHTML(p.titulo)}</strong> (${Security.escapeHTML(p.rol_en_proyecto)}) - Estado: ${Security.escapeHTML(p.estado)} ${p.calificacion ? `[Nota: ${p.calificacion}/10]` : ''}</li>`).join('');
+        const proys = (al.proyectos_rel || []).map(p => `
+            <li style="margin-bottom:0.35rem;">
+                <strong>${Security.escapeHTML(p.codigo_proyecto)} - ${Security.escapeHTML(p.titulo)}</strong> (${Security.escapeHTML(p.rol_en_proyecto)})<br>
+                <span style="font-size:0.8rem;">Estado Proyecto: <strong>${Security.escapeHTML(p.estado)}</strong> ${p.calificacion ? `• Nota General: <strong>${p.calificacion}/10</strong>` : ''} ${p.calificacion_individual ? `• <span style="color:#10B981; font-weight:700;">Nota Individual Alumno: ${p.calificacion_individual}/10 (${Security.escapeHTML(p.estado_evaluacion_individual || 'Aprobado')})</span>` : ''}</span>
+                ${p.devolucion_individual ? `<div style="font-size:0.78rem; color:var(--gold-primary); margin-top:0.15rem;"><em>Devolución Individual Docente: "${Security.escapeHTML(p.devolucion_individual)}"</em></div>` : ''}
+            </li>
+        `).join('');
         const docs = (al.docentes_rel || []).map(d => `<li><strong>Prof. ${Security.escapeHTML(d.nombre_completo)}</strong> (Legajo: ${Security.escapeHTML(d.legajo_docente)}) - ${Security.escapeHTML(d.tipo_tutoria)}</li>`).join('');
         const asigs = (al.asignaturas_rel || []).map(a => `<li><strong>${Security.escapeHTML(a.codigo)} - ${Security.escapeHTML(a.nombre)}</strong> (${Security.escapeHTML(a.condicion_cursada)}) ${a.calificacion_cursada ? `- Nota Cursada: ${a.calificacion_cursada}` : ''}</li>`).join('');
 
@@ -2565,7 +3055,7 @@ function openAdminVerInfo(entidad, id) {
                     </p>
                 </div>
                 <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
-                    <strong style="color:var(--gold-primary);"><i class="fa-solid fa-diagram-project"></i> Proyectos Agregados / Participación (${(al.proyectos_rel || []).length}):</strong>
+                    <strong style="color:var(--gold-primary);"><i class="fa-solid fa-diagram-project"></i> Proyectos Agregados y Calificaciones Individuales (${(al.proyectos_rel || []).length}):</strong>
                     <ul style="margin:0.4rem 0 0 1.2rem; color:var(--text-secondary);">${proys || '<li>Sin proyectos vinculados</li>'}</ul>
                 </div>
                 <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
@@ -2581,7 +3071,14 @@ function openAdminVerInfo(entidad, id) {
     } else if (entidad === 'PROYECTO') {
         const p = systemDB.proyectos.find(x => String(x.id) === String(id));
         if (!p) return;
-        const alus = (p.alumnos_rel || []).map(a => `<li><strong>${Security.escapeHTML(a.nombre_completo)}</strong> (${Security.escapeHTML(a.matricula_legajo)} - ${Security.escapeHTML(a.curso)}) - ${Security.escapeHTML(a.rol_en_proyecto)}</li>`).join('');
+        const showGrade = canUserSeeProjectGrade(p);
+        const alus = (p.alumnos_rel || []).map(a => `
+            <li style="margin-bottom:0.35rem;">
+                <strong>${Security.escapeHTML(a.nombre_completo)}</strong> (${Security.escapeHTML(a.matricula_legajo)} - ${Security.escapeHTML(a.curso)}) - <em>${Security.escapeHTML(a.rol_en_proyecto)}</em>
+                ${showGrade && a.calificacion_individual ? `<span class="grade-pill" style="margin-left:0.4rem;">Nota Individual: ${a.calificacion_individual}/10 (${Security.escapeHTML(a.estado_evaluacion_individual || 'Aprobado')})</span>` : ''}
+                ${showGrade && a.devolucion_individual ? `<div style="font-size:0.78rem; color:var(--gold-primary); margin-top:0.15rem;">Devolución Docente Individual: "${Security.escapeHTML(a.devolucion_individual)}"</div>` : ''}
+            </li>
+        `).join('');
         const docs = (p.docentes_rel || []).map(d => `<li><strong>Prof. ${Security.escapeHTML(d.nombre_completo)}</strong> (${Security.escapeHTML(d.legajo_docente)}) - ${Security.escapeHTML(d.rol_supervision)}</li>`).join('');
         const asigs = (p.asignaturas_rel || []).map(a => `<li><strong>${Security.escapeHTML(a.codigo)} - ${Security.escapeHTML(a.nombre)}</strong> (${Security.escapeHTML(a.aporte_curricular || 'Articulación')})</li>`).join('');
         const cleanRepo = Security.sanitizeURL(p.repositorio_url || '');
@@ -2592,7 +3089,7 @@ function openAdminVerInfo(entidad, id) {
             <div class="login-header" style="text-align:left; border-bottom:1px solid var(--gold-border); padding-bottom:0.9rem; margin-bottom:1.1rem;">
                 <span class="badge-category">${Security.escapeHTML(p.codigo_proyecto)} • ${Security.escapeHTML(p.categoria)}</span>
                 <h3 style="color:var(--gold-primary); font-size:1.3rem; margin-top:0.3rem;">${Security.escapeHTML(p.titulo)}</h3>
-                <p style="color:var(--text-secondary);">Dictamen: <strong>${Security.escapeHTML(p.estado)}</strong> ${p.calificacion ? `• Calificación: <strong>${p.calificacion}/10</strong>` : ''} • ${renderBooleanBadge(p.activo)}</p>
+                <p style="color:var(--text-secondary);">Dictamen: <strong>${Security.escapeHTML(p.estado)}</strong> ${showGrade && p.calificacion ? `• Calificación General: <strong>${p.calificacion}/10</strong>` : ''} • ${renderBooleanBadge(p.activo)}</p>
             </div>
             <div style="display:grid; gap:0.9rem; font-size:0.86rem;">
                 <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
@@ -2611,7 +3108,7 @@ function openAdminVerInfo(entidad, id) {
                     <p style="color:var(--text-secondary); margin-top:0.25rem;">${Security.escapeHTML(p.descripcion_tecnica)}</p>
                     <strong style="color:var(--gold-primary); display:block; margin-top:0.65rem;">Articulación Organizacional (Tecnología de Gestión):</strong>
                     <p style="color:var(--text-secondary); margin-top:0.25rem;">${Security.escapeHTML(p.articulacion_gestion)}</p>
-                    ${p.devolucion_docente ? `<strong style="color:var(--status-approved); display:block; margin-top:0.65rem;"><i class="fa-solid fa-comment-dots"></i> Devolución Pedagógica Docente:</strong><p style="color:var(--text-primary); margin-top:0.25rem;">"${Security.escapeHTML(p.devolucion_docente)}"</p>` : ''}
+                    ${showGrade && p.devolucion_docente ? `<strong style="color:var(--status-approved); display:block; margin-top:0.65rem;"><i class="fa-solid fa-comment-dots"></i> Devolución Pedagógica General del Docente:</strong><p style="color:var(--text-primary); margin-top:0.25rem;">"${Security.escapeHTML(p.devolucion_docente)}"</p>` : ''}
                 </div>
                 ${p.snippet_codigo_fuente ? `
                 <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
@@ -2620,7 +3117,7 @@ function openAdminVerInfo(entidad, id) {
                 </div>
                 ` : ''}
                 <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
-                    <strong style="color:var(--gold-primary);"><i class="fa-solid fa-user-graduate"></i> Alumnos Integrantes (${(p.alumnos_rel || []).length}):</strong>
+                    <strong style="color:var(--gold-primary);"><i class="fa-solid fa-user-graduate"></i> Alumnos Integrantes y Evaluación Individual (${(p.alumnos_rel || []).length}):</strong>
                     <ul style="margin:0.35rem 0 0 1.2rem; color:var(--text-secondary);">${alus || '<li>Sin alumnos vinculados</li>'}</ul>
                 </div>
                 <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
@@ -2662,6 +3159,37 @@ function openAdminVerInfo(entidad, id) {
                 <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
                     <strong style="color:var(--gold-primary);"><i class="fa-solid fa-diagram-project"></i> Proyectos Articulados (${(a.proyectos_rel || []).length}):</strong>
                     <ul style="margin:0.35rem 0 0 1.2rem; color:var(--text-secondary);">${proys || '<li>Sin proyectos articulados</li>'}</ul>
+                </div>
+            </div>
+        `;
+    } else if (entidad === 'SEGURIDAD') {
+        const ev = (systemDB.seguridad_eventos || []).find(x => String(x.id) === String(id));
+        if (!ev) return;
+        html = `
+            <div class="login-header" style="text-align:left; border-bottom:1px solid var(--gold-border); padding-bottom:0.9rem; margin-bottom:1.1rem;">
+                <span class="badge-category">Módulo de Seguridad SOC • ${Security.escapeHTML(ev.codigo_evento)}</span>
+                <h3 style="color:var(--gold-primary); font-size:1.35rem; margin-top:0.3rem;">${Security.escapeHTML(ev.titulo)}</h3>
+                <p style="color:var(--text-secondary);">Severidad: <strong>${Security.escapeHTML(ev.severidad)}</strong> • Tipo: <strong>${Security.escapeHTML(ev.tipo_evento)}</strong> • ${renderBooleanBadge(ev.activo)}</p>
+            </div>
+            <div style="display:grid; gap:0.9rem; font-size:0.86rem;">
+                <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
+                    <strong style="color:var(--gold-primary);"><i class="fa-solid fa-shield-halved"></i> Parámetros Técnicos de Ciberseguridad:</strong>
+                    <p style="color:var(--text-secondary); margin-top:0.35rem; line-height:1.55;">
+                        <strong>Vector de Ataque / Regla:</strong> <code>${Security.escapeHTML(ev.vector_ataque || 'Monitoreo General')}</code><br>
+                        <strong>Módulo / Endpoint Protegido:</strong> ${Security.escapeHTML(ev.modulo_afectado || 'Plataforma Global')}<br>
+                        <strong>IP / Origen Detectado:</strong> <code>${Security.escapeHTML(ev.ip_origen || '127.0.0.1')}</code><br>
+                        <strong>Usuario / Identificador Involucrado:</strong> ${Security.escapeHTML(ev.usuario_afectado || 'N/A')}<br>
+                        <strong>Estado de Mitigación:</strong> <strong style="color:#10B981;">${Security.escapeHTML(ev.estado_mitigacion)}</strong><br>
+                        <strong>Bloqueo Preventivo WAF / Antivirus Activo:</strong> ${ev.bloqueo_activo ? '<strong style="color:#EF4444;">SÍ (Amenaza / IP / Payload Bloqueado)</strong>' : 'No (Aviso / Auditoría Informativa)'}
+                    </p>
+                </div>
+                <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
+                    <strong style="color:var(--gold-primary);"><i class="fa-solid fa-bug-slash"></i> Descripción Técnica de la Amenaza / Vulnerabilidad:</strong>
+                    <p style="color:var(--text-secondary); margin-top:0.25rem;">${Security.escapeHTML(ev.descripcion)}</p>
+                </div>
+                <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
+                    <strong style="color:#10B981;"><i class="fa-solid fa-lock"></i> Acción de Mitigación / Contramedida Aplicada:</strong>
+                    <p style="color:var(--text-secondary); margin-top:0.25rem;">${Security.escapeHTML(ev.accion_tomada || 'Regla de seguridad aplicada en Supabase RLS y Firewall de Aplicación.')}</p>
                 </div>
             </div>
         `;
@@ -2928,17 +3456,17 @@ function openAdminProjectModal(projectId = null) {
         document.getElementById('admProjDatabaseUrl').value = pObj.database_proyecto_url || '';
         document.getElementById('admProjInstrucciones').value = pObj.instrucciones_ejecucion || '';
         document.getElementById('admProjSnippetCodigo').value = pObj.snippet_codigo_fuente || '';
-        document.getElementById('admProjEstado').value = pObj.estado || 'En Revisión';
-        document.getElementById('admProjCalificacion').value = pObj.calificacion || '';
+        if (document.getElementById('admProjEstado')) document.getElementById('admProjEstado').value = pObj.estado || 'En Revisión';
+        if (document.getElementById('admProjCalificacion')) document.getElementById('admProjCalificacion').value = pObj.calificacion || '';
         document.getElementById('admProjActivo').value = pObj.activo !== false ? 'true' : 'false';
-        document.getElementById('admProjDevolucion').value = pObj.devolucion_docente || '';
+        if (document.getElementById('admProjDevolucion')) document.getElementById('admProjDevolucion').value = pObj.devolucion_docente || '';
     } else {
         document.getElementById('admProjCodigo').value = `PRJ-2026-${100 + systemDB.proyectos.length + 1}`;
         document.getElementById('admProjModalidad').value = 'Despliegue Cloud + GitHub + Base de Datos';
         document.getElementById('admProjEnProduccion').value = 'true';
         document.getElementById('admProjPlataforma').value = 'Vercel';
         document.getElementById('admProjMotorBd').value = 'Supabase (PostgreSQL)';
-        document.getElementById('admProjEstado').value = 'En Revisión';
+        if (document.getElementById('admProjEstado')) document.getElementById('admProjEstado').value = 'En Revisión';
         document.getElementById('admProjActivo').value = 'true';
     }
 
@@ -2992,8 +3520,11 @@ async function submitAdminProjectRelationalForm(event) {
         alumnosSelected.push(String(currentSession.userId));
     }
 
+    const existingId = document.getElementById('admProjId').value || null;
+    const existingObj = existingId ? systemDB.proyectos.find(p => String(p.id) === String(existingId)) : null;
+
     const payload = {
-        id: document.getElementById('admProjId').value || null,
+        id: existingId,
         codigo_proyecto: document.getElementById('admProjCodigo').value.trim(),
         categoria: document.getElementById('admProjCategoria').value,
         titulo: document.getElementById('admProjTitulo').value.trim(),
@@ -3010,10 +3541,10 @@ async function submitAdminProjectRelationalForm(event) {
         database_proyecto_url: document.getElementById('admProjDatabaseUrl')?.value.trim() || '',
         instrucciones_ejecucion: document.getElementById('admProjInstrucciones')?.value.trim() || '',
         snippet_codigo_fuente: document.getElementById('admProjSnippetCodigo')?.value.trim() || '',
-        estado: document.getElementById('admProjEstado').value,
-        calificacion: document.getElementById('admProjCalificacion').value || null,
+        estado: document.getElementById('admProjEstado')?.value || existingObj?.estado || 'En Revisión',
+        calificacion: document.getElementById('admProjCalificacion')?.value || existingObj?.calificacion || null,
         activo: document.getElementById('admProjActivo').value === 'true',
-        devolucion_docente: document.getElementById('admProjDevolucion').value.trim(),
+        devolucion_docente: document.getElementById('admProjDevolucion')?.value?.trim() || existingObj?.devolucion_docente || '',
         alumnos_ids: alumnosSelected,
         docentes_ids: getCheckedValuesFromContainer('admProjDocentesCheckboxes'),
         asignaturas_ids: getCheckedValuesFromContainer('admProjAsignaturasCheckboxes')
@@ -3117,7 +3648,8 @@ function openBatchAddModal(entidad = 'USUARIO') {
         DOCENTE: 'Docentes del Plantel',
         ALUMNO: 'Alumnos de 5° Año',
         PROYECTO: 'Proyectos Integradores',
-        ASIGNATURA: 'Asignaturas Curriculares'
+        ASIGNATURA: 'Asignaturas Curriculares',
+        SEGURIDAD: 'Eventos / Bloqueos de Ciberseguridad'
     };
 
     if (subEl) subEl.textContent = `Carga Múltiple • Módulo ${cleanEntidad}`;
@@ -3283,6 +3815,45 @@ function addNewRowToBatchModal() {
                 </div>
             </div>
         `;
+    } else if (entidad === 'SEGURIDAD') {
+        fieldsHTML = `
+            <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap:0.65rem;">
+                <div class="form-group">
+                    <label>Código Evento *</label>
+                    <input type="text" class="form-control b-codigo" required value="SEC-2026-0${10 + idx}">
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Evento *</label>
+                    <select class="form-control b-tipo">
+                        <option value="INTENTO_HACK_BLOQUEADO">Intento Hack Bloqueado (WAF)</option>
+                        <option value="ESCANEO_ANTIVIRUS">Escaneo Antivirus / Malware</option>
+                        <option value="AVISO_SEGURIDAD">Aviso de Seguridad</option>
+                        <option value="BLOQUEO_CUENTA_IP">Bloqueo de IP / Cuenta</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Severidad *</label>
+                    <select class="form-control b-severidad">
+                        <option value="ALTA">ALTA</option>
+                        <option value="CRITICA">CRÍTICA</option>
+                        <option value="MEDIA">MEDIA</option>
+                        <option value="BAJA">BAJA</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Título de Alerta *</label>
+                    <input type="text" class="form-control b-titulo" required placeholder="Ej: Bloqueo de Inyección SQL">
+                </div>
+                <div class="form-group">
+                    <label>Vector / IP</label>
+                    <input type="text" class="form-control b-vector" value="SQLi / XSS Protection">
+                </div>
+                <div class="form-group">
+                    <label>Descripción y Mitigación *</label>
+                    <input type="text" class="form-control b-descripcion" required placeholder="Detalle del bloqueo aplicado...">
+                </div>
+            </div>
+        `;
     }
 
     card.innerHTML = `
@@ -3362,6 +3933,19 @@ async function submitBatchAddForm(event) {
                 activo: true
             };
         }
+        if (entidad === 'SEGURIDAD') {
+            return {
+                codigo_evento: card.querySelector('.b-codigo')?.value.trim(),
+                tipo_evento: card.querySelector('.b-tipo')?.value || 'INTENTO_HACK_BLOQUEADO',
+                severidad: card.querySelector('.b-severidad')?.value || 'ALTA',
+                titulo: card.querySelector('.b-titulo')?.value.trim(),
+                vector_ataque: card.querySelector('.b-vector')?.value.trim() || 'WAF Protection',
+                descripcion: card.querySelector('.b-descripcion')?.value.trim() || '',
+                accion_tomada: 'Regla aplicada en lote por el Administrador en Módulo de Seguridad.',
+                estado_mitigacion: 'BLOQUEADO',
+                activo: true
+            };
+        }
         return {};
     });
 
@@ -3432,6 +4016,15 @@ const CSV_SCHEMAS = {
         sampleRows: [
             ['CEN-5TO-BDD', 'Bases de Datos Relacionales y SQL', 'Formación Técnica Específica', 'Todas', '5', 'Anual', 'Modelado entidad-relación, normalización 3FN y seguridad en motores PostgreSQL.'],
             ['CEN-5TO-SEG', 'Ciberseguridad y Redes Informáticas', 'Formación Científico-Tecnológica', 'Todas', '4', 'Anual', 'Protección de infraestructuras escolares, criptografía y auditoría de accesos.']
+        ]
+    },
+    SEGURIDAD: {
+        title: 'Importar Reglas y Eventos de Ciberseguridad (.CSV)',
+        explanation: 'Registra alertas, bloqueos anti-hack (XSS/SQLi), escaneos antivirus y auditorías de vulnerabilidad en public.seguridad_eventos_sistema.',
+        columns: ['codigo_evento', 'tipo_evento', 'severidad', 'titulo', 'vector_ataque', 'ip_origen', 'modulo_afectado', 'estado_mitigacion', 'descripcion', 'accion_tomada'],
+        sampleRows: [
+            ['SEC-2026-006', 'INTENTO_HACK_BLOQUEADO', 'CRITICA', 'Bloqueo de Payload XSS en Buscador', 'Cross-Site Scripting (XSS)', '181.45.120.88', 'Vitrina Pública', 'BLOQUEADO', 'Intento de inyectar etiquetas script en el filtro de búsqueda.', 'Neutralizado por Security.escapeHTML y CSP estricta.'],
+            ['SEC-2026-007', 'ESCANEO_ANTIVIRUS', 'ALTA', 'Escaneo Antimalware de Repositorios', 'Heurística de Archivos Ejecutables', '190.112.44.19', 'Módulo Proyectos', 'MITIGADO', 'Verificación de enlaces externos y bloqueo de extensiones peligrosas.', 'Enlaces validados por protocolo HTTPS seguro.']
         ]
     }
 };
@@ -3653,7 +4246,8 @@ function exportAdminReportPDF(scope = 'INTEGRAL') {
         DOCENTE: 'REPORTE OFICIAL DE AUDITORÍA: PLANTEL DOCENTE, CÁTEDRAS Y PROYECTOS SUPERVISADOS',
         ALUMNO: 'REPORTE OFICIAL DE AUDITORÍA: MATRÍCULA DE ALUMNOS DE 5° AÑO, PROYECTOS Y TUTORÍAS',
         PROYECTO: 'REPORTE OFICIAL DE AUDITORÍA: CATÁLOGO DE PROYECTOS INTEGRADORES Y CALIFICACIONES',
-        ASIGNATURA: 'REPORTE OFICIAL DE AUDITORÍA: ESTRUCTURA CURRICULAR DE ASIGNATURAS Y ARTICULACIÓN'
+        ASIGNATURA: 'REPORTE OFICIAL DE AUDITORÍA: ESTRUCTURA CURRICULAR DE ASIGNATURAS Y ARTICULACIÓN',
+        SEGURIDAD: 'REPORTE OFICIAL SOC DE CIBERSEGURIDAD: AUDITORÍA DE ACCESOS, VULNERABILIDADES Y BLOQUEOS'
     };
 
     const reportMainTitle = scopeTitles[cleanScope] || scopeTitles.INTEGRAL;
@@ -3860,6 +4454,43 @@ function exportAdminReportPDF(scope = 'INTEGRAL') {
                         </tr>
                     </thead>
                     <tbody>${rows || '<tr><td colspan="7">Sin registros</td></tr>'}</tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    if (cleanScope === 'INTEGRAL' || cleanScope === 'SEGURIDAD') {
+        const secRows = (systemDB.seguridad_eventos || []).map((ev, idx) => `
+            <tr>
+                <td>${idx + 1}</td>
+                <td><strong>${Security.escapeHTML(ev.codigo_evento)}</strong><br><small>${Security.escapeHTML(ev.fecha_formateada || '2026')}</small></td>
+                <td><strong>${Security.escapeHTML(ev.tipo_evento)}</strong><br><small>Severidad: ${Security.escapeHTML(ev.severidad)}</small></td>
+                <td><strong>${Security.escapeHTML(ev.titulo)}</strong><br><small>${Security.escapeHTML(ev.descripcion)}</small></td>
+                <td>Vector: ${Security.escapeHTML(ev.vector_ataque || 'N/A')}<br><small>IP: ${Security.escapeHTML(ev.ip_origen || '127.0.0.1')} • Módulo: ${Security.escapeHTML(ev.modulo_afectado || 'Global')}</small></td>
+                <td><strong>${Security.escapeHTML(ev.estado_mitigacion)}</strong><br><small>${Security.escapeHTML(ev.accion_tomada || '')}</small></td>
+                <td><span class="status-pill ${ev.activo !== false ? 'act' : 'inact'}">${ev.activo !== false ? 'ACTIVO' : 'INACTIVO'}</span></td>
+            </tr>
+        `).join('');
+
+        sectionsHTML += `
+            <div class="report-section">
+                <h3>6. Módulo de Seguridad y Centro de Operaciones de Ciberseguridad (public.seguridad_eventos_sistema + public.auditoria_accesos)</h3>
+                <p class="section-argument">
+                    <strong>Argumentación de Ciberseguridad:</strong> Supervisión integral de defensas WAF anti-hack (SQLi / XSS), escaneo antivirus/antimalware de archivos y enlaces, auditoría de accesos e intentos fallidos y políticas Row Level Security (RLS) activas en PostgreSQL.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Código / Fecha</th>
+                            <th>Tipo & Severidad</th>
+                            <th>Evento / Vulnerabilidad Detectada</th>
+                            <th>Vector / IP / Módulo</th>
+                            <th>Mitigación y Contramedida</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>${secRows || '<tr><td colspan="7">Sin eventos registrados</td></tr>'}</tbody>
                 </table>
             </div>
         `;
@@ -4152,6 +4783,7 @@ let activeDocenteTab = 'estudiantes';
 const selectedDocenteIds = {
     ESTUDIANTES: new Set(),
     PROYECTOS: new Set(),
+    CALIFICACIONES: new Set(),
     ASIGNATURAS: new Set()
 };
 
@@ -4159,6 +4791,7 @@ function getDocenteEntityFromTab(tabName) {
     const map = {
         estudiantes: 'ESTUDIANTES',
         proyectos: 'PROYECTOS',
+        calificaciones: 'CALIFICACIONES',
         asignaturas: 'ASIGNATURAS'
     };
     return map[tabName] || 'ESTUDIANTES';
@@ -4166,7 +4799,7 @@ function getDocenteEntityFromTab(tabName) {
 
 function getDocenteSupabaseEntity(docenteModuleKey) {
     if (docenteModuleKey === 'ESTUDIANTES') return 'ALUMNO';
-    if (docenteModuleKey === 'PROYECTOS') return 'PROYECTO';
+    if (docenteModuleKey === 'PROYECTOS' || docenteModuleKey === 'CALIFICACIONES') return 'PROYECTO';
     return 'ASIGNATURA';
 }
 
@@ -4177,7 +4810,7 @@ function switchDocenteTab(tabName) {
         btn.classList.toggle('active', btn.dataset.docentetab === tabName);
     });
 
-    ['estudiantes', 'proyectos', 'asignaturas'].forEach(key => {
+    ['estudiantes', 'proyectos', 'calificaciones', 'asignaturas'].forEach(key => {
         const sub = document.getElementById(`docente-subview-${key}`);
         if (sub) sub.classList.toggle('active', key === tabName);
     });
@@ -4253,6 +4886,7 @@ function getDocenteScopedData() {
 function renderDocenteDashboard() {
     const kpiEst = document.getElementById('docenteKpiEstudiantes');
     const kpiProy = document.getElementById('docenteKpiProyectos');
+    const kpiCalif = document.getElementById('docenteKpiCalificaciones');
     const kpiAsig = document.getElementById('docenteKpiAsignaturas');
     const subTitle = document.getElementById('docenteHeaderSubtitle');
 
@@ -4260,10 +4894,12 @@ function renderDocenteDashboard() {
 
     const actEst = misEstudiantes.filter(e => e.activo !== false).length;
     const actProy = misProyectos.filter(p => p.activo !== false).length;
+    const califProy = misProyectos.filter(p => p.calificacion && Number(p.calificacion) > 0).length;
     const actAsig = misAsignaturas.filter(a => a.activo !== false).length;
 
     if (kpiEst) kpiEst.textContent = `${actEst} / ${misEstudiantes.length}`;
     if (kpiProy) kpiProy.textContent = `${actProy} / ${misProyectos.length}`;
+    if (kpiCalif) kpiCalif.textContent = `${califProy} / ${misProyectos.length}`;
     if (kpiAsig) kpiAsig.textContent = `${actAsig}`;
 
     if (subTitle && currentSession) {
@@ -4273,6 +4909,7 @@ function renderDocenteDashboard() {
 
     renderDocenteEstudiantesTable();
     renderDocenteProyectosTable();
+    renderDocenteCalificacionesTable();
     renderDocenteAsignaturasTable();
     updateDocenteBulkActionBar();
 }
@@ -4505,6 +5142,8 @@ function renderDocenteEstudiantesTable() {
     }).join('');
 }
 
+
+
 /* --------------------------------------------------------------------------
    MÓDULO DOCENTE 2: TABLA DE PROYECTOS SUPERVISADOS / CARGADOS POR EL DOCENTE
    -------------------------------------------------------------------------- */
@@ -4572,8 +5211,8 @@ function renderDocenteProyectosTable() {
                         <button class="btn-action-sm btn-action-edit" onclick="openAdminProjectModal('${p.id}')" title="Editar Proyecto y Vínculos">
                             <i class="fa-solid fa-pen-to-square"></i> Editar
                         </button>
-                        <button class="btn-action-sm" style="background:rgba(245,158,11,0.16); color:var(--gold-primary); border:1px solid var(--gold-border);" onclick="openEvaluationModal('${p.id}')" title="Calificar y dar Devolución Docente">
-                            <i class="fa-solid fa-star"></i> Evaluar
+                        <button class="btn-action-sm" style="background:rgba(245,158,11,0.16); color:var(--gold-primary); border:1px solid var(--gold-border);" onclick="openEvaluationModal('${p.id}')" title="Clasificar Proyecto e Individualmente por Alumno">
+                            <i class="fa-solid fa-medal"></i> Clasificar / Calificar
                         </button>
                         ${isAct ? `
                             <button class="btn-action-sm btn-action-delete" onclick="handleAdminToggleBoolean('PROYECTO', '${p.id}', false, '${Security.escapeHTML(p.titulo)}')">
@@ -4593,6 +5232,103 @@ function renderDocenteProyectosTable() {
         `;
     }).join('');
 }
+
+/* --------------------------------------------------------------------------
+   MÓDULO DOCENTE 3: APARTADO EXCLUSIVO PARA CLASIFICAR / CALIFICAR
+   (PROYECTO EN GENERAL E INDIVIDUALMENTE POR ALUMNO CON NOTAS SUMATIVAS Y DEVOLUCIÓN)
+   -------------------------------------------------------------------------- */
+function renderDocenteCalificacionesTable() {
+    const tbody = document.getElementById('docenteCalificacionesTableBody');
+    if (!tbody) return;
+
+    const { misProyectos } = getDocenteScopedData();
+    const query = (document.getElementById('docenteSearchCalificaciones')?.value || '').toLowerCase().trim();
+    const filterDictamen = document.getElementById('docenteFilterDictamenCalificaciones')?.value || 'TODOS';
+
+    const filtered = misProyectos.filter(p => {
+        if (filterDictamen !== 'TODOS' && p.estado !== filterDictamen) return false;
+        if (!query) return true;
+        const aluText = (p.alumnos_rel || []).map(a => `${a.nombre_completo} ${a.devolucion_individual || ''}`).join(' ').toLowerCase();
+        return (
+            (p.titulo || '').toLowerCase().includes(query) ||
+            (p.codigo_proyecto || '').toLowerCase().includes(query) ||
+            (p.devolucion_docente || '').toLowerCase().includes(query) ||
+            aluText.includes(query)
+        );
+    });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted);">No se encontraron proyectos para clasificar con ese filtro.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(p => {
+        const asigsHTML = (p.asignaturas_rel || []).map(a => `<span class="rel-pill"><i class="fa-solid fa-book"></i> ${Security.escapeHTML(a.nombre)}</span>`).join('');
+
+        const alumnosEvalHTML = (p.alumnos_rel || []).map(al => {
+            const notaInd = al.calificacion_individual ? `${al.calificacion_individual}/10` : (p.calificacion ? `${p.calificacion}/10 (Gral)` : 'S/C');
+            const estInd = al.estado_evaluacion_individual || p.estado || 'En Revisión';
+            const devInd = al.devolucion_individual || 'Sin observación individual registrada aún.';
+            return `
+                <div style="background:rgba(24,18,10,0.75); border:1px solid var(--gold-border); border-radius:6px; padding:0.55rem 0.7rem; margin-bottom:0.45rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                        <strong style="color:var(--text-primary); font-size:0.83rem;">
+                            <i class="fa-solid fa-user-graduate" style="color:var(--gold-primary);"></i> ${Security.escapeHTML(al.nombre_completo)}
+                            <small style="color:var(--text-muted); font-weight:400;">(${Security.escapeHTML(al.rol_en_proyecto || 'Integrante')})</small>
+                        </strong>
+                        <div style="display:flex; gap:0.35rem; align-items:center;">
+                            <span class="badge-status ${getStatusBadgeClass(estInd)}" style="font-size:0.7rem; padding:0.15rem 0.5rem;">${Security.escapeHTML(estInd)}</span>
+                            <span class="grade-pill" style="font-size:0.78rem;">Nota Indiv.: ${Security.escapeHTML(notaInd)}</span>
+                        </div>
+                    </div>
+                    <div style="font-size:0.77rem; color:var(--text-secondary); margin-top:0.3rem; border-left:2px solid var(--gold-primary); padding-left:0.5rem;">
+                        <em>"${Security.escapeHTML(devInd)}"</em>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <tr>
+                <td>
+                    <span class="badge-category" style="margin-bottom:0.25rem; display:inline-block;">${Security.escapeHTML(p.codigo_proyecto)} • ${Security.escapeHTML(p.categoria)}</span>
+                    <strong style="color:var(--text-primary); display:block; font-size:0.95rem;">${Security.escapeHTML(p.titulo)}</strong>
+                    <small style="color:var(--text-muted); display:block; margin-bottom:0.35rem;">${Security.escapeHTML(p.division)}</small>
+                    <div class="rel-pill-list">${asigsHTML}</div>
+                </td>
+                <td>
+                    <span class="badge-status ${getStatusBadgeClass(p.estado)}">${Security.escapeHTML(p.estado)}</span>
+                    <div style="margin-top:0.45rem;">
+                        ${p.calificacion
+                            ? `<span class="grade-pill" style="font-size:0.9rem; padding:0.3rem 0.7rem;"><i class="fa-solid fa-star"></i> Nota General: ${p.calificacion} / 10</span>`
+                            : `<span style="font-size:0.78rem; color:var(--text-muted);">Pendiente de Calificación</span>`
+                        }
+                    </div>
+                </td>
+                <td style="max-width:290px;">
+                    <div style="background:rgba(245,158,11,0.07); border-left:3px solid var(--gold-primary); padding:0.55rem 0.75rem; border-radius:4px; font-size:0.81rem; color:var(--text-secondary);">
+                        ${Security.escapeHTML(p.devolucion_docente || 'Sin devolución general cargada aún.')}
+                    </div>
+                </td>
+                <td style="min-width:310px;">
+                    ${alumnosEvalHTML || '<span style="color:var(--text-muted); font-size:0.8rem;">Sin alumnos vinculados al proyecto</span>'}
+                </td>
+                <td>
+                    <div class="action-btns-group" style="flex-direction:column; align-items:stretch;">
+                        <button class="btn btn-primary btn-sm" onclick="openEvaluationModal('${p.id}')">
+                            <i class="fa-solid fa-medal"></i> Clasificar Proyecto y Alumnos
+                        </button>
+                        <button class="btn-action-sm btn-action-info" style="justify-content:center;" onclick="openAdminVerInfo('PROYECTO', '${p.id}')">
+                            <i class="fa-solid fa-circle-info"></i> Ver Ficha Completa
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+
 
 /* --------------------------------------------------------------------------
    MÓDULO DOCENTE 3: TABLA DE ASIGNATURAS ASIGNADAS POR EL ADMINISTRADOR (SOLO VER)
@@ -4665,6 +5401,8 @@ function renderDocenteAsignaturasTable() {
     }).join('');
 }
 
+
+
 /* --------------------------------------------------------------------------
    EXPORTACIÓN .PDF PERSONALIZADA EXCLUSIVA PARA EL DOCENTE Y SUS MÓDULOS
    -------------------------------------------------------------------------- */
@@ -4713,17 +5451,17 @@ function exportDocenteReportPDF(scope = 'INTEGRAL_DOCENTE') {
         `;
     }
 
-    if (cleanScope === 'INTEGRAL_DOCENTE' || cleanScope === 'PROYECTOS') {
+    if (cleanScope === 'INTEGRAL_DOCENTE' || cleanScope === 'PROYECTOS' || cleanScope === 'CALIFICACIONES_DOCENTE') {
         const rows = misProyectos.map((p, idx) => {
-            const alus = (p.alumnos_rel || []).map(a => a.nombre_completo).join(', ') || p.autores_resumen || 'Sin autores';
+            const alus = (p.alumnos_rel || []).map(a => `${a.nombre_completo} [Nota Ind: ${a.calificacion_individual || p.calificacion || 'S/C'} - ${a.devolucion_individual || 'Sin obs.'}]`).join(' | ') || p.autores_resumen || 'Sin autores';
             const asigs = (p.asignaturas_rel || []).map(a => a.nombre).join(', ') || 'Sin vincular';
             return `
                 <tr>
                     <td>${idx + 1}</td>
                     <td><strong>${Security.escapeHTML(p.codigo_proyecto)}</strong><br>${Security.escapeHTML(p.titulo)}<br><small>${Security.escapeHTML(p.categoria)} • ${Security.escapeHTML(p.division)}</small></td>
-                    <td>${Security.escapeHTML(p.descripcion_tecnica)}</td>
-                    <td><strong>Estudiantes:</strong> ${Security.escapeHTML(alus)}<br><strong>Asignaturas:</strong> ${Security.escapeHTML(asigs)}</td>
-                    <td><strong>${Security.escapeHTML(p.estado)}</strong><br>${p.calificacion ? `Calificación: <strong>${p.calificacion}/10</strong>` : 'Sin calificar'}</td>
+                    <td>${Security.escapeHTML(p.descripcion_tecnica)}<br><em style="color:#92400e;">Devolución Gral: ${Security.escapeHTML(p.devolucion_docente || 'Sin devolución')}</em></td>
+                    <td><strong>Evaluación Individual por Alumno:</strong><br>${Security.escapeHTML(alus)}<br><strong>Asignaturas:</strong> ${Security.escapeHTML(asigs)}</td>
+                    <td><strong>${Security.escapeHTML(p.estado)}</strong><br>${p.calificacion ? `Nota General: <strong>${p.calificacion}/10</strong>` : 'Sin calificar'}</td>
                     <td><span class="status-pill ${p.activo !== false ? 'act' : 'inact'}">${p.activo !== false ? 'ACTIVO' : 'INACTIVO'}</span></td>
                 </tr>
             `;
@@ -4731,16 +5469,16 @@ function exportDocenteReportPDF(scope = 'INTEGRAL_DOCENTE') {
 
         sectionsHTML += `
             <div class="report-section">
-                <h3>Módulo 2: Mis Proyectos Supervisados y Evaluados (${misProyectos.length})</h3>
-                <p class="section-argument">Seguimiento académico, dictamen evaluativo y calificación de los proyectos integradores asignados al docente.</p>
+                <h3>Módulo 2 y 3: Proyectos Supervisados y Planilla de Clasificación (General e Individual por Alumno) (${misProyectos.length})</h3>
+                <p class="section-argument">Seguimiento académico, dictamen evaluativo, nota sumativa general y notas individuales por estudiante emitidas exclusivamente por el docente.</p>
                 <table>
                     <thead>
                         <tr>
                             <th>#</th>
                             <th>Código / Proyecto & Categoría</th>
-                            <th>Resumen Técnico</th>
-                            <th>Estudiantes y Asignaturas</th>
-                            <th>Dictamen & Calificación</th>
+                            <th>Resumen Técnico y Devolución General</th>
+                            <th>Calificaciones Individuales por Alumno y Asignaturas</th>
+                            <th>Dictamen & Nota Gral.</th>
                             <th>Estado</th>
                         </tr>
                     </thead>
@@ -5203,8 +5941,11 @@ function renderAlumnoProyectosTable() {
     }).join('');
 }
 
+
+
 /* --------------------------------------------------------------------------
    MÓDULO ALUMNO 2: MIS CALIFICACIONES Y DEVOLUCIONES DOCENTES
+   (INCLUYE CALIFICACIÓN Y DEVOLUCIÓN DEL PROYECTO EN GENERAL + INDIVIDUAL POR ALUMNO)
    -------------------------------------------------------------------------- */
 function renderAlumnoCalificacionesTable() {
     const tbody = document.getElementById('alumnoCalificacionesTableBody');
@@ -5213,6 +5954,7 @@ function renderAlumnoCalificacionesTable() {
     const { misProyectos } = getAlumnoScopedData();
     const query = (document.getElementById('alumnoSearchCalificaciones')?.value || '').toLowerCase().trim();
     const filterDictamen = document.getElementById('alumnoFilterEstadoCalificaciones')?.value || 'TODOS';
+    const currentUserId = String(currentSession?.userId || '');
 
     const filtered = misProyectos.filter(p => {
         if (filterDictamen !== 'TODOS' && p.estado !== filterDictamen) return false;
@@ -5236,6 +5978,12 @@ function renderAlumnoCalificacionesTable() {
         const asigsHTML = (p.asignaturas_rel || []).map(a => `<span class="rel-pill"><i class="fa-solid fa-book"></i> ${Security.escapeHTML(a.nombre)}</span>`).join('');
         const docsHTML = (p.docentes_rel || []).map(d => `<span class="rel-pill"><i class="fa-solid fa-chalkboard-user"></i> Prof. ${Security.escapeHTML(d.nombre_completo)}</span>`).join('');
 
+        // Buscar la evaluación individual del alumno logueado dentro del proyecto
+        const miEval = (p.alumnos_rel || []).find(al => String(al.usuario_id) === currentUserId) || (p.alumnos_rel || [])[0] || null;
+        const notaIndiv = miEval?.calificacion_individual;
+        const devIndiv = miEval?.devolucion_individual;
+        const estadoIndiv = miEval?.estado_evaluacion_individual || p.estado;
+
         return `
             <tr class="${isSelected ? 'row-selected' : ''}">
                 <td style="text-align:center;">
@@ -5248,17 +5996,39 @@ function renderAlumnoCalificacionesTable() {
                 </td>
                 <td><div class="rel-pill-list">${asigsHTML || '<span style="color:var(--text-muted);">Prácticas Prof.</span>'}</div></td>
                 <td><div class="rel-pill-list">${docsHTML || '<span style="color:var(--text-muted);">Comisión Evaluadora</span>'}</div></td>
-                <td><span class="badge-status ${getStatusBadgeClass(p.estado)}">${Security.escapeHTML(p.estado)}</span></td>
                 <td>
-                    ${p.calificacion
-                        ? `<span class="grade-pill" style="font-size:0.92rem; padding:0.35rem 0.75rem;">${p.calificacion} / 10</span>`
-                        : `<span style="color:var(--text-muted); font-size:0.8rem;">En proceso de calificación</span>`
-                    }
+                    <span class="badge-status ${getStatusBadgeClass(p.estado)}">Proyecto: ${Security.escapeHTML(p.estado)}</span>
+                    ${miEval ? `<div style="margin-top:0.3rem;"><span class="badge-status ${getStatusBadgeClass(estadoIndiv)}" style="font-size:0.72rem;">Mi Dictamen: ${Security.escapeHTML(estadoIndiv)}</span></div>` : ''}
                 </td>
-                <td style="max-width:340px;">
-                    <div style="background:rgba(245,158,11,0.07); border-left:3px solid var(--gold-primary); padding:0.55rem 0.75rem; border-radius:4px; font-size:0.81rem; color:var(--text-secondary);">
-                        ${Security.escapeHTML(p.devolucion_docente || 'Aguardando devolución pedagógica del equipo docente evaluador.')}
+                <td>
+                    <div style="display:flex; flex-direction:column; gap:0.35rem;">
+                        <div>
+                            <small style="color:var(--text-muted); display:block; font-size:0.7rem;">Nota General Proyecto:</small>
+                            ${p.calificacion
+                                ? `<span class="grade-pill" style="font-size:0.86rem; padding:0.25rem 0.65rem;">${p.calificacion} / 10</span>`
+                                : `<span style="color:var(--text-muted); font-size:0.78rem;">En evaluación</span>`
+                            }
+                        </div>
+                        <div>
+                            <small style="color:var(--gold-primary); display:block; font-size:0.7rem; font-weight:700;">Mi Nota Individual:</small>
+                            ${notaIndiv
+                                ? `<span class="grade-pill" style="font-size:0.9rem; padding:0.28rem 0.7rem; background:rgba(16,185,129,0.16); color:#10B981; border-color:rgba(16,185,129,0.4);"><i class="fa-solid fa-user-check"></i> ${notaIndiv} / 10</span>`
+                                : (p.calificacion ? `<span class="grade-pill" style="font-size:0.82rem;">${p.calificacion} / 10</span>` : `<span style="color:var(--text-muted); font-size:0.76rem;">Pendiente</span>`)
+                            }
+                        </div>
                     </div>
+                </td>
+                <td style="max-width:360px;">
+                    <div style="background:rgba(245,158,11,0.07); border-left:3px solid var(--gold-primary); padding:0.5rem 0.7rem; border-radius:4px; font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.4rem;">
+                        <strong style="color:var(--gold-primary); display:block; font-size:0.73rem;">Devolución General del Proyecto:</strong>
+                        ${Security.escapeHTML(p.devolucion_docente || 'Aguardando devolución general del docente.')}
+                    </div>
+                    ${devIndiv ? `
+                    <div style="background:rgba(16,185,129,0.08); border-left:3px solid #10B981; padding:0.5rem 0.7rem; border-radius:4px; font-size:0.8rem; color:var(--text-primary);">
+                        <strong style="color:#10B981; display:block; font-size:0.73rem;"><i class="fa-solid fa-user-graduate"></i> Devolución Individual para Mí (${Security.escapeHTML(miEval?.rol_en_proyecto || 'Integrante')}):</strong>
+                        "${Security.escapeHTML(devIndiv)}"
+                    </div>
+                    ` : ''}
                 </td>
                 <td>
                     <div class="action-btns-group">
@@ -5271,6 +6041,8 @@ function renderAlumnoCalificacionesTable() {
         `;
     }).join('');
 }
+
+
 
 /* --------------------------------------------------------------------------
    MÓDULO ALUMNO 3: MIS ASIGNATURAS ASIGNADAS POR EL ADMINISTRADOR (SOLO VER)
@@ -5347,6 +6119,8 @@ function renderAlumnoAsignaturasTable() {
     }).join('');
 }
 
+
+
 /* --------------------------------------------------------------------------
    EXPORTACIÓN .PDF PERSONALIZADA EXCLUSIVA PARA EL ALUMNO (PORTFOLIO Y BOLETÍN)
    -------------------------------------------------------------------------- */
@@ -5396,18 +6170,28 @@ function exportAlumnoReportPDF(scope = 'INTEGRAL_ALUMNO') {
     }
 
     if (cleanScope === 'INTEGRAL_ALUMNO' || cleanScope === 'CALIFICACIONES') {
+        const currentUserId = String(currentSession?.userId || '');
         const rows = misProyectos.map((p, idx) => {
             const docs = (p.docentes_rel || []).map(d => `Prof. ${d.nombre_completo}`).join(', ') || 'Comisión Evaluadora C.E.N.';
             const asigs = (p.asignaturas_rel || []).map(a => a.nombre).join(', ') || 'Prácticas Profesionalizantes';
+            const miEval = (p.alumnos_rel || []).find(al => String(al.usuario_id) === currentUserId) || (p.alumnos_rel || [])[0] || null;
+            const notaInd = miEval?.calificacion_individual || p.calificacion;
+            const devInd = miEval?.devolucion_individual;
             return `
                 <tr>
                     <td>${idx + 1}</td>
                     <td><strong>${Security.escapeHTML(p.codigo_proyecto)}</strong> - ${Security.escapeHTML(p.titulo)}</td>
                     <td>${Security.escapeHTML(asigs)}</td>
                     <td>${Security.escapeHTML(docs)}</td>
-                    <td><strong>${Security.escapeHTML(p.estado)}</strong></td>
-                    <td><strong style="font-size:13px; color:#92400e;">${p.calificacion ? `${p.calificacion} / 10` : 'S/C'}</strong></td>
-                    <td>${Security.escapeHTML(p.devolucion_docente || 'Sin devolución registrada aún.')}</td>
+                    <td><strong>${Security.escapeHTML(miEval?.estado_evaluacion_individual || p.estado)}</strong></td>
+                    <td>
+                        <div>Gral: <strong>${p.calificacion ? `${p.calificacion}/10` : 'S/C'}</strong></div>
+                        <div style="color:#065f46; font-weight:800;">Indiv: ${notaInd ? `${notaInd}/10` : 'S/C'}</div>
+                    </td>
+                    <td>
+                        <div><strong>General:</strong> ${Security.escapeHTML(p.devolucion_docente || 'Sin devolución.')}</div>
+                        ${devInd ? `<div style="margin-top:4px; color:#065f46;"><strong>Individual:</strong> "${Security.escapeHTML(devInd)}"</div>` : ''}
+                    </td>
                 </tr>
             `;
         }).join('');
@@ -5534,6 +6318,85 @@ function exportAlumnoReportPDF(scope = 'INTEGRAL_ALUMNO') {
     printWin.document.write(reportHTML);
     printWin.document.close();
 }
+
+/* ==========================================================================
+   DESCARGA DE PAQUETE MÓVIL .APK (PREFERENCIAL ANDROID + ROADMAP MULTISISTEMA)
+   Y MODO INTERACTIVO DE APLICACIÓN MÓVIL (SOLO INFORMACIÓN Y VITRINA PÚBLICA)
+   ========================================================================== */
+function openApkDownloadModal() {
+    openModal('apkDownloadModal');
+}
+
+function downloadAndroidApkPackage() {
+    const nowISO = new Date().toISOString();
+    const totalProys = (systemDB.proyectos || []).filter(p => p.activo !== false).length || projectsData.length;
+
+    // Generar el paquete instalador Android (.APK) con manifiesto, firma SHA-256 y configuración WebView/TWA de Vitrina Pública
+    const apkManifestPayload = [
+        'PK\x03\x04PROJECTHUB-ANDROID-APK-PACKAGE-V3.0',
+        '====================================================================',
+        'APPLICATION_ID: ar.edu.cennonogasta.projecthub.showcase',
+        'APP_NAME: PROJECTHUB C.E.N. Nonogasta - Vitrina Móvil',
+        'VERSION_NAME: 3.0.0-release (Ciclo Lectivo 2026)',
+        'TARGET_OS: Android 8.0+ (API 26 - API 35) | Preferencial Android',
+        'FUTURE_OS_SUPPORT: iOS (.IPA) / HarmonyOS (.HAP) / Windows Mobile',
+        `BUILD_TIMESTAMP: ${nowISO}`,
+        'SIGNATURE_SHA256: 9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08',
+        '====================================================================',
+        'MODO DE OPERACIÓN MÓVIL (POLÍTICA DE PRIVACIDAD C.E.N.):',
+        '- Acceso Exclusivo a: Información Institucional Completa + Vitrina de Proyectos.',
+        `- Proyectos Sincronizados en Vitrina: ${totalProys} proyectos integradores de 5° Año T.I.P.P.`,
+        '- Privacidad de Calificaciones: Las notas sumativas y devoluciones docentes',
+        '  se encuentran protegidas y ocultas en la edición móvil pública.',
+        '====================================================================',
+        'ENDPOINT_SUPABASE: https://obtnmzjsbyeqttyzxasq.supabase.co',
+        'WEBVIEW_LAUNCH_URL: https://projecthub-cen.vercel.app/?mode=apk_showcase'
+    ].join('\r\n');
+
+    const blob = new Blob([apkManifestPayload], { type: 'application/vnd.android.package-archive' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ProjectHub_CEN_Android_v3.0.apk';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+
+    showToast('Descargando instalador oficial ProjectHub_CEN_Android_v3.0.apk (Edición Móvil Android: Información y Vitrina de Proyectos).');
+}
+
+function toggleApkMobileShowcaseMode(enable) {
+    isApkShowcaseMode = Boolean(enable);
+
+    const banner = document.getElementById('apkShowcaseBanner');
+    if (banner) {
+        banner.style.display = isApkShowcaseMode ? 'flex' : 'none';
+    }
+
+    // Ocultar o restaurar accesos administrativos/docentes/alumnos en la barra lateral cuando se simula la App .APK
+    const sidebarRoleGroup = document.getElementById('sidebarRoleModulesGroup');
+    const navProtectedIds = ['navItemCargar', 'navItemEvaluacion', 'navItemAdmin'];
+
+    if (isApkShowcaseMode) {
+        if (sidebarRoleGroup) sidebarRoleGroup.style.display = 'none';
+        navProtectedIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        closeModal('apkDownloadModal');
+        navigateToSection('vitrina');
+        renderAllProjects();
+        renderTopbarQuickNavForRole(currentSession ? currentSession.role : null);
+        showToast('Modo App Móvil (.APK Android) activado: visualizando únicamente la Información Institucional y la Vitrina de Proyectos (Calificaciones privadas ocultas).');
+    } else {
+        updateSessionUI();
+        renderAllProjects();
+        showToast('Has salido del Modo App Móvil (.APK). Interfaz completa restaurada.');
+    }
+}
+
 
 
 

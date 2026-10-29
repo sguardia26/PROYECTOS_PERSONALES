@@ -3,12 +3,13 @@
    Centro Educativo Nonogasta (C.E.N.) - La Rioja
    ========================================================================== */
 
-const CACHE_NAME = 'projecthub-cen-cache-v3';
+const CACHE_NAME = 'projecthub-cen-cache-v4';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './manifest.json',
     './assets/css/styles.css',
+    './assets/js/supabaseClient.js',
     './assets/js/app.js',
     './assets/img/ProjectHub.png',
     './assets/img/ProjectHub2.jpg'
