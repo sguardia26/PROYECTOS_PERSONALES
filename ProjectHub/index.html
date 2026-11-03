@@ -111,6 +111,9 @@
          ====================================================================== -->
     <div class="app-shell">
 
+        <!-- Fondo Oscuro Táctil para Cerrar el Sidebar en Celulares y Tablets -->
+        <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="document.body.classList.remove('mobile-sidebar-open')"></div>
+
         <!-- ==================================================================
              SIDEBAR PRINCIPAL ADAPTATIVO SEGÚN EL ROL DEL USUARIO
              ================================================================== -->
@@ -1675,9 +1678,9 @@
     </div>
 
     <!-- ======================================================================
-         BARRA INFERIOR MÓVIL (ESTILO INSTAGRAM / YOUTUBE EN CELULARES)
+         BARRA INFERIOR MÓVIL ADAPTATIVA POR ROL (ESTILO INSTAGRAM / YOUTUBE EN CELULARES)
          ====================================================================== -->
-    <nav class="mobile-bottom-nav">
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
         <button class="bottom-nav-btn active" data-section="inicio" onclick="navigateToSection('inicio')">
             <i class="fa-solid fa-house"></i>
             <span>Inicio</span>
@@ -1686,15 +1689,15 @@
             <i class="fa-solid fa-compass"></i>
             <span>Vitrina</span>
         </button>
-        <button class="bottom-nav-btn" data-section="cargar" onclick="handleProtectedNavigation('cargar')">
-            <i class="fa-solid fa-square-plus"></i>
-            <span>Subir</span>
+        <button class="bottom-nav-btn" id="mobileBottomRolePanelBtn" data-section="cargar" onclick="handleMobileRolePrimaryAction()">
+            <i class="fa-solid fa-layer-group" id="mobileBottomRolePanelIcon"></i>
+            <span id="mobileBottomRolePanelLabel">Mi Panel</span>
         </button>
-        <button class="bottom-nav-btn" data-section="evaluacion" onclick="handleProtectedNavigation('evaluacion')">
-            <i class="fa-solid fa-clipboard-check"></i>
-            <span>Evaluar</span>
+        <button class="bottom-nav-btn" onclick="openApkDownloadModal()">
+            <i class="fa-brands fa-android"></i>
+            <span>App .APK</span>
         </button>
-        <button class="bottom-nav-btn" onclick="openLoginModal()">
+        <button class="bottom-nav-btn" onclick="handleMobileProfileOrLogin()">
             <i class="fa-solid fa-circle-user"></i>
             <span id="mobileBottomAuthLabel">Acceder</span>
         </button>
@@ -2603,20 +2606,20 @@
                 <!-- Tarjeta Preferencial Android (.APK) -->
                 <div style="background:linear-gradient(145deg, rgba(16,185,129,0.12), rgba(15,15,20,0.95)); border:1.5px solid #10b981; border-radius:var(--radius-md); padding:1.15rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem;">
-                        <span style="font-weight:800; color:#10b981; font-size:0.95rem;"><i class="fa-brands fa-android"></i> Android OS (Preferencial)</span>
-                        <span class="badge-category" style="background:#10b981; color:#09090b; font-weight:800;">v3.0 ESTABLE</span>
+                        <span style="font-weight:800; color:#10b981; font-size:0.95rem;"><i class="fa-brands fa-android"></i> Android OS (Nativo Compilado)</span>
+                        <span class="badge-category" style="background:#10b981; color:#09090b; font-weight:800;">v3.0 REAL (~3.1 MB)</span>
                     </div>
                     <p style="font-size:0.81rem; color:var(--text-secondary); margin-bottom:0.85rem;">
-                        Paquete <code>ProjectHub_CEN_Android_v3.0.apk</code> firmado con verificación SHA-256. Diseñado para visualizar toda la información de la plataforma y el catálogo completo de proyectos de 5° Año sin exponer datos privados ni calificaciones.
+                        Paquete binario oficial <code>ProjectHub_CEN_Android_v3.0.apk</code> (<code>ar.edu.cennonogasta.projecthub</code>) compilado con Android SDK y firmado con esquema criptográfico APK Signature v2/v3. Listo para descargar e instalar directamente en cualquier celular o tablet Android.
                     </p>
                     <ul style="list-style:none; padding:0; margin:0 0 1rem 0; font-size:0.78rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:0.35rem;">
-                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Contenido:</strong> Información Completa C.E.N. + Vitrina de Proyectos.</li>
-                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Privacidad:</strong> Calificaciones ocultas (exclusivas del alumno en web).</li>
-                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Requisitos:</strong> Android 8.0+ (ARM64 / Universal).</li>
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>App Instalable Real:</strong> Contiene <code>classes.dex</code>, <code>AndroidManifest.xml</code>, ícono oficial y conexión en vivo a Supabase.</li>
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Contenido:</strong> Información Completa C.E.N. + Vitrina de Proyectos (Notas privadas ocultas).</li>
+                        <li><i class="fa-solid fa-check" style="color:#10b981;"></i> <strong>Requisitos:</strong> Android 7.0+ (API 24 a API 36 • Universal).</li>
                     </ul>
-                    <button type="button" class="btn btn-primary" style="width:100%; background:#10b981; color:#09090b; border-color:#10b981; font-weight:800;" onclick="downloadAndroidApkPackage()">
-                        <i class="fa-solid fa-download"></i> Descargar ProjectHub_CEN_v3.0.apk (Android)
-                    </button>
+                    <a href="assets/apk/ProjectHub_CEN_Android_v3.0.apk" download="ProjectHub_CEN_Android_v3.0.apk" class="btn btn-primary" style="width:100%; background:#10b981; color:#09090b; border-color:#10b981; font-weight:800; text-decoration:none; display:inline-flex; justify-content:center;" onclick="downloadAndroidApkPackage(event)">
+                        <i class="fa-solid fa-download"></i> Descargar e Instalar ProjectHub_CEN_v3.0.apk
+                    </a>
                 </div>
 
                 <!-- Tarjeta Otros Sistemas Operativos a Futuro + Modo Vista App Móvil -->

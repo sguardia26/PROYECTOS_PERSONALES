@@ -673,7 +673,7 @@ function renderTopbarQuickNavForRole(roleCode) {
 
     const activeSec = Array.from(document.querySelectorAll('.app-section.active'))[0]?.id?.replace('section-', '') || 'inicio';
 
-    if (!currentSession || roleCode === 'VISITANTE') {
+    if (!currentSession || roleCode === 'VISITANTE' || isApkShowcaseMode) {
         topbarNav.innerHTML = `
             <button type="button" class="topbar-nav-pill ${activeSec === 'inicio' ? 'active' : ''}" data-section="inicio" onclick="navigateToSection('inicio')">
                 <i class="fa-solid fa-house"></i> <span>Inicio</span>
@@ -760,11 +760,13 @@ function renderTopbarQuickNavForRole(roleCode) {
 }
 
 function jumpToDocenteModule(tabName) {
+    document.body.classList.remove('mobile-sidebar-open');
     handleProtectedNavigation('evaluacion');
     switchDocenteTab(tabName);
 }
 
 function jumpToAdminModule(tabName) {
+    document.body.classList.remove('mobile-sidebar-open');
     handleProtectedNavigation('administracion');
     switchAdminTab(tabName);
 }
@@ -782,6 +784,9 @@ function updateAuthUI() {
     const sidebarRoleContextText = document.getElementById('sidebarRoleContextText');
     const sidebarLoginBtn = document.getElementById('sidebarLoginBtn');
     const mobileBottomAuthLabel = document.getElementById('mobileBottomAuthLabel');
+    const mobileBottomRolePanelBtn = document.getElementById('mobileBottomRolePanelBtn');
+    const mobileBottomRolePanelIcon = document.getElementById('mobileBottomRolePanelIcon');
+    const mobileBottomRolePanelLabel = document.getElementById('mobileBottomRolePanelLabel');
     const roleSwitcher = document.getElementById('roleSwitcherSelect');
 
     // 1. MODO VISITANTE (Sin sesión iniciada): ocultar accesos exclusivos de roles
@@ -790,6 +795,9 @@ function updateAuthUI() {
         if (loggedActions) loggedActions.style.display = 'none';
         if (sidebarLoginBtn) sidebarLoginBtn.style.display = 'flex';
         if (mobileBottomAuthLabel) mobileBottomAuthLabel.textContent = 'Acceder';
+        if (mobileBottomRolePanelLabel) mobileBottomRolePanelLabel.textContent = 'Mi Panel';
+        if (mobileBottomRolePanelIcon) mobileBottomRolePanelIcon.className = 'fa-solid fa-layer-group';
+        if (mobileBottomRolePanelBtn) mobileBottomRolePanelBtn.dataset.section = 'cargar';
         if (roleSwitcher) roleSwitcher.style.display = 'none';
 
         // Personalización automática del Sidebar y Topbar para Visitante
@@ -841,6 +849,9 @@ function updateAuthUI() {
     if (sidebarRoleContextText) sidebarRoleContextText.textContent = `ROL: ${activeRole}`;
 
     if (activeRole === 'ADMINISTRADOR') {
+        if (mobileBottomRolePanelLabel) mobileBottomRolePanelLabel.textContent = 'Admin';
+        if (mobileBottomRolePanelIcon) mobileBottomRolePanelIcon.className = 'fa-solid fa-sliders';
+        if (mobileBottomRolePanelBtn) mobileBottomRolePanelBtn.dataset.section = 'administracion';
         if (sidebarUploadBtn) {
             sidebarUploadBtn.style.display = 'flex';
             sidebarUploadBtn.style.opacity = '1';
@@ -857,6 +868,9 @@ function updateAuthUI() {
         if (sidebarDocenteQuickGroup) sidebarDocenteQuickGroup.style.display = 'none';
         if (sidebarAlumnoQuickGroup) sidebarAlumnoQuickGroup.style.display = 'none';
     } else if (activeRole === 'DOCENTE') {
+        if (mobileBottomRolePanelLabel) mobileBottomRolePanelLabel.textContent = 'Docente';
+        if (mobileBottomRolePanelIcon) mobileBottomRolePanelIcon.className = 'fa-solid fa-chalkboard-user';
+        if (mobileBottomRolePanelBtn) mobileBottomRolePanelBtn.dataset.section = 'evaluacion';
         if (sidebarUploadBtn) sidebarUploadBtn.style.display = 'none';
         if (sidebarEvalBtn) {
             sidebarEvalBtn.style.display = 'flex';
@@ -868,6 +882,9 @@ function updateAuthUI() {
         if (sidebarAlumnoQuickGroup) sidebarAlumnoQuickGroup.style.display = 'none';
     } else {
         // ROL ALUMNO
+        if (mobileBottomRolePanelLabel) mobileBottomRolePanelLabel.textContent = 'Alumno';
+        if (mobileBottomRolePanelIcon) mobileBottomRolePanelIcon.className = 'fa-solid fa-user-graduate';
+        if (mobileBottomRolePanelBtn) mobileBottomRolePanelBtn.dataset.section = 'cargar';
         if (sidebarUploadBtn) {
             sidebarUploadBtn.style.display = 'flex';
             sidebarUploadBtn.style.opacity = '1';
@@ -5605,6 +5622,7 @@ const selectedAlumnoIds = {
 };
 
 function jumpToAlumnoModule(tabName) {
+    document.body.classList.remove('mobile-sidebar-open');
     handleProtectedNavigation('cargar');
     const targetBtn = document.querySelector(`#alumnoModuleTabs .admin-tab-btn[data-alumnotab="${tabName}"]`);
     switchAlumnoTab(tabName, targetBtn);
@@ -6324,47 +6342,25 @@ function exportAlumnoReportPDF(scope = 'INTEGRAL_ALUMNO') {
    Y MODO INTERACTIVO DE APLICACIÓN MÓVIL (SOLO INFORMACIÓN Y VITRINA PÚBLICA)
    ========================================================================== */
 function openApkDownloadModal() {
+    document.body.classList.remove('mobile-sidebar-open');
     openModal('apkDownloadModal');
 }
 
-function downloadAndroidApkPackage() {
-    const nowISO = new Date().toISOString();
-    const totalProys = (systemDB.proyectos || []).filter(p => p.activo !== false).length || projectsData.length;
+function downloadAndroidApkPackage(event) {
+    const apkFileUrl = 'assets/apk/ProjectHub_CEN_Android_v3.0.apk';
 
-    // Generar el paquete instalador Android (.APK) con manifiesto, firma SHA-256 y configuración WebView/TWA de Vitrina Pública
-    const apkManifestPayload = [
-        'PK\x03\x04PROJECTHUB-ANDROID-APK-PACKAGE-V3.0',
-        '====================================================================',
-        'APPLICATION_ID: ar.edu.cennonogasta.projecthub.showcase',
-        'APP_NAME: PROJECTHUB C.E.N. Nonogasta - Vitrina Móvil',
-        'VERSION_NAME: 3.0.0-release (Ciclo Lectivo 2026)',
-        'TARGET_OS: Android 8.0+ (API 26 - API 35) | Preferencial Android',
-        'FUTURE_OS_SUPPORT: iOS (.IPA) / HarmonyOS (.HAP) / Windows Mobile',
-        `BUILD_TIMESTAMP: ${nowISO}`,
-        'SIGNATURE_SHA256: 9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08',
-        '====================================================================',
-        'MODO DE OPERACIÓN MÓVIL (POLÍTICA DE PRIVACIDAD C.E.N.):',
-        '- Acceso Exclusivo a: Información Institucional Completa + Vitrina de Proyectos.',
-        `- Proyectos Sincronizados en Vitrina: ${totalProys} proyectos integradores de 5° Año T.I.P.P.`,
-        '- Privacidad de Calificaciones: Las notas sumativas y devoluciones docentes',
-        '  se encuentran protegidas y ocultas en la edición móvil pública.',
-        '====================================================================',
-        'ENDPOINT_SUPABASE: https://obtnmzjsbyeqttyzxasq.supabase.co',
-        'WEBVIEW_LAUNCH_URL: https://projecthub-cen.vercel.app/?mode=apk_showcase'
-    ].join('\r\n');
+    // Si se invoca desde un botón (no un enlace <a download> nativo), disparar la descarga del binario .APK real
+    const isNativeAnchor = event && event.currentTarget && event.currentTarget.tagName === 'A';
+    if (!isNativeAnchor) {
+        const a = document.createElement('a');
+        a.href = apkFileUrl;
+        a.download = 'ProjectHub_CEN_Android_v3.0.apk';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
 
-    const blob = new Blob([apkManifestPayload], { type: 'application/vnd.android.package-archive' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'ProjectHub_CEN_Android_v3.0.apk';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 3000);
-
-    showToast('Descargando instalador oficial ProjectHub_CEN_Android_v3.0.apk (Edición Móvil Android: Información y Vitrina de Proyectos).');
+    showToast('Descargando aplicación nativa firmada ProjectHub_CEN_Android_v3.0.apk (3.1 MB • Android 7.0+): Información Institucional Completa + Vitrina de Proyectos.');
 }
 
 function toggleApkMobileShowcaseMode(enable) {
@@ -6375,25 +6371,55 @@ function toggleApkMobileShowcaseMode(enable) {
         banner.style.display = isApkShowcaseMode ? 'flex' : 'none';
     }
 
-    // Ocultar o restaurar accesos administrativos/docentes/alumnos en la barra lateral cuando se simula la App .APK
-    const sidebarRoleGroup = document.getElementById('sidebarRoleModulesGroup');
-    const navProtectedIds = ['navItemCargar', 'navItemEvaluacion', 'navItemAdmin'];
+    const protectedSidebarIds = [
+        'sidebarUploadBtn',
+        'sidebarEvaluationBtn',
+        'sidebarAdminBtn',
+        'sidebarAdminQuickGroup',
+        'sidebarDocenteQuickGroup',
+        'sidebarAlumnoQuickGroup'
+    ];
 
     if (isApkShowcaseMode) {
-        if (sidebarRoleGroup) sidebarRoleGroup.style.display = 'none';
-        navProtectedIds.forEach(id => {
+        protectedSidebarIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
         closeModal('apkDownloadModal');
         navigateToSection('vitrina');
-        renderAllProjects();
-        renderTopbarQuickNavForRole(currentSession ? currentSession.role : null);
-        showToast('Modo App Móvil (.APK Android) activado: visualizando únicamente la Información Institucional y la Vitrina de Proyectos (Calificaciones privadas ocultas).');
+        filterProjects();
+        renderTopbarQuickNavForRole('VISITANTE');
+        showToast('Modo App Móvil (.APK Android) activado: visualizando exclusivamente la Información Institucional y la Vitrina de Proyectos (Calificaciones privadas ocultas).');
     } else {
-        updateSessionUI();
-        renderAllProjects();
+        updateAuthUI();
+        filterProjects();
         showToast('Has salido del Modo App Móvil (.APK). Interfaz completa restaurada.');
+    }
+}
+
+function handleMobileRolePrimaryAction() {
+    document.body.classList.remove('mobile-sidebar-open');
+    if (!currentSession) {
+        openLoginModal();
+        showToast('Inicia sesión para acceder a tu panel académico según tu rol.');
+        return;
+    }
+    const role = currentSession.role || 'ALUMNO';
+    if (role === 'ADMINISTRADOR') {
+        handleProtectedNavigation('administracion');
+    } else if (role === 'DOCENTE') {
+        handleProtectedNavigation('evaluacion');
+    } else {
+        handleProtectedNavigation('cargar');
+    }
+}
+
+function handleMobileProfileOrLogin() {
+    document.body.classList.remove('mobile-sidebar-open');
+    if (currentSession) {
+        openUserProfileModal();
+    } else {
+        openLoginModal();
     }
 }
 
