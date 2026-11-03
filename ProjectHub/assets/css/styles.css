@@ -1,10 +1,5 @@
-/* ==========================================================================
-   PROJECTHUB - Centro Educativo Nonogasta (C.E.N.) - La Rioja
-   Arquitectura App-Shell (Estilo YouTube / Instagram) + Identidad Oficial C.E.N.
-   ========================================================================== */
-
 :root {
-    /* Paleta Oficial extraída del logotipo PROJECTHUB - C.E.N. */
+
     --bg-dark: #090706;
     --bg-surface: #120e0b;
     --bg-card: #1a1410;
@@ -50,7 +45,6 @@
     --shadow-gold: 0 0 25px rgba(255, 208, 0, 0.32);
 }
 
-/* Modo Claro Institucional */
 [data-theme="light"] {
     --bg-dark: #F7F3EB;
     --bg-surface: #EFE8DC;
@@ -83,12 +77,11 @@ body {
     min-height: 100vh;
 }
 
-/* Fondo con patrón tecnológico sutil inspirado en el microcontrolador del logo */
 body::before {
     content: "";
     position: fixed;
     inset: 0;
-    background-image: 
+    background-image:
         radial-gradient(circle at 20% 15%, rgba(255, 208, 0, 0.07) 0%, transparent 35%),
         radial-gradient(circle at 85% 80%, rgba(255, 168, 0, 0.05) 0%, transparent 40%),
         linear-gradient(rgba(255, 208, 0, 0.02) 1px, transparent 1px),
@@ -98,7 +91,6 @@ body::before {
     pointer-events: none;
 }
 
-/* Scrollbar personalizada */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -115,9 +107,6 @@ body::before {
     background: var(--gold-primary);
 }
 
-/* ==========================================================================
-   BARRA SUPERIOR FIJA (TOPBAR ESTILO YOUTUBE / INSTAGRAM)
-   ========================================================================== */
 .app-topbar {
     position: fixed;
     top: 0;
@@ -202,7 +191,6 @@ body::before {
     font-weight: 500;
 }
 
-/* Buscador Global Central estilo YouTube */
 .topbar-center {
     flex: 1;
     max-width: 540px;
@@ -248,9 +236,6 @@ body::before {
     gap: 0.7rem;
 }
 
-/* ==========================================================================
-   SIDEBAR PRINCIPAL VINCULADO (ESTILO INSTAGRAM / YOUTUBE)
-   ========================================================================== */
 .app-shell {
     display: flex;
     padding-top: var(--topbar-height);
@@ -275,7 +260,6 @@ body::before {
     overflow-x: hidden;
 }
 
-/* Estado Colapsado del Sidebar en Escritorio (Mini Sidebar como YouTube) */
 body.sidebar-collapsed .app-sidebar {
     width: var(--sidebar-collapsed-width);
     padding: 1.25rem 0.5rem;
@@ -371,7 +355,6 @@ body.sidebar-collapsed .sidebar-link i {
     margin: 0.65rem 0.5rem 1rem;
 }
 
-/* Tarjeta Inferior Institucional dentro del Sidebar */
 .sidebar-footer-card {
     background: var(--bg-card);
     border: 1px solid var(--gold-border);
@@ -402,9 +385,6 @@ body.sidebar-collapsed .sidebar-link i {
     line-height: 1.35;
 }
 
-/* ==========================================================================
-   CONTENEDOR DE SECCIONES DINÁMICAS (MAIN STAGE)
-   ========================================================================== */
 .app-main {
     flex: 1;
     margin-left: var(--sidebar-width);
@@ -440,9 +420,6 @@ body.sidebar-collapsed .app-main {
     }
 }
 
-/* ==========================================================================
-   HISTORIAS / HIGHLIGHTS DE ACCESO RÁPIDO (ESTILO INSTAGRAM STORIES)
-   ========================================================================== */
 .stories-bar {
     display: flex;
     align-items: center;
@@ -510,9 +487,6 @@ body.sidebar-collapsed .app-main {
     white-space: nowrap;
 }
 
-/* ==========================================================================
-   SECCIÓN 1: PÁGINA PRINCIPAL (INICIO + RESUMEN DE ARTICULACIÓN + ACCESOS)
-   ========================================================================== */
 .home-hero-banner {
     background: radial-gradient(circle at 80% 50%, rgba(255, 208, 0, 0.16) 0%, rgba(35, 17, 7, 0.5) 50%, var(--bg-card) 100%);
     border: 1px solid var(--gold-border);
@@ -566,7 +540,6 @@ body.sidebar-collapsed .app-main {
     max-width: 640px;
 }
 
-/* Logo Orbital en Inicio */
 .logo-orbit-wrapper {
     position: relative;
     width: 260px;
@@ -613,7 +586,6 @@ body.sidebar-collapsed .app-main {
     50% { transform: translateY(-8px); }
 }
 
-/* Resumen de la Articulación en la Página Principal */
 .articulation-summary-section {
     margin-bottom: 2.5rem;
 }
@@ -717,7 +689,6 @@ body.sidebar-collapsed .app-main {
     margin-top: 0.25rem;
 }
 
-/* Botones / Tarjetas de Acceso Personalizadas hacia las Secciones */
 .quick-access-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(265px, 1fr));
@@ -797,7 +768,6 @@ body.sidebar-collapsed .app-main {
     color: var(--text-secondary);
 }
 
-/* KPIs Estadísticas */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -842,9 +812,6 @@ body.sidebar-collapsed .app-main {
     color: var(--text-secondary);
 }
 
-/* ==========================================================================
-   BOTONES GLOBALES E INSIGNIAS
-   ========================================================================== */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -936,9 +903,6 @@ body.sidebar-collapsed .app-main {
     text-transform: uppercase;
 }
 
-/* ==========================================================================
-   SECCIÓN 2: VITRINA DE PROYECTOS (FEED DE TARJETAS)
-   ========================================================================== */
 .section-header {
     display: flex;
     flex-wrap: wrap;
@@ -1229,9 +1193,6 @@ body.sidebar-collapsed .app-main {
     font-size: 0.7rem;
 }
 
-/* ==========================================================================
-   FORMULARIOS, PANELES Y TABLAS (CARGAR PROYECTO / EVALUACIÓN)
-   ========================================================================== */
 .panel-card {
     background: var(--bg-card);
     border: 1px solid var(--gold-border);
@@ -1366,9 +1327,6 @@ textarea.form-control {
     font-family: var(--font-heading);
 }
 
-/* ==========================================================================
-   MODALES Y LOGIN UNIFICADO (UN SOLO ACCESO PARA DOCENTE Y ALUMNO)
-   ========================================================================== */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -1483,7 +1441,6 @@ textarea.form-control {
     margin-top: 0.6rem;
 }
 
-/* Ciberseguridad & Botón Instalar PWA */
 .btn-install-app {
     display: inline-flex;
     align-items: center;
@@ -1556,9 +1513,6 @@ textarea.form-control {
     gap: 0.75rem;
 }
 
-/* ==========================================================================
-   BARRA DE NAVEGACIÓN INFERIOR MÓVIL (ESTILO INSTAGRAM / YOUTUBE MOBILE)
-   ========================================================================== */
 .mobile-bottom-nav {
     display: none;
     position: fixed;
@@ -1603,7 +1557,6 @@ textarea.form-control {
     font-weight: 800;
 }
 
-/* Toast Notifications */
 .toast-container {
     position: fixed;
     bottom: 1.5rem;
@@ -1629,9 +1582,6 @@ textarea.form-control {
     min-width: 280px;
 }
 
-/* ==========================================================================
-   DISEÑO RESPONSIVE Y ADAPTATIVO PARA TODOS LOS DISPOSITIVOS
-   ========================================================================== */
 @media (max-width: 1100px) {
     .home-hero-banner {
         grid-template-columns: 1fr;
@@ -1650,7 +1600,7 @@ textarea.form-control {
 }
 
 @media (max-width: 900px) {
-    /* En Tablets y Móviles el Sidebar se convierte en Drawer deslizable y se activa la barra inferior estilo Instagram */
+
     .app-sidebar {
         transform: translateX(-100%);
         width: 270px !important;
@@ -1720,9 +1670,6 @@ textarea.form-control {
     }
 }
 
-/* ==========================================================================
-   PANEL DE SUPERVISIÓN INTEGRAL DEL ADMINISTRADOR (5 SUB-MÓDULOS + CRUD BOOLEANO)
-   ========================================================================== */
 .admin-tabs-bar {
     display: flex;
     flex-wrap: wrap;
@@ -1954,9 +1901,6 @@ textarea.form-control {
     cursor: pointer;
 }
 
-/* ==========================================================================
-   SELECCIÓN MÚLTIPLE, BARRA DE LOTE, ELIMINACIÓN DEFINITIVA Y REPORTE PDF
-   ========================================================================== */
 .table-select-checkbox {
     accent-color: var(--gold-primary);
     width: 17px;
@@ -2078,9 +2022,6 @@ textarea.form-control {
     text-transform: uppercase;
 }
 
-/* ==========================================================================
-   TOPBAR ADAPTATIVA POR ROL Y RESPONSIVE MULTI-PANTALLA (DESDE 320px HASTA 4K)
-   ========================================================================== */
 .app-topbar {
     gap: 0.65rem;
     padding: 0 1.15rem;
@@ -2166,7 +2107,6 @@ textarea.form-control {
     flex-shrink: 0;
 }
 
-/* Mejorar el Sidebar para que todos los accesos y módulos quepan cómodamente sin desbordes */
 .app-sidebar {
     padding: 0.95rem 0.75rem 1.25rem;
     gap: 0.6rem;
@@ -2206,7 +2146,6 @@ body.sidebar-collapsed .sidebar-role-chip {
     display: none !important;
 }
 
-/* Backdrop oscuro cuando se abre el Sidebar en Tablets y Celulares */
 .sidebar-backdrop {
     display: none;
     position: fixed;
@@ -2223,7 +2162,6 @@ body.mobile-sidebar-open .sidebar-backdrop {
     display: block;
 }
 
-/* Badges de Despliegue Cloud / Local / Base de Datos en Proyectos */
 .deploy-badge-online {
     display: inline-flex;
     align-items: center;
@@ -2265,7 +2203,6 @@ body.mobile-sidebar-open .sidebar-backdrop {
     line-height: 1.45;
 }
 
-/* Escalado Ultra-Wide y 4K (2560px - 3840px+) */
 @media (min-width: 1850px) {
     :root {
         --sidebar-width: 280px;
@@ -2295,7 +2232,6 @@ body.mobile-sidebar-open .sidebar-backdrop {
     }
 }
 
-/* Optimización de Topbar para Monitores Estándar y Notebooks (1280px - 1680px) */
 @media (max-width: 1680px) {
     .app-topbar {
         padding: 0 0.9rem;
@@ -2368,7 +2304,6 @@ body.mobile-sidebar-open .sidebar-backdrop {
     }
 }
 
-/* Notebooks compactas (1024px - 1340px): compactar buscador y usuario para que toda la barra superior entre sin recortes */
 @media (max-width: 1340px) {
     .brand-subtitle {
         display: none;
@@ -2431,7 +2366,6 @@ body.mobile-sidebar-open .sidebar-backdrop {
     }
 }
 
-/* Optimización para Celulares Pequeños y Medianos (320px - 640px) */
 @media (max-width: 640px) {
     :root {
         --topbar-height: 60px;
@@ -2503,7 +2437,3 @@ body.mobile-sidebar-open .sidebar-backdrop {
         max-height: 92vh;
     }
 }
-
-
-
-

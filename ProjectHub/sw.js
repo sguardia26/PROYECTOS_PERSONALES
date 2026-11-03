@@ -1,9 +1,4 @@
-/* ==========================================================================
-   PROJECTHUB - Service Worker (PWA & Offline Cache)
-   Centro Educativo Nonogasta (C.E.N.) - La Rioja
-   ========================================================================== */
-
-const CACHE_NAME = 'projecthub-cen-cache-v5';
+const CACHE_NAME = 'projecthub-cen-cache-v6';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -15,7 +10,6 @@ const ASSETS_TO_CACHE = [
     './assets/img/ProjectHub2.jpg'
 ];
 
-// Instalación del Service Worker y precaché de recursos críticos
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
@@ -24,7 +18,6 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Activación y limpieza de cachés antiguos
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -39,12 +32,10 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Estrategia Network-First con fallback a Caché para datos frescos y navegación offline
 self.addEventListener('fetch', (event) => {
-    // Solo interceptar peticiones GET
+
     if (event.request.method !== 'GET') return;
 
-    // Ignorar peticiones no seguras o externas no cacheables
     const url = new URL(event.request.url);
     if (!url.protocol.startsWith('http')) return;
 
@@ -71,4 +62,3 @@ self.addEventListener('fetch', (event) => {
             })
     );
 });
-

@@ -1,9 +1,3 @@
-/* ==========================================================================
-   PROJECTHUB - Cliente Oficial Supabase & Servicio Seguro de Identidad,
-   Roles y Supervisión Integral de Administrador
-   Centro Educativo Nonogasta (C.E.N.) - 5° Año T.I.P.P.
-   ========================================================================== */
-
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 const SUPABASE_URL = 'https://obtnmzjsbyeqttyzxasq.supabase.co';
@@ -18,17 +12,9 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     }
 });
 
-/**
- * Servicio relacional de Autenticación, Autorización Multirrol, Auditoría
- * y Supervisión Integral de Entidades (3FN + Baja Lógica Booleana)
- */
 const ProjectHubAuthService = {
     client: supabase,
 
-    /**
-     * 1. Resuelve si el usuario ingresó Correo Institucional, Nombre de Usuario o DNI
-     *    y verifica en la BD si la cuenta está activa o bloqueada por fuerza bruta.
-     */
     async resolveLoginIdentifier(identifier) {
         const cleanId = String(identifier || '').trim();
         const { data, error } = await supabase.rpc('resolver_identificador_login', {
@@ -43,10 +29,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 2. Registra en la tabla inmutable `public.auditoria_accesos` el intento de login
-     *    y actualiza el contador de fuerza bruta en `public.usuarios`.
-     */
     async recordLoginAttempt(identifier, isSuccess, detail = '') {
         try {
             const { data } = await supabase.rpc('registrar_intento_login', {
@@ -62,9 +44,6 @@ const ProjectHubAuthService = {
         }
     },
 
-    /**
-     * 3. Obtiene la ficha relacional completa del usuario autenticado
-     */
     async fetchCurrentUserProfile() {
         const { data, error } = await supabase.rpc('obtener_perfil_completo_actual');
         if (error) {
@@ -74,9 +53,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 4. Flujo completo de Login Unificado con Correo, Usuario o DNI + Contraseña
-     */
     async signInUnified(identifier, password) {
         const resolution = await this.resolveLoginIdentifier(identifier);
 
@@ -134,21 +110,10 @@ const ProjectHubAuthService = {
         };
     },
 
-    /**
-     * 5. Cerrar sesión de forma segura en Supabase Auth
-     */
     async signOut() {
         await supabase.auth.signOut();
     },
 
-    /* ======================================================================
-       MÉTODOS DE SUPERVISIÓN Y GESTIÓN RELACIONAL (ADMINISTRADOR / SISTEMA)
-       ====================================================================== */
-
-    /**
-     * 6. Obtiene en una sola consulta relacional todas las entidades y vínculos:
-     *    usuarios, docentes, alumnos, proyectos y asignaturas.
-     */
     async fetchSystemSupervisionData() {
         const { data, error } = await supabase.rpc('obtener_datos_supervision_sistema');
         if (error) {
@@ -158,9 +123,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 7. Baja / Alta Lógica (Booleano `activo`) sin borrar información física
-     */
     async toggleEntityBooleanState(entidad, id, nuevoEstadoActivo) {
         const { data, error } = await supabase.rpc('admin_cambiar_estado_booleano', {
             p_entidad: entidad,
@@ -174,9 +136,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 8. Crear o Modificar Usuario + Roles + Ficha (Admin/Docente/Alumno) + Relaciones N:M
-     */
     async saveUserIntegral(payload) {
         const { data, error } = await supabase.rpc('admin_guardar_usuario_integral', {
             p_datos: payload
@@ -188,9 +147,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 9. Crear o Modificar Proyecto Relacional + Alumnos + Docentes + Asignaturas
-     */
     async saveProjectRelational(payload) {
         const { data, error } = await supabase.rpc('guardar_proyecto_relacional', {
             p_datos: payload
@@ -202,9 +158,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 10. Crear o Modificar Asignatura Relacional + Docentes + Alumnos + Proyectos
-     */
     async saveAsignaturaRelational(payload) {
         const { data, error } = await supabase.rpc('admin_guardar_asignatura_relacional', {
             p_datos: payload
@@ -216,9 +169,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 11. Eliminación Definitiva de la Base de Datos (Solo permitida si el registro ya está Inactivo)
-     */
     async hardDeleteInactiveEntity(entidad, id) {
         const { data, error } = await supabase.rpc('admin_eliminar_definitivo', {
             p_entidad: entidad,
@@ -231,9 +181,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 12. Operación Masiva en Lote sobre Registros Seleccionados (DESACTIVAR | REACTIVAR | ELIMINAR_DEFINITIVO)
-     */
     async executeBatchOperation(entidad, idsArray, accion) {
         const { data, error } = await supabase.rpc('admin_operacion_lote', {
             p_entidad: entidad,
@@ -247,9 +194,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 13. Carga Masiva Múltiple o Importación .CSV en cualquiera de los módulos (incluyendo SEGURIDAD)
-     */
     async importBatchEntities(entidad, registrosArray) {
         const { data, error } = await supabase.rpc('admin_importar_lote_entidad', {
             p_entidad: entidad,
@@ -262,9 +206,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 14. Calificación Exclusiva del DOCENTE: Evalúa el Proyecto en general y a cada Alumno de manera individual
-     */
     async gradeProjectAndStudentsDocente(payload) {
         const { data, error } = await supabase.rpc('docente_calificar_proyecto_e_individual', {
             p_datos: payload
@@ -276,9 +217,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 15. Módulo de Ciberseguridad (SOC Administrador): Registrar o actualizar evento/alerta/bloqueo
-     */
     async saveSecurityEventAdmin(payload) {
         const { data, error } = await supabase.rpc('admin_guardar_evento_seguridad', {
             p_datos: payload
@@ -290,9 +228,6 @@ const ProjectHubAuthService = {
         return data;
     },
 
-    /**
-     * 16. Alias compatible para operaciones masivas en lote (Admin / Docente / Alumno)
-     */
     async bulkAdminOperation(entidad, idsArray, accion) {
         return await this.executeBatchOperation(entidad, idsArray, accion);
     }

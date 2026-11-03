@@ -1,16 +1,10 @@
-# Archivos de sistema operativo
 .DS_Store
 Thumbs.db
 Desktop.ini
-
-# Archivos de configuración local y variables de entorno sensibles
 .env
 .env.local
 *.log
 *.bak
 *.sql
-
-# Editor / IDE
 .vscode/
 .idea/
-

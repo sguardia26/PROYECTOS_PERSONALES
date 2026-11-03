@@ -1,21 +1,11 @@
-/* ==========================================================================
-   PROJECTHUB - Centro Educativo Nonogasta (C.E.N.) - La Rioja
-   Motor App-Shell (Estilo YouTube/Instagram), Sidebar Vinculado,
-   Login Unificado (Detección de Rol) y Suite de Ciberseguridad
-   ========================================================================== */
-
 const STORAGE_KEY_PROJECTS = 'projecthub_cen_projects_v1';
 const STORAGE_KEY_SESSION = 'projecthub_cen_session_v1';
 
-/* ==========================================================================
-   MÓDULO DE CIBERSEGURIDAD INSTITUCIONAL (C.E.N. SHIELD)
-   ========================================================================== */
 const Security = {
     csrfToken: '',
     sessionTimer: null,
-    SESSION_TIMEOUT_MS: 30 * 60 * 1000, // 30 minutos de inactividad
+    SESSION_TIMEOUT_MS: 30 * 60 * 1000,
 
-    // 1. Sanitización Anti-XSS (HTML Entity Encoding estricto)
     escapeHTML(str) {
         if (str === null || str === undefined) return '';
         return String(str)
@@ -27,7 +17,6 @@ const Security = {
             .replace(/\//g, '&#x2F;');
     },
 
-    // 2. Sanitizador de Enlaces Externos (Anti-Tabnabbing / Anti-Phishing)
     sanitizeURL(url) {
         if (!url || typeof url !== 'string') return '';
         const trimmed = url.trim();
@@ -45,11 +34,10 @@ const Security = {
         return '';
     },
 
-    // 3. Filtro Seguro de Archivos Adjuntos (Lista Blanca Estricta)
     validateUploadedFile(file) {
         if (!file) return { valid: true };
 
-        const MAX_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+        const MAX_SIZE_BYTES = 25 * 1024 * 1024;
         const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'zip', 'pptx'];
         const parts = file.name.split('.');
         const extension = parts.length > 1 ? parts.pop().toLowerCase() : '';
@@ -85,7 +73,6 @@ const Security = {
         return { valid: true, sanitizedName };
     },
 
-    // 4. Token Criptográfico Anti-CSRF
     generateCSRFToken() {
         const array = new Uint8Array(24);
         if (window.crypto && window.crypto.getRandomValues) {
@@ -108,7 +95,6 @@ const Security = {
         return Boolean(token && this.csrfToken && token === this.csrfToken);
     },
 
-    // 5. Mitigación Anti-Fuerza Bruta en el Login Unificado
     checkBruteForce() {
         const now = Date.now();
         const storedLock = parseInt(sessionStorage.getItem('cen_login_lockout') || '0', 10);
@@ -177,7 +163,6 @@ const Security = {
         if (this._lockoutInterval) clearInterval(this._lockoutInterval);
     },
 
-    // 6. Cierre Automático por Inactividad
     initSessionTimeout() {
         const resetTimer = () => {
             if (this.sessionTimer) clearTimeout(this.sessionTimer);
@@ -196,9 +181,6 @@ const Security = {
     }
 };
 
-/* ==========================================================================
-   CATÁLOGO INICIAL DE PROYECTOS (5° AÑO C.E.N. NONOGASTA)
-   ========================================================================== */
 const initialProjects = [
     {
         id: 101,
@@ -272,7 +254,6 @@ let currentSearchQuery = '';
 let currentSession = null;
 let deferredInstallPrompt = null;
 
-// Estado relacional en vivo sincronizado desde Supabase PostgreSQL (3FN)
 let systemDB = {
     usuarios: [],
     docentes: [],
@@ -285,13 +266,6 @@ let systemDB = {
 let activeAdminTab = 'usuarios';
 let isApkShowcaseMode = false;
 
-/**
- * 4° REGLA INSTITUCIONAL: PRIVACIDAD DE CALIFICACIONES Y DEVOLUCIONES
- * - El Usuario Común / Público (!currentSession) y la vista App Móvil (.APK) SOLO ven
- *   la información de la plataforma y la Vitrina de Proyectos. Las notas y devoluciones son PRIVADAS.
- * - El ALUMNO solo puede ver sus propias calificaciones y las de sus proyectos donde es autor/integrante.
- * - El DOCENTE (autoridad evaluadora) y el ADMINISTRADOR (supervisión lectura) pueden visualizarlas en gestión.
- */
 function canUserSeeProjectGrade(proj) {
     if (isApkShowcaseMode || !currentSession) return false;
 
@@ -300,7 +274,6 @@ function canUserSeeProjectGrade(proj) {
         return true;
     }
 
-    // Si es ALUMNO, verificar que pertenezca al proyecto o sea su autor
     const userId = String(currentSession.userId || '');
     const alumnosRel = proj?.alumnos_rel || [];
     if (alumnosRel.some(a => String(a.usuario_id) === userId)) {
@@ -316,9 +289,6 @@ function canUserSeeProjectGrade(proj) {
     return false;
 }
 
-/* ==========================================================================
-   INICIALIZACIÓN GENERAL
-   ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
     Security.generateCSRFToken();
     Security.checkBruteForce();
@@ -352,7 +322,6 @@ async function refreshSystemDataFromSupabase(showNotification = false) {
             systemDB.seguridad_eventos = Array.isArray(data.seguridad_eventos) ? data.seguridad_eventos : [];
             systemDB.auditoria_accesos = Array.isArray(data.auditoria_accesos) ? data.auditoria_accesos : [];
 
-            // Mapear los proyectos activos de la BD hacia la Vitrina y bandejas del sistema
             const activeDbProjects = systemDB.proyectos.filter(p => p.activo !== false);
             if (activeDbProjects.length > 0) {
                 projectsList = activeDbProjects.map(p => ({
@@ -401,11 +370,8 @@ async function refreshSystemDataFromSupabase(showNotification = false) {
     }
 }
 
-/* ==========================================================================
-   NAVEGACIÓN DE SECCIONES Y SIDEBAR VINCULADO (ESTILO YOUTUBE / INSTAGRAM)
-   ========================================================================== */
 function toggleAppSidebar() {
-    if (window.innerWidth <= 900) {
+    if (window.innerWidth <= 1100) {
         document.body.classList.toggle('mobile-sidebar-open');
     } else {
         document.body.classList.toggle('sidebar-collapsed');
@@ -413,7 +379,7 @@ function toggleAppSidebar() {
 }
 
 function navigateToSection(sectionName) {
-    // 1. Ocultar todas las secciones y mostrar la seleccionada
+
     document.querySelectorAll('.app-section').forEach(sec => {
         sec.classList.remove('active');
     });
@@ -423,22 +389,18 @@ function navigateToSection(sectionName) {
         target.classList.add('active');
     }
 
-    // 2. Sincronizar estado activo en el Sidebar Principal
     document.querySelectorAll('.sidebar-link[data-section]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.section === sectionName);
     });
 
-    // 3. Sincronizar estado activo en la Barra Superior Rápida por Rol (#topbarRoleQuickNav)
     document.querySelectorAll('#topbarRoleQuickNav .topbar-nav-pill[data-section]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.section === sectionName);
     });
 
-    // 4. Sincronizar estado activo en la Barra Inferior Móvil
     document.querySelectorAll('.bottom-nav-btn[data-section]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.section === sectionName);
     });
 
-    // Cerrar sidebar móvil si estaba abierto en pantallas chicas
     document.body.classList.remove('mobile-sidebar-open');
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -484,7 +446,7 @@ function quickCategoryJump(categoryName) {
 
 function handleGlobalSearch(query) {
     currentSearchQuery = (query || '').toLowerCase().trim();
-    // Si el usuario escribe en el buscador superior y no está en vitrina, lo lleva automáticamente a vitrina
+
     const vitrinaSection = document.getElementById('section-vitrina');
     if (currentSearchQuery.length > 0 && vitrinaSection && !vitrinaSection.classList.contains('active')) {
         navigateToSection('vitrina');
@@ -492,9 +454,6 @@ function handleGlobalSearch(query) {
     filterProjects();
 }
 
-/* ==========================================================================
-   LOGIN UNIFICADO CONECTADO A SUPABASE (RELACIONAL, NORMALIZADO Y MULTIRROL)
-   ========================================================================== */
 function openLoginModal() {
     Security.generateCSRFToken();
     Security.checkBruteForce();
@@ -508,15 +467,15 @@ function fillUnifiedDemo(targetRole) {
     if (targetRole === 'ADMINISTRADOR') {
         userField.value = 'admin.cen@cennonogasta.edu.ar';
         passField.value = 'cen2026admin';
-        showToast('Cuenta Multirrol (ADMINISTRADOR + DOCENTE) cargada. También puedes usar DNI 32500100 o usuario sguardia.admin.');
+        showToast('Cuenta Multirrol (ADMINISTRADOR + DOCENTE) cargada. También puedes usar DNI 37186919 o usuario sguardia.admin.');
     } else if (targetRole === 'DOCENTE') {
         userField.value = 'docente.practicas@cennonogasta.edu.ar';
         passField.value = 'cen2026docente';
         showToast('Cuenta DOCENTE cargada. También puedes usar DNI 34800200 o usuario docente.practicas.');
     } else {
-        userField.value = 'alumno.5to.tipp@cennonogasta.edu.ar';
-        passField.value = 'cen2026alumno';
-        showToast('Cuenta ALUMNO cargada. También puedes usar DNI 47900300 o usuario mateo.carrizo.');
+        userField.value = 'madelein.aguilar';
+        passField.value = 'cen20267298';
+        showToast('Cuenta ALUMNO (Aguilar Hualpa, Madelein Ailen - 1° DIV.) cargada. También puedes ingresar con DNI 48407298.');
     }
 }
 
@@ -730,7 +689,6 @@ function renderTopbarQuickNavForRole(roleCode) {
         return;
     }
 
-    // ADMINISTRADOR
     topbarNav.innerHTML = `
         <button type="button" class="topbar-nav-pill ${activeSec === 'inicio' ? 'active' : ''}" data-section="inicio" onclick="navigateToSection('inicio')">
             <i class="fa-solid fa-house"></i> <span>Inicio</span>
@@ -789,7 +747,6 @@ function updateAuthUI() {
     const mobileBottomRolePanelLabel = document.getElementById('mobileBottomRolePanelLabel');
     const roleSwitcher = document.getElementById('roleSwitcherSelect');
 
-    // 1. MODO VISITANTE (Sin sesión iniciada): ocultar accesos exclusivos de roles
     if (!currentSession) {
         if (guestActions) guestActions.style.display = 'block';
         if (loggedActions) loggedActions.style.display = 'none';
@@ -800,7 +757,6 @@ function updateAuthUI() {
         if (mobileBottomRolePanelBtn) mobileBottomRolePanelBtn.dataset.section = 'cargar';
         if (roleSwitcher) roleSwitcher.style.display = 'none';
 
-        // Personalización automática del Sidebar y Topbar para Visitante
         if (sidebarRoleContextChip) sidebarRoleContextChip.style.display = 'inline-flex';
         if (sidebarRoleContextText) sidebarRoleContextText.textContent = 'MODO VISITANTE';
         if (sidebarUploadBtn) sidebarUploadBtn.style.display = 'none';
@@ -827,7 +783,6 @@ function updateAuthUI() {
     if (userName) userName.textContent = safeName;
     if (mobileBottomAuthLabel) mobileBottomAuthLabel.textContent = safeRole;
 
-    // Si el usuario tiene múltiples roles en la tabla intermedia usuarios_roles, habilitar el selector
     if (roleSwitcher) {
         const rolesList = Array.isArray(currentSession.roles) ? currentSession.roles : [];
         if (rolesList.length > 1) {
@@ -842,7 +797,6 @@ function updateAuthUI() {
         }
     }
 
-    // 2. PERSONALIZACIÓN AUTOMÁTICA DEL TOPBAR Y SIDEBAR SEGÚN EL ROL ACTIVO (ALUMNO | DOCENTE | ADMINISTRADOR)
     renderTopbarQuickNavForRole(activeRole);
 
     if (sidebarRoleContextChip) sidebarRoleContextChip.style.display = 'inline-flex';
@@ -881,7 +835,7 @@ function updateAuthUI() {
         if (sidebarDocenteQuickGroup) sidebarDocenteQuickGroup.style.display = 'block';
         if (sidebarAlumnoQuickGroup) sidebarAlumnoQuickGroup.style.display = 'none';
     } else {
-        // ROL ALUMNO
+
         if (mobileBottomRolePanelLabel) mobileBottomRolePanelLabel.textContent = 'Alumno';
         if (mobileBottomRolePanelIcon) mobileBottomRolePanelIcon.className = 'fa-solid fa-user-graduate';
         if (mobileBottomRolePanelBtn) mobileBottomRolePanelBtn.dataset.section = 'cargar';
@@ -1013,9 +967,6 @@ function openUserProfileModal() {
     openModal('userProfileModal');
 }
 
-/* ==========================================================================
-   PERSISTENCIA Y RENDERIZADO DE VITRINA (CON PROTECCIÓN ANTI-XSS)
-   ========================================================================== */
 function loadProjectsFromStorage() {
     const saved = localStorage.getItem(STORAGE_KEY_PROJECTS);
     if (saved) {
@@ -1045,7 +996,6 @@ async function loadSessionFromStorage() {
     }
     updateAuthUI();
 
-    // Sincronizar con la sesión activa de Supabase si existe
     if (window.ProjectHubAuth) {
         try {
             const { data } = await window.ProjectHubAuth.client.auth.getSession();
@@ -1229,9 +1179,6 @@ function renderProjectsGrid(list) {
     }).join('');
 }
 
-/* ==========================================================================
-   MODAL DE FICHA DETALLADA Y ENLACES SEGUROS
-   ========================================================================== */
 function openProjectDetail(projectId) {
     const proj = projectsList.find(p => String(p.id) === String(projectId));
     if (!proj) return;
@@ -1256,7 +1203,6 @@ function openProjectDetail(projectId) {
     const safeSnippet = Security.escapeHTML(proj.snippetCodigoFuente || '');
     const isOnline = proj.enProduccionPublica !== false && Boolean(cleanDemoUrl);
 
-    // 4° REGLA: La calificación y devolución es privada (oculta para el público general y modo .APK)
     const canSeeGrade = canUserSeeProjectGrade(proj);
 
     const techChips = (proj.techs || []).map(t => `<span class="tech-chip" style="font-size:0.82rem; padding:0.35rem 0.8rem;">${Security.escapeHTML(t)}</span>`).join('');
@@ -1393,9 +1339,6 @@ function inspectExternalLink(url) {
     openModal('linkSafetyModal');
 }
 
-/* ==========================================================================
-   CARGA DE PROYECTOS Y EVALUACIÓN DOCENTE
-   ========================================================================== */
 function updateFileLabel(inputElement) {
     const label = document.getElementById('fileDropText');
     if (inputElement.files && inputElement.files.length > 0) {
@@ -1584,10 +1527,8 @@ function renderTeacherEvaluationTable() {
     }).join('');
 }
 
-
-
 function openEvaluationModal(projectId) {
-    // 1° REGLA: ÚNICAMENTE el rol DOCENTE puede abrir el clasificador/evaluador de proyectos y alumnos
+
     const isDocenteRole = currentSession && (
         currentSession.role === 'DOCENTE' ||
         (Array.isArray(currentSession.roles) && currentSession.roles.some(r => r.codigo === 'DOCENTE') && currentSession.role === 'DOCENTE')
@@ -1615,7 +1556,6 @@ function openEvaluationModal(projectId) {
     document.getElementById('evalGrade').value = currentGrade;
     document.getElementById('evalFeedback').value = currentFeedback;
 
-    // Renderizar filas individuales por cada alumno integrante del proyecto
     const container = document.getElementById('evalIndividualStudentsContainer');
     if (container) {
         const alumnosIntegrantes = Array.isArray(dbProj?.alumnos_rel) ? dbProj.alumnos_rel : [];
@@ -1752,9 +1692,6 @@ async function saveTeacherEvaluation(event) {
     }
 }
 
-/* ==========================================================================
-   PWA, TEMA VISUAL Y UTILIDADES DE MODALES
-   ========================================================================== */
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -1832,11 +1769,6 @@ function showToast(message) {
         setTimeout(() => toast.remove(), 300);
     }, 3600);
 }
-
-/* ==========================================================================
-   MÓDULO DE SUPERVISIÓN INTEGRAL DEL ADMINISTRADOR (5 SUB-MÓDULOS + CRUD BOOLEANO)
-   1) Usuarios | 2) Docentes | 3) Alumnos | 4) Proyectos | 5) Asignaturas
-   ========================================================================== */
 
 const selectedAdminIds = {
     USUARIO: new Set(),
@@ -2096,7 +2028,7 @@ async function handleBulkAction(accion) {
 }
 
 function renderAdminSupervisionDashboard() {
-    // Actualizar contadores KPI del Administrador (6 módulos)
+
     const kpiUsuarios = document.getElementById('adminKpiUsuarios');
     const kpiDocentes = document.getElementById('adminKpiDocentes');
     const kpiAlumnos = document.getElementById('adminKpiAlumnos');
@@ -2118,7 +2050,6 @@ function renderAdminSupervisionDashboard() {
     if (kpiAsignaturas) kpiAsignaturas.textContent = `${activeAsignaturasCount} / ${systemDB.asignaturas.length}`;
     if (kpiSeguridad) kpiSeguridad.textContent = `${activeSeguridadCount} Eventos`;
 
-    // También actualizar el contador de alumnos de la portada principal con los alumnos reales de la BD
     const elHomeStudents = document.getElementById('statTotalStudents');
     if (elHomeStudents && activeAlumnosCount > 0) {
         elHomeStudents.textContent = activeAlumnosCount;
@@ -2141,9 +2072,6 @@ function renderBooleanBadge(isActive) {
     return `<span class="bool-badge-false"><i class="fa-solid fa-ban"></i> INACTIVO</span>`;
 }
 
-/* --------------------------------------------------------------------------
-   1. RENDERIZADO DE USUARIOS (public.usuarios + public.usuarios_roles)
-   -------------------------------------------------------------------------- */
 function renderAdminUsuariosTable() {
     const tbody = document.getElementById('adminUsuariosTableBody');
     if (!tbody) return;
@@ -2230,11 +2158,6 @@ function renderAdminUsuariosTable() {
     }).join('');
 }
 
-
-
-/* --------------------------------------------------------------------------
-   2. RENDERIZADO DE DOCENTES (CON PROYECTOS, ALUMNOS Y ASIGNATURAS)
-   -------------------------------------------------------------------------- */
 function renderAdminDocentesTable() {
     const tbody = document.getElementById('adminDocentesTableBody');
     if (!tbody) return;
@@ -2314,11 +2237,6 @@ function renderAdminDocentesTable() {
     }).join('');
 }
 
-
-
-/* --------------------------------------------------------------------------
-   3. RENDERIZADO DE ALUMNOS (CON PROYECTOS, DOCENTES Y ASIGNATURAS)
-   -------------------------------------------------------------------------- */
 function renderAdminAlumnosTable() {
     const tbody = document.getElementById('adminAlumnosTableBody');
     if (!tbody) return;
@@ -2398,11 +2316,6 @@ function renderAdminAlumnosTable() {
     }).join('');
 }
 
-
-
-/* --------------------------------------------------------------------------
-   4. RENDERIZADO DE PROYECTOS (CON ALUMNOS, DOCENTES Y ASIGNATURAS)
-   -------------------------------------------------------------------------- */
 function renderAdminProyectosTable() {
     const tbody = document.getElementById('adminProyectosTableBody');
     if (!tbody) return;
@@ -2486,11 +2399,6 @@ function renderAdminProyectosTable() {
     }).join('');
 }
 
-
-
-/* --------------------------------------------------------------------------
-   5. RENDERIZADO DE ASIGNATURAS (CON DOCENTES, ALUMNOS Y PROYECTOS)
-   -------------------------------------------------------------------------- */
 function renderAdminAsignaturasTable() {
     const tbody = document.getElementById('adminAsignaturasTableBody');
     if (!tbody) return;
@@ -2573,10 +2481,6 @@ function renderAdminAsignaturasTable() {
     }).join('');
 }
 
-/* --------------------------------------------------------------------------
-   6. RENDERIZADO DEL MÓDULO DE SEGURIDAD Y CIBERSEGURIDAD (SOC ADMINISTRADOR)
-   (public.seguridad_eventos_sistema + public.auditoria_accesos)
-   -------------------------------------------------------------------------- */
 function getSeverityBadgeHTML(sev) {
     const s = String(sev || 'INFO').toUpperCase();
     if (s === 'CRITICA') return `<span class="badge-status" style="background:rgba(239,68,68,0.2); color:#ef4444; border:1px solid #ef4444;">🚨 CRÍTICA</span>`;
@@ -2811,11 +2715,6 @@ async function runAdminCybersecurityScan() {
     }
 }
 
-
-
-/* ==========================================================================
-   ACCIÓN BOOLEANA (DESACTIVAR / REACTIVAR) Y ELIMINACIÓN DEFINITIVA DE BD
-   ========================================================================== */
 async function handleAdminToggleBoolean(entidad, id, nuevoEstado, nombreEtiqueta) {
     if (!window.ProjectHubAuth) return;
 
@@ -2973,9 +2872,6 @@ function openAdminMultiVerInfo(entidad, idsArray) {
     openAdminVerInfoMultiple(entidad, idsArray);
 }
 
-/* ==========================================================================
-   MODAL "VER INFO" RELACIONAL COMPLETA (PARA LAS 6 ENTIDADES)
-   ========================================================================== */
 function openAdminVerInfo(entidad, id) {
     const content = document.getElementById('adminVerInfoContent');
     if (!content) return;
@@ -3066,9 +2962,11 @@ function openAdminVerInfo(entidad, id) {
                 <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
                     <strong style="color:var(--gold-primary);"><i class="fa-solid fa-id-card"></i> Ficha Académica y Familiar:</strong>
                     <p style="margin-top:0.3rem; color:var(--text-secondary);">
-                        DNI: <strong>${Security.escapeHTML(al.dni)}</strong> | Email: <strong>${Security.escapeHTML(al.email)}</strong> | Promedio General: <strong>${al.promedio_general || 'S/C'}</strong><br>
-                        Equipo / Rol Técnico: ${Security.escapeHTML(al.nombre_equipo_proyecto || 'General')} (${Security.escapeHTML(al.rol_en_equipo || 'Desarrollador')})<br>
-                        Tutor Legal: <strong>${Security.escapeHTML(al.tutor_legal_nombre || 'No especificado')}</strong> (Tel: ${Security.escapeHTML(al.tutor_legal_telefono || 'N/A')})
+                        DNI: <strong>${Security.escapeHTML(al.dni)}</strong> ${al.cuil ? `• CUIL: <strong>${Security.escapeHTML(al.cuil)}</strong>` : ''} | Email: <strong>${Security.escapeHTML(al.email)}</strong><br>
+                        Fecha Nac.: <strong>${Security.escapeHTML(al.fecha_nacimiento || 'No registrada')}</strong> | Condición: <strong>${Security.escapeHTML(al.condicion_academica || 'Regular')}</strong> | Domicilio: <strong>${Security.escapeHTML(al.domicilio || 'N/A')} (${Security.escapeHTML(al.localidad || 'La Rioja')})</strong><br>
+                        Equipo / Rol Técnico: ${Security.escapeHTML(al.nombre_equipo_proyecto || 'General')} (${Security.escapeHTML(al.rol_en_equipo || 'Desarrollador')}) | Promedio General: <strong>${al.promedio_general || 'S/C'}</strong><br>
+                        Tutor Legal: <strong>${Security.escapeHTML(al.tutor_legal_nombre || 'No especificado')}</strong> ${al.tutor_legal_dni ? `(DNI Tutor: ${Security.escapeHTML(al.tutor_legal_dni)})` : ''} (Tel: ${Security.escapeHTML(al.tutor_legal_telefono || 'N/A')})<br>
+                        ${al.observaciones_pedagogicas ? `Observaciones / Procedencia / Materias Previas: <em>${Security.escapeHTML(al.observaciones_pedagogicas)}</em>` : ''}
                     </p>
                 </div>
                 <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
@@ -3222,9 +3120,6 @@ function openAdminVerInfo(entidad, id) {
     openModal('adminVerInfoModal');
 }
 
-/* ==========================================================================
-   MODALES DE ALTA Y MODIFICACIÓN RELACIONAL (USUARIOS / DOCENTES / ALUMNOS)
-   ========================================================================== */
 function renderCheckboxGroup(containerId, items, idKey, labelFormatter, selectedIdsSet) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -3321,7 +3216,6 @@ function openAdminUserModal(userId = null, defaultRole = 'ALUMNO') {
         document.getElementById('admUserRolPrincipal').value = defaultRole;
     }
 
-    // Poblar checkboxes de relaciones N:M para Docente
     const docAsigSet = new Set((docRelObj?.asignaturas_rel || []).map(x => String(x.id)));
     const docProySet = new Set((docRelObj?.proyectos_rel || []).map(x => String(x.id)));
     const docAluSet = new Set((docRelObj?.alumnos_rel || []).map(x => String(x.usuario_id)));
@@ -3330,9 +3224,15 @@ function openAdminUserModal(userId = null, defaultRole = 'ALUMNO') {
     renderCheckboxGroup('admDocProyectosCheckboxes', systemDB.proyectos, 'id', p => `${p.codigo_proyecto}: ${p.titulo}`, docProySet);
     renderCheckboxGroup('admDocAlumnosCheckboxes', systemDB.alumnos, 'usuario_id', al => `${al.nombre_completo} (${al.anio_cursado}° ${al.division})`, docAluSet);
 
-    // Poblar checkboxes de relaciones N:M para Alumno
-    const aluAsigSet = new Set((aluRelObj?.asignaturas_rel || []).map(x => String(x.id)));
-    const aluDocSet = new Set((aluRelObj?.docentes_rel || []).map(x => String(x.usuario_id)));
+    const defaultAsigIds = !aluRelObj
+        ? systemDB.asignaturas.filter(a => a.codigo === 'CEN-5TO-TG' || a.codigo === 'CEN-5TO-PP').map(a => String(a.id))
+        : (aluRelObj?.asignaturas_rel || []).map(x => String(x.id));
+    const defaultDocIds = !aluRelObj
+        ? systemDB.docentes.map(d => String(d.usuario_id))
+        : (aluRelObj?.docentes_rel || []).map(x => String(x.usuario_id));
+
+    const aluAsigSet = new Set(defaultAsigIds);
+    const aluDocSet = new Set(defaultDocIds);
     const aluProySet = new Set((aluRelObj?.proyectos_rel || []).map(x => String(x.id)));
 
     renderCheckboxGroup('admAluAsignaturasCheckboxes', systemDB.asignaturas, 'id', a => `${a.codigo} - ${a.nombre}`, aluAsigSet);
@@ -3353,7 +3253,6 @@ function openDocenteStudentModal(studentUserId = null) {
     const aluSec = document.getElementById('admSectionAlumnoFields');
     const titleEl = document.getElementById('adminUserFormTitle');
 
-    // En modo DOCENTE, fijar el rol en ALUMNO y ocultar selector de otros roles
     document.getElementById('chkRolAdmin').checked = false;
     document.getElementById('chkRolDocente').checked = false;
     document.getElementById('chkRolAlumno').checked = true;
@@ -3363,7 +3262,6 @@ function openDocenteStudentModal(studentUserId = null) {
     if (docSec) docSec.style.display = 'none';
     if (aluSec) aluSec.style.display = 'block';
 
-    // Si es un estudiante nuevo creado por el docente, pre-marcar al docente actual como su tutor
     if (!studentUserId && currentSession?.userId) {
         const currentDocSet = new Set([String(currentSession.userId)]);
         renderCheckboxGroup('admAluDocentesCheckboxes', systemDB.docentes, 'usuario_id', d => `Prof. ${d.nombre_completo} (${d.legajo_docente})`, currentDocSet);
@@ -3440,9 +3338,6 @@ async function submitAdminUserIntegralForm(event) {
     }
 }
 
-/* ==========================================================================
-   MODAL DE ALTA Y MODIFICACIÓN RELACIONAL DE PROYECTOS (ADMIN / DOCENTE / ALUMNO)
-   ========================================================================== */
 function openAdminProjectModal(projectId = null) {
     const form = document.getElementById('adminProjectRelationalForm');
     if (form) form.reset();
@@ -3491,12 +3386,10 @@ function openAdminProjectModal(projectId = null) {
     const docSet = new Set((pObj?.docentes_rel || []).map(x => String(x.usuario_id)));
     const asigSet = new Set((pObj?.asignaturas_rel || []).map(x => String(x.id)));
 
-    // Si es un proyecto nuevo y quien lo abre es un DOCENTE, pre-seleccionarlo como Docente Supervisor
     if (!pObj && currentSession?.role === 'DOCENTE' && currentSession?.userId) {
         docSet.add(String(currentSession.userId));
     }
 
-    // Si quien lo abre es un ALUMNO, asegurarse de que quede seleccionado en su propio proyecto y pre-marcar sus asignaturas/docentes
     if (currentSession?.role === 'ALUMNO' && currentSession?.userId) {
         aluSet.add(String(currentSession.userId));
         if (!pObj) {
@@ -3577,9 +3470,6 @@ async function submitAdminProjectRelationalForm(event) {
     }
 }
 
-/* ==========================================================================
-   MODAL DE ALTA Y MODIFICACIÓN RELACIONAL DE ASIGNATURAS (ADMIN)
-   ========================================================================== */
 function openAdminAsignaturaModal(asignaturaId = null) {
     const form = document.getElementById('adminAsignaturaRelationalForm');
     if (form) form.reset();
@@ -3639,9 +3529,6 @@ async function submitAdminAsignaturaRelationalForm(event) {
     }
 }
 
-/* ==========================================================================
-   MODAL 11: CARGA MÚLTIPLE DE REGISTROS (AGREGAR UNO O MÁS EN CUALQUIER MÓDULO)
-   ========================================================================== */
 let batchRowCounter = 0;
 
 function openBatchAddModal(entidad = 'USUARIO') {
@@ -3674,7 +3561,6 @@ function openBatchAddModal(entidad = 'USUARIO') {
         titleEl.innerHTML = `<i class="fa-solid fa-layer-group"></i> Agregar Uno o Más ${labelsMap[cleanEntidad] || cleanEntidad}`;
     }
 
-    // Iniciar con 2 filas listas para completar (el usuario puede quitar o agregar más)
     addNewRowToBatchModal();
     addNewRowToBatchModal();
     openModal('adminBatchAddModal');
@@ -3988,9 +3874,6 @@ async function submitBatchAddForm(event) {
     }
 }
 
-/* ==========================================================================
-   MODAL 12: IMPORTACIÓN .CSV Y ESTRUCTURA DE COLUMNAS PARA LOS 5 MÓDULOS
-   ========================================================================== */
 const CSV_SCHEMAS = {
     USUARIO: {
         title: 'Importar Usuarios (.CSV) y Estructura de Columnas',
@@ -4011,11 +3894,11 @@ const CSV_SCHEMAS = {
     },
     ALUMNO: {
         title: 'Importar Alumnos (.CSV) y Estructura de Columnas',
-        explanation: 'Crea o actualiza el usuario y su ficha en public.alumnos con matrícula, división (A o B), rol técnico, promedio y tutor legal.',
-        columns: ['nombres', 'apellidos', 'dni', 'username', 'email', 'password', 'matricula_legajo', 'division', 'rol_en_equipo', 'promedio_general', 'tutor_legal_nombre', 'tutor_legal_telefono'],
+        explanation: 'Crea o actualiza el usuario y su ficha en public.alumnos con matrícula, división (1° DIV. o 2° DIV.), condición académica, fecha de nacimiento, domicilio, tutor legal y matriculación automática en Tecnología de Gestión y Prácticas Profesionalizantes.',
+        columns: ['nombres', 'apellidos', 'dni', 'cuil', 'username', 'email', 'password', 'matricula_legajo', 'division', 'condicion_academica', 'fecha_nacimiento', 'genero', 'domicilio', 'localidad', 'tutor_legal_nombre', 'tutor_legal_dni', 'observaciones_pedagogicas'],
         sampleRows: [
-            ['Agustina', 'Chumbita', '48100222', 'agustina.chumbita', 'agustina.chumbita@cennonogasta.edu.ar', 'cen2026alumno', 'ALU-2026-045', 'A', 'Desarrolladora Frontend UI', '9.25', 'María Chumbita', '3825-667788'],
-            ['Tomás Ezequiel', 'Vega', '48100333', 'tomas.vega', 'tomas.vega@cennonogasta.edu.ar', 'cen2026alumno', 'ALU-2026-046', 'B', 'Analista de Base de Datos', '8.90', 'Jorge Vega', '3825-667799']
+            ['Madelein Ailen', 'Aguilar Hualpa', '48407298', '27-48407298-7', 'madelein.aguilar', 'madelein.aguilar.7298@cennonogasta.edu.ar', 'cen20267298', 'CEN-2026-48407298', '1° DIV.', 'Regular', '2008-09-25', 'F', 'B° SAN MARTIN', 'LA RIOJA', 'HUALPA ROXANA ESTHER', '33704279', 'Esc. procedencia: ESC.N° 406'],
+            ['Tiago Agustin', 'Ahumada Olivares', '49096563', '20-49096563-8', 'tiago.ahumada', 'tiago.ahumada.6563@cennonogasta.edu.ar', 'cen20266563', 'CEN-2026-49096563', '2° DIV.', 'Regular', '2009-02-21', 'M', 'B° EL LIBERTADOR', 'LA RIOJA', 'OLIVARES VALERIA VANESA', '26790806', 'Esc. procedencia: ESC. N° 194']
         ]
     },
     PROYECTO: {
@@ -4165,7 +4048,6 @@ function handleCsvFileSelected(inputEl) {
             return;
         }
 
-        // Detectar automáticamente si el separador es ';' (Excel en español) o ','
         const firstLine = rawLines[0];
         const delimiter = (firstLine.split(';').length > firstLine.split(',').length) ? ';' : ',';
 
@@ -4236,10 +4118,6 @@ async function executeCsvDatabaseImport() {
     }
 }
 
-/* ==========================================================================
-   GENERADOR DE REPORTES OFICIALES .PDF DE PROJECTHUB (DISEÑO PERSONALIZADO,
-   ARGUMENTADO, EXPLICADO Y RELACIONAL PARA EL ADMINISTRADOR Y DOCENTES)
-   ========================================================================== */
 function exportProjectsSummary() {
     exportAdminReportPDF('PROYECTO');
 }
@@ -4269,7 +4147,6 @@ function exportAdminReportPDF(scope = 'INTEGRAL') {
 
     const reportMainTitle = scopeTitles[cleanScope] || scopeTitles.INTEGRAL;
 
-    // Bloques de tablas detalladas según el alcance elegido
     let sectionsHTML = '';
 
     if (cleanScope === 'INTEGRAL' || cleanScope === 'USUARIO') {
@@ -4786,15 +4663,6 @@ function exportAdminReportPDF(scope = 'INTEGRAL') {
     showToast(`Reporte oficial .PDF (${cleanScope}) generado con el diseño institucional de ProjectHub.`);
 }
 
-/* ==========================================================================
-   PANEL INTEGRAL DEL ROL DOCENTE (3 MÓDULOS PERSONALIZADOS):
-   1) ESTUDIANTES: Ver sus estudiantes asignados + Agregar, Editar, Ver Detalle,
-      Desactivar, Reactivar, Eliminar Definitivo, Selección Múltiple, Lote, CSV y PDF.
-   2) PROYECTOS: Ver sus proyectos supervisados/cargados + Agregar, Editar, Evaluar,
-      Ver Detalle, Desactivar, Reactivar, Eliminar Definitivo, Lote, CSV y PDF.
-   3) ASIGNATURAS: Solo lectura de las asignaturas donde fue asignado por el
-      Administrador + Ver Detalle y Exportar PDF.
-   ========================================================================== */
 let activeDocenteTab = 'estudiantes';
 
 const selectedDocenteIds = {
@@ -4835,12 +4703,6 @@ function switchDocenteTab(tabName) {
     updateDocenteBulkActionBar();
 }
 
-/**
- * Obtiene las colecciones filtradas exclusivamente para el Docente logueado:
- * - Sus asignaturas asignadas por el Administrador (docentes_asignaturas)
- * - Sus proyectos supervisados/cargados o articulados con sus cátedras
- * - Sus estudiantes asignados bajo tutoría o que cursan sus asignaturas
- */
 function getDocenteScopedData() {
     if (!currentSession || !currentSession.userId) {
         return {
@@ -4853,7 +4715,6 @@ function getDocenteScopedData() {
     const docUserId = String(currentSession.userId);
     const docenteRecord = systemDB.docentes.find(d => String(d.usuario_id) === docUserId);
 
-    // 1. Asignaturas donde el Administrador asignó a este docente
     const assignedAsigIds = new Set(
         (docenteRecord?.asignaturas_rel || []).map(a => String(a.id))
     );
@@ -4865,7 +4726,6 @@ function getDocenteScopedData() {
 
     misAsignaturas.forEach(a => assignedAsigIds.add(String(a.id)));
 
-    // 2. Proyectos donde este docente está asignado como supervisor/evaluador
     const assignedProjIds = new Set(
         (docenteRecord?.proyectos_rel || []).map(p => String(p.id))
     );
@@ -4879,7 +4739,6 @@ function getDocenteScopedData() {
 
     misProyectos.forEach(p => assignedProjIds.add(String(p.id)));
 
-    // 3. Estudiantes asignados directamente al docente, integrantes de sus proyectos o inscriptos en sus asignaturas
     const assignedAluIds = new Set(
         (docenteRecord?.alumnos_rel || []).map(al => String(al.usuario_id))
     );
@@ -5007,7 +4866,6 @@ function updateDocenteBulkActionBar() {
                 : `registros seleccionados en módulo ${moduleKey}`;
         }
 
-        // En el módulo ASIGNATURAS el Docente solo tiene permiso de Ver Detalle (Asignadas por Administrador)
         const isReadOnlyAsignaturas = (moduleKey === 'ASIGNATURAS');
         if (editBtn) editBtn.style.display = isReadOnlyAsignaturas ? 'none' : 'inline-flex';
         if (deactBtn) deactBtn.style.display = isReadOnlyAsignaturas ? 'none' : 'inline-flex';
@@ -5071,9 +4929,6 @@ async function handleDocenteBulkAction(accion) {
     }
 }
 
-/* --------------------------------------------------------------------------
-   MÓDULO DOCENTE 1: TABLA DE ESTUDIANTES ASIGNADOS AL DOCENTE
-   -------------------------------------------------------------------------- */
 function renderDocenteEstudiantesTable() {
     const tbody = document.getElementById('docenteEstudiantesTableBody');
     if (!tbody) return;
@@ -5159,11 +5014,6 @@ function renderDocenteEstudiantesTable() {
     }).join('');
 }
 
-
-
-/* --------------------------------------------------------------------------
-   MÓDULO DOCENTE 2: TABLA DE PROYECTOS SUPERVISADOS / CARGADOS POR EL DOCENTE
-   -------------------------------------------------------------------------- */
 function renderDocenteProyectosTable() {
     const tbody = document.getElementById('docenteProyectosTableBody');
     if (!tbody) return;
@@ -5250,10 +5100,6 @@ function renderDocenteProyectosTable() {
     }).join('');
 }
 
-/* --------------------------------------------------------------------------
-   MÓDULO DOCENTE 3: APARTADO EXCLUSIVO PARA CLASIFICAR / CALIFICAR
-   (PROYECTO EN GENERAL E INDIVIDUALMENTE POR ALUMNO CON NOTAS SUMATIVAS Y DEVOLUCIÓN)
-   -------------------------------------------------------------------------- */
 function renderDocenteCalificacionesTable() {
     const tbody = document.getElementById('docenteCalificacionesTableBody');
     if (!tbody) return;
@@ -5345,11 +5191,6 @@ function renderDocenteCalificacionesTable() {
     }).join('');
 }
 
-
-
-/* --------------------------------------------------------------------------
-   MÓDULO DOCENTE 3: TABLA DE ASIGNATURAS ASIGNADAS POR EL ADMINISTRADOR (SOLO VER)
-   -------------------------------------------------------------------------- */
 function renderDocenteAsignaturasTable() {
     const tbody = document.getElementById('docenteAsignaturasTableBody');
     if (!tbody) return;
@@ -5418,11 +5259,6 @@ function renderDocenteAsignaturasTable() {
     }).join('');
 }
 
-
-
-/* --------------------------------------------------------------------------
-   EXPORTACIÓN .PDF PERSONALIZADA EXCLUSIVA PARA EL DOCENTE Y SUS MÓDULOS
-   -------------------------------------------------------------------------- */
 function exportDocenteReportPDF(scope = 'INTEGRAL_DOCENTE') {
     const cleanScope = String(scope || 'INTEGRAL_DOCENTE').trim().toUpperCase();
     const { misAsignaturas, misProyectos, misEstudiantes } = getDocenteScopedData();
@@ -5608,12 +5444,6 @@ function exportDocenteReportPDF(scope = 'INTEGRAL_DOCENTE') {
     printWin.document.close();
 }
 
-/* ==========================================================================
-   PANEL INTEGRAL DEL ALUMNO (3 MÓDULOS PERSONALIZADOS Y RELACIONALES)
-   1. PROYECTOS: Mis Proyectos (Agregar, Editar, Ver Detalle, Desactivar/Eliminar, Lote, CSV, PDF + GitHub / Supabase / Vercel / Local)
-   2. CALIFICACIONES: Mis Calificaciones Sumativas y Devoluciones Pedagógicas Docentes + Boletín PDF
-   3. ASIGNATURAS: Mis Asignaturas Asignadas por Administración (Solo lectura + Ver Detalle y PDF)
-   ========================================================================== */
 let activeAlumnoTab = 'proyectos';
 const selectedAlumnoIds = {
     proyectos: new Set(),
@@ -5657,12 +5487,10 @@ function getAlumnoScopedData() {
 
     const miFichaAlumno = systemDB.alumnos.find(al => String(al.usuario_id) === userId) || null;
 
-    // 1. Mis Proyectos (donde el alumno es integrante en proyectos_alumnos, o todos si el admin previsualiza el panel)
     const misProyectos = isAdmin
         ? systemDB.proyectos
         : systemDB.proyectos.filter(p => (p.alumnos_rel || []).some(a => String(a.usuario_id) === userId));
 
-    // Si por algún motivo un alumno de demostración no tuviera proyectos en proyectos_rel, mostrar los de su apellido o todos los de 5° año
     let proyectosFinales = (misProyectos.length > 0 || isAdmin)
         ? misProyectos
         : systemDB.proyectos.filter(p => (p.autores_resumen || '').toLowerCase().includes((currentSession.apellidos || '').toLowerCase()));
@@ -5671,7 +5499,6 @@ function getAlumnoScopedData() {
         proyectosFinales = systemDB.proyectos;
     }
 
-    // 2. Mis Asignaturas asignadas por el Administrador en alumnos_asignaturas
     let misAsignaturas = isAdmin
         ? systemDB.asignaturas
         : systemDB.asignaturas.filter(a => (a.alumnos_rel || []).some(al => String(al.usuario_id) === userId));
@@ -5680,7 +5507,6 @@ function getAlumnoScopedData() {
         misAsignaturas = systemDB.asignaturas;
     }
 
-    // 3. Calcular promedio sumativo de proyectos calificados + promedio general
     const notasProyectos = proyectosFinales
         .map(p => parseFloat(p.calificacion))
         .filter(n => !isNaN(n) && n > 0);
@@ -5771,7 +5597,6 @@ function updateAlumnoBulkActionBar() {
     if (pill) pill.textContent = count;
     if (badge) badge.textContent = `registro${count > 1 ? 's' : ''} seleccionado${count > 1 ? 's' : ''} en el módulo ${activeAlumnoTab.toUpperCase()}`;
 
-    // En CALIFICACIONES y ASIGNATURAS el alumno solo puede Ver Detalle (lectura académica)
     const isReadOnlyTab = (activeAlumnoTab === 'calificaciones' || activeAlumnoTab === 'asignaturas');
     ['alumnoBulkEditBtn', 'alumnoBulkDeactivateBtn', 'alumnoBulkActivateBtn', 'alumnoBulkDeletePermBtn'].forEach(btnId => {
         const btn = document.getElementById(btnId);
@@ -5839,9 +5664,6 @@ async function handleAlumnoBulkAction(accion) {
     }
 }
 
-/* --------------------------------------------------------------------------
-   MÓDULO ALUMNO 1: MIS PROYECTOS (GITHUB / SUPABASE / VERCEL / CÓDIGO LOCAL)
-   -------------------------------------------------------------------------- */
 function renderAlumnoProyectosTable() {
     const tbody = document.getElementById('alumnoProyectosTableBody');
     if (!tbody) return;
@@ -5959,12 +5781,6 @@ function renderAlumnoProyectosTable() {
     }).join('');
 }
 
-
-
-/* --------------------------------------------------------------------------
-   MÓDULO ALUMNO 2: MIS CALIFICACIONES Y DEVOLUCIONES DOCENTES
-   (INCLUYE CALIFICACIÓN Y DEVOLUCIÓN DEL PROYECTO EN GENERAL + INDIVIDUAL POR ALUMNO)
-   -------------------------------------------------------------------------- */
 function renderAlumnoCalificacionesTable() {
     const tbody = document.getElementById('alumnoCalificacionesTableBody');
     if (!tbody) return;
@@ -5996,7 +5812,6 @@ function renderAlumnoCalificacionesTable() {
         const asigsHTML = (p.asignaturas_rel || []).map(a => `<span class="rel-pill"><i class="fa-solid fa-book"></i> ${Security.escapeHTML(a.nombre)}</span>`).join('');
         const docsHTML = (p.docentes_rel || []).map(d => `<span class="rel-pill"><i class="fa-solid fa-chalkboard-user"></i> Prof. ${Security.escapeHTML(d.nombre_completo)}</span>`).join('');
 
-        // Buscar la evaluación individual del alumno logueado dentro del proyecto
         const miEval = (p.alumnos_rel || []).find(al => String(al.usuario_id) === currentUserId) || (p.alumnos_rel || [])[0] || null;
         const notaIndiv = miEval?.calificacion_individual;
         const devIndiv = miEval?.devolucion_individual;
@@ -6060,11 +5875,6 @@ function renderAlumnoCalificacionesTable() {
     }).join('');
 }
 
-
-
-/* --------------------------------------------------------------------------
-   MÓDULO ALUMNO 3: MIS ASIGNATURAS ASIGNADAS POR EL ADMINISTRADOR (SOLO VER)
-   -------------------------------------------------------------------------- */
 function renderAlumnoAsignaturasTable() {
     const tbody = document.getElementById('alumnoAsignaturasTableBody');
     if (!tbody) return;
@@ -6099,7 +5909,6 @@ function renderAlumnoAsignaturasTable() {
             <span class="rel-pill"><i class="fa-solid fa-chalkboard-user"></i> Prof. ${Security.escapeHTML(d.nombre_completo)} (${Security.escapeHTML(d.rol_catedra || 'Titular')})</span>
         `).join('');
 
-        // Proyectos del propio alumno vinculados a esta asignatura
         const misProysEnMateria = misProyectos.filter(p => (p.asignaturas_rel || []).some(asg => String(asg.id) === String(a.id)));
         const proysHTML = misProysEnMateria.map(p => `
             <span class="rel-pill"><i class="fa-solid fa-diagram-project"></i> ${Security.escapeHTML(p.codigo_proyecto)}: ${Security.escapeHTML(p.titulo.substring(0, 24))}...</span>
@@ -6137,11 +5946,6 @@ function renderAlumnoAsignaturasTable() {
     }).join('');
 }
 
-
-
-/* --------------------------------------------------------------------------
-   EXPORTACIÓN .PDF PERSONALIZADA EXCLUSIVA PARA EL ALUMNO (PORTFOLIO Y BOLETÍN)
-   -------------------------------------------------------------------------- */
 function exportAlumnoReportPDF(scope = 'INTEGRAL_ALUMNO') {
     const cleanScope = String(scope || 'INTEGRAL_ALUMNO').trim().toUpperCase();
     const { misProyectos, misAsignaturas, miFichaAlumno, promedioGeneral } = getAlumnoScopedData();
@@ -6337,10 +6141,6 @@ function exportAlumnoReportPDF(scope = 'INTEGRAL_ALUMNO') {
     printWin.document.close();
 }
 
-/* ==========================================================================
-   DESCARGA DE PAQUETE MÓVIL .APK (PREFERENCIAL ANDROID + ROADMAP MULTISISTEMA)
-   Y MODO INTERACTIVO DE APLICACIÓN MÓVIL (SOLO INFORMACIÓN Y VITRINA PÚBLICA)
-   ========================================================================== */
 function openApkDownloadModal() {
     document.body.classList.remove('mobile-sidebar-open');
     openModal('apkDownloadModal');
@@ -6349,7 +6149,6 @@ function openApkDownloadModal() {
 function downloadAndroidApkPackage(event) {
     const apkFileUrl = 'assets/apk/ProjectHub_CEN_Android_v3.0.apk';
 
-    // Si se invoca desde un botón (no un enlace <a download> nativo), disparar la descarga del binario .APK real
     const isNativeAnchor = event && event.currentTarget && event.currentTarget.tagName === 'A';
     if (!isNativeAnchor) {
         const a = document.createElement('a');
@@ -6422,8 +6221,3 @@ function handleMobileProfileOrLogin() {
         openLoginModal();
     }
 }
-
-
-
-
-

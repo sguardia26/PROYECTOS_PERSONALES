@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <!-- Ciberseguridad: Content Security Policy (CSP) con Lista Blanca para API Segura de Supabase -->
+
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://obtnmzjsbyeqttyzxasq.supabase.co wss://obtnmzjsbyeqttyzxasq.supabase.co https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self';">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="strict-origin-when-cross-origin">
 
-    <!-- PWA (Progressive Web App) -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FFD000">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,20 +18,16 @@
     <link rel="icon" type="image/png" href="assets/img/ProjectHub.png">
     <link rel="apple-touch-icon" href="assets/img/ProjectHub.png">
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Estilos Personalizados PROJECTHUB App-Shell -->
+
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
 
-    <!-- ======================================================================
-         TOPBAR FIJA (ESTILO YOUTUBE / INSTAGRAM)
-         ====================================================================== -->
     <header class="app-topbar">
         <div class="topbar-left">
             <button class="sidebar-toggle-btn" onclick="toggleAppSidebar()" title="Alternar Menú Lateral (Sidebar)">
@@ -48,7 +43,6 @@
             </a>
         </div>
 
-        <!-- Buscador Global Rápido (Redirige y filtra en Vitrina al escribir) -->
         <div class="topbar-center">
             <div class="global-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -56,7 +50,6 @@
             </div>
         </div>
 
-        <!-- Navegación Rápida Personalizada en el Topbar según el Rol del Usuario -->
         <nav class="topbar-role-nav" id="topbarRoleQuickNav" aria-label="Accesos rápidos del rol activo">
             <button type="button" class="topbar-nav-pill active" onclick="navigateToSection('inicio')">
                 <i class="fa-solid fa-house"></i> <span>Inicio</span>
@@ -67,31 +60,27 @@
         </nav>
 
         <div class="topbar-right">
-            <!-- Escudo de Ciberseguridad -->
+
             <button class="security-badge" onclick="openModal('securityModal')" title="Estado de Ciberseguridad">
                 <i class="fa-solid fa-shield-halved"></i> <span>Seguridad</span>
             </button>
 
-            <!-- Botón Descargar .APK Móvil (Preferencial Android + Modo Vitrina App) -->
             <button class="btn-install-app" id="installAppBtn" onclick="openApkDownloadModal()" title="Descargar Aplicativo .APK para Android y Vista Móvil">
                 <i class="fa-brands fa-android"></i> <span>Descargar .APK</span>
             </button>
 
-            <!-- Cambio de Tema Oscuro / Claro -->
             <button class="btn-icon" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar Tema Visual">
                 <i class="fa-solid fa-sun"></i>
             </button>
 
-            <!-- BOTÓN DE LOGIN UNIFICADO (UN SOLO ACCESO TANTO PARA DOCENTE COMO ALUMNO) -->
             <div id="guestActions">
                 <button class="btn btn-primary" onclick="openLoginModal()">
                     <i class="fa-solid fa-circle-user"></i> Iniciar Sesión
                 </button>
             </div>
 
-            <!-- Estado de Sesión Iniciada (Detectado según el usuario logueado y sus roles en Supabase) -->
             <div id="loggedUserActions" style="display: none; align-items: center; gap: 0.6rem;">
-                <!-- Selector dinámico de Rol Activo (solo aparece cuando el usuario tiene más de un rol en usuarios_roles) -->
+
                 <select id="roleSwitcherSelect" class="select-filter" style="display: none; padding: 0.35rem 0.65rem; font-size: 0.75rem; font-weight: 700; border-color: var(--gold-primary); color: var(--gold-primary);" onchange="switchActiveUserRole(this.value)" title="Cambiar entre tus roles asignados">
                 </select>
                 <div class="user-badge" onclick="openUserProfileModal()" style="cursor: pointer;" title="Ver mi Ficha Relacional y Roles">
@@ -106,17 +95,10 @@
         </div>
     </header>
 
-    <!-- ======================================================================
-         CONTENEDOR PRINCIPAL APP-SHELL (SIDEBAR + SECCIONES INDEPENDIENTES)
-         ====================================================================== -->
     <div class="app-shell">
 
-        <!-- Fondo Oscuro Táctil para Cerrar el Sidebar en Celulares y Tablets -->
         <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="document.body.classList.remove('mobile-sidebar-open')"></div>
 
-        <!-- ==================================================================
-             SIDEBAR PRINCIPAL ADAPTATIVO SEGÚN EL ROL DEL USUARIO
-             ================================================================== -->
         <aside class="app-sidebar" id="appSidebar">
             <div>
                 <div class="sidebar-nav-group">
@@ -151,7 +133,6 @@
                     </button>
                 </div>
 
-                <!-- Sub-Accesos Rápidos Exclusivos cuando el usuario está en Rol ALUMNO -->
                 <div class="sidebar-nav-group" id="sidebarAlumnoQuickGroup" style="display:none;">
                     <div class="sidebar-section-title">Módulos del Alumno</div>
 
@@ -169,7 +150,6 @@
                     </button>
                 </div>
 
-                <!-- Sub-Accesos Rápidos Exclusivos cuando el usuario está en Rol DOCENTE -->
                 <div class="sidebar-nav-group" id="sidebarDocenteQuickGroup" style="display:none;">
                     <div class="sidebar-section-title">Módulos del Docente</div>
 
@@ -191,7 +171,6 @@
                     </button>
                 </div>
 
-                <!-- Sub-Accesos Rápidos Exclusivos cuando el usuario está en Rol ADMINISTRADOR -->
                 <div class="sidebar-nav-group" id="sidebarAdminQuickGroup" style="display:none;">
                     <div class="sidebar-section-title">Módulos del Administrador</div>
 
@@ -269,7 +248,6 @@
                 </div>
             </div>
 
-            <!-- Tarjeta Institucional Inferior en el Sidebar -->
             <div class="sidebar-footer-card">
                 <img src="assets/img/ProjectHub.png" alt="Escudo C.E.N.">
                 <h5>C.E.N. NONOGASTA</h5>
@@ -277,17 +255,10 @@
             </div>
         </aside>
 
-        <!-- ==================================================================
-             ESCENARIO CENTRAL DE SECCIONES (CADA ACCESO ABRE SU SECCIÓN)
-             ================================================================== -->
         <main class="app-main">
 
-            <!-- ==============================================================
-                 SECCIÓN 1: PÁGINA PRINCIPAL (RESUMEN ARTICULACIÓN + BOTONES DE ACCESO)
-                 ============================================================== -->
             <section id="section-inicio" class="app-section active">
 
-                <!-- Barra de Historias / Accesos Rápidos (Estilo Instagram Highlights) -->
                 <div class="stories-bar">
                     <button class="story-item" onclick="navigateToSection('vitrina')">
                         <div class="story-ring"><div class="story-inner"><i class="fa-solid fa-layer-group"></i></div></div>
@@ -323,7 +294,6 @@
                     </button>
                 </div>
 
-                <!-- Portada Institucional C.E.N. -->
                 <div class="home-hero-banner">
                     <div>
                         <div class="institution-pill">
@@ -356,7 +326,6 @@
                     </div>
                 </div>
 
-                <!-- RESUMEN DE LA ARTICULACIÓN INTERDISCIPLINARIA (NÚCLEO DE LA PÁGINA PRINCIPAL) -->
                 <div class="articulation-summary-section">
                     <div class="section-heading-bar">
                         <h2><i class="fa-solid fa-diagram-project"></i> Resumen de la Articulación Curricular (5° Año)</h2>
@@ -364,7 +333,7 @@
                     </div>
 
                     <div class="articulation-cards-grid">
-                        <!-- Espacio 1: Prácticas Profesionalizantes -->
+
                         <div class="articulation-summary-card">
                             <div class="art-card-top">
                                 <div class="art-card-icon"><i class="fa-solid fa-laptop-code"></i></div>
@@ -383,7 +352,6 @@
                             </ul>
                         </div>
 
-                        <!-- Espacio 2: Tecnología de Gestión -->
                         <div class="articulation-summary-card">
                             <div class="art-card-top">
                                 <div class="art-card-icon"><i class="fa-solid fa-chart-pie"></i></div>
@@ -404,13 +372,12 @@
                     </div>
                 </div>
 
-                <!-- BOTONES PERSONALIZADOS PARA ACCEDER A LAS DEMÁS FUNCIONALIDADES -->
                 <div class="section-heading-bar" id="homeQuickAccessHeader">
                     <h2><i class="fa-solid fa-grip"></i> Accesos Directos a las Funcionalidades</h2>
                 </div>
 
                 <div class="quick-access-grid" id="homeQuickAccessGrid">
-                    <!-- Acceso 1: Vitrina de Proyectos -->
+
                     <div class="access-action-card" onclick="navigateToSection('vitrina')">
                         <div class="access-card-header">
                             <div class="access-icon-box"><i class="fa-solid fa-cubes"></i></div>
@@ -422,7 +389,6 @@
                         </div>
                     </div>
 
-                    <!-- Acceso 2: Descargar Aplicación Móvil .APK (Preferencial Android) -->
                     <div class="access-action-card" onclick="openApkDownloadModal()">
                         <div class="access-card-header">
                             <div class="access-icon-box" style="color:#10b981; border-color:rgba(16,185,129,0.4);"><i class="fa-brands fa-android"></i></div>
@@ -434,7 +400,6 @@
                         </div>
                     </div>
 
-                    <!-- Acceso 3: Login Único (Docente y Alumno) -->
                     <div class="access-action-card" data-role-card="AUTH" onclick="openLoginModal()">
                         <div class="access-card-header">
                             <div class="access-icon-box"><i class="fa-solid fa-user-lock"></i></div>
@@ -446,7 +411,6 @@
                         </div>
                     </div>
 
-                    <!-- Acceso 4: Adjuntar Proyecto -->
                     <div class="access-action-card" data-role-card="PROTECTED" onclick="handleProtectedNavigation('cargar')">
                         <div class="access-card-header">
                             <div class="access-icon-box"><i class="fa-solid fa-cloud-arrow-up"></i></div>
@@ -458,7 +422,6 @@
                         </div>
                     </div>
 
-                    <!-- Acceso 5: Panel de Evaluación -->
                     <div class="access-action-card" data-role-card="PROTECTED" onclick="handleProtectedNavigation('evaluacion')">
                         <div class="access-card-header">
                             <div class="access-icon-box"><i class="fa-solid fa-chalkboard-user"></i></div>
@@ -470,7 +433,6 @@
                         </div>
                     </div>
 
-                    <!-- Acceso 6: Supervisión Integral Administrador + Ciberseguridad -->
                     <div class="access-action-card" data-role-card="PROTECTED" onclick="handleProtectedNavigation('administracion')">
                         <div class="access-card-header">
                             <div class="access-icon-box"><i class="fa-solid fa-user-shield"></i></div>
@@ -483,7 +445,6 @@
                     </div>
                 </div>
 
-                <!-- Indicadores Institucionales -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon"><i class="fa-solid fa-code-branch"></i></div>
@@ -517,9 +478,6 @@
 
             </section>
 
-            <!-- ==============================================================
-                 SECCIÓN 2: VITRINA DE PROYECTOS (SECCIÓN INDEPENDIENTE)
-                 ============================================================== -->
             <section id="section-vitrina" class="app-section">
                 <div class="section-header">
                     <div class="section-title-group">
@@ -536,7 +494,6 @@
                     </div>
                 </div>
 
-                <!-- Barra de Chips de Categorías estilo YouTube -->
                 <div class="filters-bar">
                     <div class="filter-pills" id="categoryPills">
                         <button class="filter-pill active" data-category="TODOS" onclick="setCategoryFilter('TODOS', this)">Todos los Proyectos</button>
@@ -554,18 +511,11 @@
                     </select>
                 </div>
 
-                <!-- Grilla de Tarjetas de Proyectos -->
                 <div class="projects-grid" id="projectsGridContainer">
-                    <!-- Renderizado dinámico por app.js -->
+
                 </div>
             </section>
 
-            <!-- ==============================================================
-                 SECCIÓN 3: PANEL INTEGRAL DEL ALUMNO (3 MÓDULOS RELACIONALES)
-                 1) MIS PROYECTOS (Agregar, Modificar, Ver Detalle, Desactivar/Eliminar, Lote, CSV, PDF + GitHub/Supabase/Vercel/Código Local)
-                 2) MIS CALIFICACIONES (Devoluciones pedagógicas docentes y notas sumativas + Ver Detalle y Boletín PDF)
-                 3) MIS ASIGNATURAS (Consulta exclusiva de las asignaturas donde fue asignado por el Administrador + Ver Detalle y PDF)
-                 ============================================================== -->
             <section id="section-cargar" class="app-section">
                 <div class="section-header">
                     <div class="section-title-group">
@@ -582,7 +532,6 @@
                     </div>
                 </div>
 
-                <!-- KPIs Exclusivos del Alumno Logueado -->
                 <div class="stats-grid" style="margin-bottom: 1.5rem;">
                     <div class="stat-card" style="cursor:pointer;" onclick="switchAlumnoTab('proyectos')">
                         <div class="stat-icon"><i class="fa-solid fa-diagram-project"></i></div>
@@ -607,7 +556,6 @@
                     </div>
                 </div>
 
-                <!-- Barra de los 3 Módulos del Alumno -->
                 <div class="admin-tabs-bar" id="alumnoModuleTabs">
                     <button class="admin-tab-btn active" data-alumnotab="proyectos" onclick="switchAlumnoTab('proyectos')">
                         <i class="fa-solid fa-diagram-project"></i> 1. Módulo Mis Proyectos (GitHub / Supabase / Vercel / Local)
@@ -620,7 +568,6 @@
                     </button>
                 </div>
 
-                <!-- BARRA FLOTANTE DE ACCIONES POR SELECCIÓN MÚLTIPLE DEL ALUMNO -->
                 <div class="bulk-action-bar" id="alumnoBulkActionBar">
                     <div class="bulk-selection-info">
                         <span class="bulk-count-pill" id="alumnoBulkCountPill">0</span>
@@ -648,9 +595,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     SUB-VISTA ALUMNO 1: MIS PROYECTOS (GITHUB / SUPABASE / VERCEL / CÓDIGO LOCAL)
-                     ========================================================== -->
                 <div id="alumno-subview-proyectos" class="admin-subview active">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -709,9 +653,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     SUB-VISTA ALUMNO 2: MIS CALIFICACIONES Y DEVOLUCIONES DOCENTES
-                     ========================================================== -->
                 <div id="alumno-subview-calificaciones" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -765,9 +706,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     SUB-VISTA ALUMNO 3: MIS ASIGNATURAS ASIGNADAS (SOLO LECTURA)
-                     ========================================================== -->
                 <div id="alumno-subview-asignaturas" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -816,13 +754,6 @@
                 </div>
             </section>
 
-            <!-- ==============================================================
-                 SECCIÓN 4: PANEL INTEGRAL DEL DOCENTE (4 MÓDULOS RELACIONALES)
-                 1) ESTUDIANTES (Agregar, Modificar, Ver Detalle, Desactivar/Eliminar, Lote, CSV, PDF)
-                 2) PROYECTOS (Agregar, Modificar, Evaluar, Ver Detalle, Desactivar/Eliminar, Lote, CSV, PDF)
-                 3) CALIFICAR PROYECTOS Y ALUMNOS (Exclusivo Docente: Calificación General del Proyecto + Individual por Alumno con Notas Sumativas y Devolución)
-                 4) ASIGNATURAS (Consulta exclusiva de las asignaturas donde fue asignado por el Administrador + Ver Detalle y PDF)
-                 ============================================================== -->
             <section id="section-evaluacion" class="app-section">
                 <div class="section-header">
                     <div class="section-title-group">
@@ -839,7 +770,6 @@
                     </div>
                 </div>
 
-                <!-- KPIs Exclusivos del Docente Logueado -->
                 <div class="stats-grid" style="margin-bottom: 1.5rem;">
                     <div class="stat-card" style="cursor:pointer;" onclick="switchDocenteTab('estudiantes')">
                         <div class="stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
@@ -871,7 +801,6 @@
                     </div>
                 </div>
 
-                <!-- Barra de los 4 Módulos del Docente -->
                 <div class="admin-tabs-bar">
                     <button class="admin-tab-btn active" data-docentetab="estudiantes" onclick="switchDocenteTab('estudiantes')">
                         <i class="fa-solid fa-user-graduate"></i> 1. Módulo Estudiantes
@@ -887,7 +816,6 @@
                     </button>
                 </div>
 
-                <!-- BARRA FLOTANTE DE ACCIONES POR SELECCIÓN MÚLTIPLE DEL DOCENTE -->
                 <div class="bulk-action-bar" id="docenteBulkActionBar">
                     <div class="bulk-selection-info">
                         <span class="bulk-count-pill" id="docenteBulkCountPill">0</span>
@@ -915,9 +843,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     MÓDULO DOCENTE 1: ESTUDIANTES (ALUMNOS ASIGNADOS AL DOCENTE)
-                     ========================================================== -->
                 <div id="docente-subview-estudiantes" class="admin-subview active">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -975,9 +900,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     MÓDULO DOCENTE 2: PROYECTOS (PROYECTOS ASIGNADOS / SUPERVISADOS)
-                     ========================================================== -->
                 <div id="docente-subview-proyectos" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -1035,10 +957,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     MÓDULO DOCENTE 3: CLASIFICAR Y CALIFICAR PROYECTOS E INDIVIDUALMENTE POR ALUMNO
-                     (EXCLUSIVO DEL ROL DOCENTE)
-                     ========================================================== -->
                 <div id="docente-subview-calificaciones" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -1088,9 +1006,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     MÓDULO DOCENTE 4: ASIGNATURAS (SOLO LECTURA DE LAS ASIGNADAS POR EL ADMIN)
-                     ========================================================== -->
                 <div id="docente-subview-asignaturas" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -1130,11 +1045,6 @@
                 </div>
             </section>
 
-            <!-- ==============================================================
-                 SECCIÓN 5: PANEL DE ADMINISTRACIÓN GENERAL (ROL ADMINISTRADOR)
-                 1) Gestión de Usuarios | 2) Gestión de Docentes | 3) Gestión de Alumnos
-                 4) Gestión de Proyectos (Sin Calificación, exclusiva Docente) | 5) Gestión de Asignaturas | 6) Módulo de Seguridad (Ciberseguridad SOC)
-                 ============================================================== -->
             <section id="section-administracion" class="app-section">
                 <div class="section-header">
                     <div class="section-title-group">
@@ -1151,7 +1061,6 @@
                     </div>
                 </div>
 
-                <!-- KPIs del Administrador -->
                 <div class="stats-grid" style="margin-bottom: 1.5rem;">
                     <div class="stat-card" style="cursor:pointer;" onclick="switchAdminTab('usuarios')">
                         <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
@@ -1197,7 +1106,6 @@
                     </div>
                 </div>
 
-                <!-- Barra de 6 Módulos Normalizados del Administrador -->
                 <div class="admin-tabs-bar">
                     <button class="admin-tab-btn active" data-admintab="usuarios" onclick="switchAdminTab('usuarios')">
                         <i class="fa-solid fa-users-gear"></i> 1. Gestión de Usuarios
@@ -1219,7 +1127,6 @@
                     </button>
                 </div>
 
-                <!-- BARRA FLOTANTE DE ACCIONES POR SELECCIÓN (UNO O MÁS PARÁMETROS SELECCIONADOS) -->
                 <div class="bulk-action-bar" id="adminBulkActionBar">
                     <div class="bulk-selection-info">
                         <span class="bulk-count-pill" id="adminBulkCountPill">0</span>
@@ -1247,9 +1154,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     MÓDULO 1: GESTIÓN DE USUARIOS
-                     ========================================================== -->
                 <div id="admin-subview-usuarios" class="admin-subview active">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -1307,9 +1211,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     MÓDULO 2: GESTIÓN DE DOCENTES (PROYECTOS + ALUMNOS + ASIGNATURAS)
-                     ========================================================== -->
                 <div id="admin-subview-docentes" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -1362,9 +1263,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     MÓDULO 3: GESTIÓN DE ALUMNOS (PROYECTOS + DOCENTES + ASIGNATURAS)
-                     ========================================================== -->
                 <div id="admin-subview-alumnos" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -1417,9 +1315,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     MÓDULO 4: GESTIÓN DE PROYECTOS (DOCENTES + ALUMNOS + ASIGNATURAS)
-                     ========================================================== -->
                 <div id="admin-subview-proyectos" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -1473,9 +1368,6 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     MÓDULO 5: GESTIÓN DE ASIGNATURAS (DOCENTES + ALUMNOS + PROYECTOS)
-                     ========================================================== -->
                 <div id="admin-subview-asignaturas" class="admin-subview">
                     <div class="panel-card">
                         <div class="admin-toolbar">
@@ -1529,12 +1421,8 @@
                     </div>
                 </div>
 
-                <!-- ==========================================================
-                     MÓDULO 6: MÓDULO DE SEGURIDAD Y CIBERSEGURIDAD (SOC ADMINISTRADOR)
-                     (Accesos, Acciones, Vulnerabilidades, Avisos y Bloqueos contra Hacks, Virus, SQLi/XSS)
-                     ========================================================== -->
                 <div id="admin-subview-seguridad" class="admin-subview">
-                    <!-- Panel de Estado Activo del Escudo de Ciberseguridad -->
+
                     <div class="panel-card" style="margin-bottom: 1.25rem; border-color: rgba(16, 185, 129, 0.45); background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(14, 14, 18, 0.96));">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
                             <div style="display:flex; align-items:center; gap:0.95rem;">
@@ -1559,7 +1447,6 @@
                             </div>
                         </div>
 
-                        <!-- Indicadores Rápidos de Seguridad -->
                         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap:0.8rem; margin-top:1.1rem;">
                             <div style="background:rgba(0,0,0,0.35); border:1px solid var(--gold-border); border-radius:var(--radius-sm); padding:0.75rem;">
                                 <div style="font-size:0.73rem; color:var(--text-secondary);"><i class="fa-solid fa-code" style="color:#10b981;"></i> Escudo WAF Anti-XSS / SQLi</div>
@@ -1580,7 +1467,6 @@
                         </div>
                     </div>
 
-                    <!-- Tabla Principal de Eventos de Ciberseguridad, Vulnerabilidades, Avisos y Bloqueos -->
                     <div class="panel-card" style="margin-bottom: 1.25rem;">
                         <div class="admin-toolbar">
                             <div>
@@ -1645,7 +1531,6 @@
                         </div>
                     </div>
 
-                    <!-- Bitácora en Vivo de Accesos y Autenticaciones (public.auditoria_accesos) -->
                     <div class="panel-card">
                         <div class="admin-toolbar">
                             <div>
@@ -1677,9 +1562,6 @@
         </main>
     </div>
 
-    <!-- ======================================================================
-         BARRA INFERIOR MÓVIL ADAPTATIVA POR ROL (ESTILO INSTAGRAM / YOUTUBE EN CELULARES)
-         ====================================================================== -->
     <nav class="mobile-bottom-nav" id="mobileBottomNav">
         <button class="bottom-nav-btn active" data-section="inicio" onclick="navigateToSection('inicio')">
             <i class="fa-solid fa-house"></i>
@@ -1703,9 +1585,6 @@
         </button>
     </nav>
 
-    <!-- ======================================================================
-         MODAL 1: LOGIN UNIFICADO (UN SOLO FORMULARIO PARA DOCENTES Y ALUMNOS)
-         ====================================================================== -->
     <div class="modal-overlay" id="loginModal">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('loginModal')">
@@ -1718,13 +1597,11 @@
                 <p>Centro Educativo Nonogasta • 5° Año Informática P. y P.</p>
             </div>
 
-            <!-- Explicación de Login Unificado conectado a Base de Datos Relacional Supabase -->
             <div class="unified-login-info">
                 <i class="fa-solid fa-database"></i>
                 <span><strong>Autenticación Relacional Supabase:</strong> Ingresa con tu <strong>Correo Institucional, Usuario o DNI</strong>. El sistema valida tu identidad y carga tus roles (<strong>ADMINISTRADOR, DOCENTE, ALUMNO</strong>).</span>
             </div>
 
-            <!-- Alerta Dinámica de Bloqueo por Fuerza Bruta -->
             <div class="security-lockout-box" id="loginLockoutBox">
                 <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.4rem; color: var(--danger);"></i>
                 <div>
@@ -1751,7 +1628,6 @@
                 </button>
             </form>
 
-            <!-- Cuentas Reales en la Base de Datos de Supabase para Pruebas -->
             <div class="demo-credentials-box">
                 <strong style="color: var(--gold-primary); display:block;"><i class="fa-solid fa-server"></i> Cuentas Reales en Supabase (Prueba de Roles):</strong>
                 <span style="color: var(--text-secondary);">Selecciona un perfil para cargar sus credenciales reales de la base de datos (puedes ingresar por Correo, Usuario o DNI):</span>
@@ -1770,9 +1646,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 2: VISTA DETALLADA DE PROYECTO (FICHA TÉCNICA + GESTIÓN)
-         ====================================================================== -->
     <div class="modal-overlay" id="projectDetailModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('projectDetailModal')">
@@ -1782,9 +1655,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 3: EVALUACIÓN Y CLASIFICACIÓN EXCLUSIVA DOCENTE (PROYECTO GENERAL + INDIVIDUAL POR ALUMNO)
-         ====================================================================== -->
     <div class="modal-overlay" id="evaluateModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('evaluateModal')">
@@ -1799,7 +1669,6 @@
             <form id="evaluateForm" onsubmit="saveTeacherEvaluation(event)">
                 <input type="hidden" id="evalProjectId">
 
-                <!-- 1. Evaluación General del Proyecto -->
                 <div style="background:var(--bg-surface); border:1px solid var(--gold-border); border-radius:var(--radius-md); padding:1.05rem; margin-bottom:1.15rem;">
                     <h4 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:0.9rem; margin-bottom:0.8rem;">
                         <i class="fa-solid fa-diagram-project"></i> 1. Clasificación General del Proyecto Integrador (Equipo)
@@ -1826,7 +1695,6 @@
                     </div>
                 </div>
 
-                <!-- 2. Evaluación Individual Personalizada por cada Alumno Integrante -->
                 <div style="background:rgba(16,185,129,0.04); border:1px solid rgba(16,185,129,0.35); border-radius:var(--radius-md); padding:1.05rem; margin-bottom:1.25rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
                         <h4 style="color:#10b981; font-family:var(--font-heading); font-size:0.9rem; margin:0;">
@@ -1840,7 +1708,7 @@
                         Asigna la nota sumativa individual (1 a 10), el dictamen personal y la devolución pedagógica específica para cada alumno que participa en este proyecto. Esta calificación es privada y solo podrá verla cada estudiante en su módulo <strong>Mis Calificaciones</strong>.
                     </p>
                     <div id="evalIndividualStudentsContainer" style="display:flex; flex-direction:column; gap:0.85rem; max-height:320px; overflow-y:auto; padding-right:0.25rem;">
-                        <!-- Renderizado dinámico por cada alumno del proyecto -->
+
                     </div>
                 </div>
 
@@ -1854,9 +1722,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 4: ESCUDO DE CIBERSEGURIDAD INSTITUCIONAL
-         ====================================================================== -->
     <div class="modal-overlay" id="securityModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('securityModal')">
@@ -1912,9 +1777,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 5: INSPECCIÓN DE ENLACE EXTERNO (ANTI-PHISHING)
-         ====================================================================== -->
     <div class="modal-overlay" id="linkSafetyModal">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('linkSafetyModal')">
@@ -1937,9 +1799,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 6: FICHA RELACIONAL DEL USUARIO Y ROLES (SUPABASE DB)
-         ====================================================================== -->
     <div class="modal-overlay" id="userProfileModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('userProfileModal')">
@@ -1949,9 +1808,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 7: VER INFO RELACIONAL COMPLETA (USUARIOS, DOCENTES, ALUMNOS, PROYECTOS, ASIGNATURAS)
-         ====================================================================== -->
     <div class="modal-overlay" id="adminVerInfoModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('adminVerInfoModal')">
@@ -1961,9 +1817,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 8: FORMULARIO INTEGRAL DE USUARIO / DOCENTE / ALUMNO (AGREGAR Y MODIFICAR)
-         ====================================================================== -->
     <div class="modal-overlay" id="adminUserFormModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('adminUserFormModal')">
@@ -2024,7 +1877,6 @@
                         </select>
                     </div>
 
-                    <!-- Selección de Múltiples Roles (Tabla Intermedia usuarios_roles) -->
                     <div id="admSectionRolesSelectorBox" class="form-group full-width" style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--gold-border);">
                         <label style="color:var(--gold-primary);"><i class="fa-solid fa-layer-group"></i> Roles Asignados en <code>public.usuarios_roles</code> (Puedes marcar uno o varios) <span>*</span></label>
                         <div style="display:flex; flex-wrap:wrap; gap:1.2rem; margin-top:0.5rem;">
@@ -2051,7 +1903,6 @@
                         </div>
                     </div>
 
-                    <!-- SECCIÓN ESPECÍFICA SI TIENE ROL DOCENTE -->
                     <div id="admSectionDocenteFields" class="form-group full-width" style="display:none; background:rgba(255,208,0,0.04); padding:1.1rem; border-radius:var(--radius-md); border:1px solid var(--gold-border);">
                         <h4 style="color:var(--gold-primary); font-family:var(--font-heading); font-size:0.9rem; margin-bottom:0.85rem;">
                             <i class="fa-solid fa-chalkboard-user"></i> Parámetros de la Entidad <code>public.docentes</code> y Relaciones Académicas
@@ -2093,7 +1944,6 @@
                         </div>
                     </div>
 
-                    <!-- SECCIÓN ESPECÍFICA SI TIENE ROL ALUMNO -->
                     <div id="admSectionAlumnoFields" class="form-group full-width" style="display:none; background:rgba(16,185,129,0.04); padding:1.1rem; border-radius:var(--radius-md); border:1px solid rgba(16,185,129,0.35);">
                         <h4 style="color:var(--status-approved); font-family:var(--font-heading); font-size:0.9rem; margin-bottom:0.85rem;">
                             <i class="fa-solid fa-user-graduate"></i> Parámetros de la Entidad <code>public.alumnos</code> y Relaciones Académicas
@@ -2106,6 +1956,8 @@
                             <div class="form-group">
                                 <label>Año y División</label>
                                 <select id="admAluDivision" class="form-control">
+                                    <option value="1° DIV.">5° Año - 1° DIV.</option>
+                                    <option value="2° DIV.">5° Año - 2° DIV.</option>
                                     <option value="A">5° Año "A" - T.I.P.P.</option>
                                     <option value="B">5° Año "B" - T.I.P.P.</option>
                                     <option value="C">5° Año "C" - T.I.P.P.</option>
@@ -2153,9 +2005,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 9: FORMULARIO RELACIONAL DE PROYECTO (AGREGAR Y MODIFICAR POR ADMIN)
-         ====================================================================== -->
     <div class="modal-overlay" id="adminProjectFormModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('adminProjectFormModal')">
@@ -2205,7 +2054,6 @@
                         <textarea id="admProjGestion" class="form-control" required></textarea>
                     </div>
 
-                    <!-- BLOQUE DE DESPLIEGUE, REPOSITORIO EXTERNO, BASE DE DATOS Y CÓDIGO FUENTE -->
                     <div class="form-group full-width" style="border-top:1px solid var(--gold-border); padding-top:0.85rem; margin-top:0.35rem;">
                         <label style="color:var(--gold-primary); font-size:0.9rem;">
                             <i class="fa-solid fa-cloud-arrow-up"></i> Opciones de Entrega, Repositorio (GitHub), Base de Datos (Supabase) y Despliegue (Vercel / Local)
@@ -2258,7 +2106,6 @@
                         <textarea id="admProjSnippetCodigo" class="form-control" rows="4" style="font-family:monospace; font-size:0.8rem;" placeholder="// Pega aquí el bloque clave de tu código (conexión a Supabase, controlador backend, consulta SQL o firmware)..."></textarea>
                     </div>
 
-                    <!-- AVISO INSTITUCIONAL: LA CALIFICACIÓN Y DEVOLUCIÓN ES POTESTAD EXCLUSIVA DEL DOCENTE -->
                     <div id="admProjEvaluationFieldsGroup" class="form-group full-width" style="border-top:1px solid var(--gold-border); padding-top:0.85rem; margin-top:0.35rem;">
                         <div style="background:rgba(255,208,0,0.06); border:1px dashed var(--gold-border); border-radius:var(--radius-sm); padding:0.85rem 1rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem;">
                             <div style="display:flex; align-items:center; gap:0.75rem;">
@@ -2279,7 +2126,6 @@
                         </select>
                     </div>
 
-                    <!-- Relaciones N:M del Proyecto -->
                     <div class="form-group full-width">
                         <label style="color:var(--gold-primary);"><i class="fa-solid fa-user-graduate"></i> Alumnos Integrantes Asignados al Proyecto (<code>public.proyectos_alumnos</code>)</label>
                         <div id="admProjAlumnosCheckboxes" class="checkbox-multi-grid"></div>
@@ -2304,9 +2150,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 10: FORMULARIO RELACIONAL DE ASIGNATURA (AGREGAR Y MODIFICAR POR ADMIN)
-         ====================================================================== -->
     <div class="modal-overlay" id="adminAsignaturaFormModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('adminAsignaturaFormModal')">
@@ -2363,7 +2206,6 @@
                         <textarea id="admAsigDescripcion" class="form-control" placeholder="Describe los ejes formativos de la asignatura..."></textarea>
                     </div>
 
-                    <!-- Relaciones N:M de la Asignatura -->
                     <div class="form-group full-width">
                         <label style="color:var(--gold-primary);"><i class="fa-solid fa-chalkboard-user"></i> Docentes Asignados a la Cátedra (<code>public.docentes_asignaturas</code>)</label>
                         <div id="admAsigDocentesCheckboxes" class="checkbox-multi-grid"></div>
@@ -2388,9 +2230,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 11: CARGA MÚLTIPLE DE REGISTROS (AGREGAR UNO O MÁS EN CUALQUIER MÓDULO)
-         ====================================================================== -->
     <div class="modal-overlay" id="adminBatchAddModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('adminBatchAddModal')">
@@ -2423,9 +2262,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 12: IMPORTACIÓN .CSV Y ESTRUCTURA DE COLUMNAS PARA CADA MÓDULO
-         ====================================================================== -->
     <div class="modal-overlay" id="adminCsvImportModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('adminCsvImportModal')">
@@ -2479,9 +2315,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 13: FORMULARIO DE EVENTO / AVISO / BLOQUEO DE CIBERSEGURIDAD (MÓDULO 6 ADMIN)
-         ====================================================================== -->
     <div class="modal-overlay" id="adminSecurityFormModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('adminSecurityFormModal')">
@@ -2581,10 +2414,6 @@
         </div>
     </div>
 
-    <!-- ======================================================================
-         MODAL 14: DESCARGA DE APLICACIÓN MÓVIL .APK (PREFERENCIAL ANDROID + FUTUROS SO)
-         Y ACTIVADOR DE LA VISTA PERSONALIZADA DE LA APP MÓVIL (SOLO INFO + VITRINA)
-         ====================================================================== -->
     <div class="modal-overlay" id="apkDownloadModal">
         <div class="modal-box modal-lg">
             <button class="modal-close" onclick="closeModal('apkDownloadModal')">
@@ -2603,7 +2432,7 @@
             </div>
 
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-bottom:1.2rem;">
-                <!-- Tarjeta Preferencial Android (.APK) -->
+
                 <div style="background:linear-gradient(145deg, rgba(16,185,129,0.12), rgba(15,15,20,0.95)); border:1.5px solid #10b981; border-radius:var(--radius-md); padding:1.15rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem;">
                         <span style="font-weight:800; color:#10b981; font-size:0.95rem;"><i class="fa-brands fa-android"></i> Android OS (Nativo Compilado)</span>
@@ -2622,7 +2451,6 @@
                     </a>
                 </div>
 
-                <!-- Tarjeta Otros Sistemas Operativos a Futuro + Modo Vista App Móvil -->
                 <div style="background:var(--bg-surface); border:1px solid var(--gold-border); border-radius:var(--radius-md); padding:1.15rem; display:flex; flex-direction:column; justify-content:space-between;">
                     <div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem;">
@@ -2664,7 +2492,6 @@
         </div>
     </div>
 
-    <!-- Banner Flotante cuando el usuario activa la Previsualización del Modo App Móvil (.APK) -->
     <div id="apkShowcaseBanner" style="display:none; position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:9999; background:linear-gradient(135deg, #064e3b, #0f172a); border:2px solid #10b981; border-radius:999px; padding:0.55rem 1.25rem; box-shadow:0 12px 32px rgba(0,0,0,0.65); align-items:center; gap:0.85rem; color:#fff; font-size:0.82rem;">
         <span><i class="fa-brands fa-android" style="color:#10b981; font-size:1.05rem;"></i> <strong>MODO APP MÓVIL (.APK) ACTIVO:</strong> Mostrando exclusivamente Información Institucional y Vitrina de Proyectos (Notas Privadas Ocultas).</span>
         <button type="button" class="btn btn-primary" style="padding:0.3rem 0.8rem; font-size:0.75rem;" onclick="toggleApkMobileShowcaseMode(false)">
@@ -2672,13 +2499,10 @@
         </button>
     </div>
 
-    <!-- Contenedor de Notificaciones Toast -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Cliente Oficial Supabase & Servicio de Autenticación Relacional -->
     <script type="module" src="assets/js/supabaseClient.js"></script>
 
-    <!-- Lógica Dinámica Frontend App-Shell -->
     <script src="assets/js/app.js"></script>
 </body>
 </html>
