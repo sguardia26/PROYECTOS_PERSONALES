@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Capacitación DFA · Informática, Google Drive, 3D &amp; AR</title>
+  <meta name="description" content="Plataforma interactiva tipo Prezi con 3D, Realidad Aumentada, práctica en Google Drive y evaluación gamificada — Departamento Formación de Agentes Gral. Ángel Vicente Peñaloza." />
+  <link rel="icon" type="image/jpeg" href="assets/logos/dep_formacion_agentes.jpg" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- Loader inicial -->
+  <div id="boot-loader" class="boot-loader">
+    <img src="assets/logos/dep_formacion_agentes.jpg" alt="Logo DFA" class="loader-logo" />
+    <div class="loader-title">Departamento Formación de Agentes «Gral. Ángel Vicente Peñaloza»</div>
+    <div class="loader-sub">Iniciando Universo Interactivo 3D &amp; Prezi...</div>
+  </div>
+
+  <!-- Fondo 3D Cósmico con Paralaje -->
+  <canvas id="cosmic-bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- Barra Superior HUD Institucional -->
+  <header class="top-hud">
+    <div class="hud-brand">
+      <img src="assets/logos/dep_formacion_agentes.jpg" alt="Escudo DFA" class="hud-logo" />
+      <div class="hud-brand-text">
+        <strong>Capacitación Informática DFA</strong>
+        <small>Tec. Sup. Guardia, Sebastián Nicolás</small>
+      </div>
+    </div>
+
+    <nav class="hud-nav" aria-label="Bloques principales">
+      <button type="button" class="nav-pill active" data-section="prezi">
+        <span>🌌</span> Presentación Prezi
+      </button>
+      <button type="button" class="nav-pill" data-section="studio3d">
+        <span>🧊</span> Lab 3D &amp; AR
+      </button>
+      <button type="button" class="nav-pill" data-section="practice">
+        <span>📂</span> Práctica Drive <em id="nav-practice-badge" class="nav-mini-badge">0%</em>
+      </button>
+      <button type="button" class="nav-pill" data-section="quiz">
+        <span>🏆</span> Evaluación &amp; Ranking
+      </button>
+    </nav>
+
+    <div class="hud-right">
+      <span id="db-engine-pill" class="db-engine-pill">● Cargando JSON...</span>
+      <button type="button" id="btn-sound-toggle" class="icon-btn" title="Silenciar efectos">🔊</button>
+      <button type="button" id="btn-fullscreen-toggle" class="icon-btn" title="Pantalla completa">⛶</button>
+    </div>
+  </header>
+
+  <!-- BLOQUE 1: PRESENTACIÓN ESPACIAL TIPO PREZI -->
+  <main id="section-prezi" class="main-section active">
+    <div id="prezi-viewport" class="prezi-viewport">
+      <div id="prezi-world" class="prezi-world">
+        <svg id="prezi-flight-svg" class="prezi-flight-svg" viewBox="-1800 -1400 3600 2800" aria-hidden="true"></svg>
+      </div>
+    </div>
+    <div class="prezi-bottom-dock">
+      <div class="prezi-dock-status" id="prezi-current-label">Estación 0 · Universo Digital DFA</div>
+      <div class="prezi-dock-controls">
+        <button type="button" id="btn-prezi-prev" class="dock-btn">← Anterior</button>
+        <button type="button" id="btn-prezi-overview" class="dock-btn accent">🗺️ Mapa General</button>
+        <div id="prezi-dots" class="prezi-dots" aria-label="Estaciones"></div>
+        <button type="button" id="btn-prezi-next" class="dock-btn primary">Siguiente →</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- LABORATORIO 3D INTERACTIVO & REALIDAD AUMENTADA (AR) -->
+  <section id="section-studio3d" class="main-section scrollable-section">
+    <div class="section-shell">
+      <div class="studio-header">
+        <div>
+          <span class="section-eyebrow">EXPERIENCIA INMERSIVA · WEBGL 3D + REALIDAD AUMENTADA</span>
+          <h2>Laboratorio Holográfico 3D &amp; Realidad Aumentada (AR)</h2>
+          <p>Rotá los modelos 360°, desarmá una PC por dentro o activá tu cámara para proyectar el holograma en el aula.</p>
+        </div>
+        <div class="model-tabs">
+          <button type="button" class="model-tab active" data-3d-model="hardware">🖥️ PC Hardware 3D</button>
+          <button type="button" class="model-tab" data-3d-model="system">🔄 Sistema Informático</button>
+          <button type="button" class="model-tab" data-3d-model="google">☁️ Google Workspace</button>
+        </div>
+      </div>
+
+      <div class="studio-grid">
+        <div class="studio-stage-card" id="studio-3d-stage">
+          <!-- Video de cámara real en vivo para AR -->
+          <video id="ar-camera-video" class="ar-video-bg" playsinline muted hidden></video>
+
+          <!-- Retícula futurista AR -->
+          <div id="ar-hud-overlay" class="ar-hud-overlay" hidden>
+            <div class="ar-corner tl"></div>
+            <div class="ar-corner tr"></div>
+            <div class="ar-corner bl"></div>
+            <div class="ar-corner br"></div>
+            <div class="ar-live-chip">● MODO REALIDAD AUMENTADA ACTIVO · DFA CHILECITO</div>
+          </div>
+
+          <!-- Canvas Three.js interactivo -->
+          <canvas id="three-studio-canvas" class="studio-canvas"></canvas>
+
+          <div class="studio-status-bar" id="ar-status-text">
+            Modo Laboratorio 3D · Arrastrá para rotar y hacé clic en cualquier componente
+          </div>
+        </div>
+
+        <aside class="studio-sidebar">
+          <div class="inspector-card" id="inspector-card">
+            <span class="inspector-tag" id="inspector-tag">Tocá una pieza 3D</span>
+            <h3 id="inspector-title">PC de Escritorio 3D (Hardware)</h3>
+            <p id="inspector-desc">Hacé clic sobre cualquier componente 3D del escenario para inspeccionar su función dentro de un sistema informático.</p>
+          </div>
+
+          <div class="studio-controls-card">
+            <h4>🎛️ Controles 3D &amp; AR</h4>
+            <div class="controls-stack">
+              <button type="button" class="btn-primary-glow" id="btn-3d-explode">💥 Desarmar (Vista Explotada)</button>
+              <button type="button" class="btn-gold" id="btn-ar-camera"><span>📷</span> Activar Cámara AR</button>
+              <button type="button" class="btn-glass" id="btn-ar-sim">🕶️ Modo AR Simulado (Sin Cámara)</button>
+              <button type="button" class="btn-glass" id="btn-ar-photo">📸 Capturar Foto AR (.png)</button>
+              <div class="controls-row-2">
+                <button type="button" class="btn-glass-sm active" id="btn-3d-autorot">🔄 Auto-Rotar: ON</button>
+                <button type="button" class="btn-glass-sm" id="btn-3d-reset">↺ Reiniciar Vista</button>
+              </div>
+              <label class="scale-control">
+                <span>Tamaño del Holograma (AR / 3D)</span>
+                <input type="range" id="ar-scale-slider" min="0.55" max="1.45" step="0.05" value="1" />
+              </label>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOQUE 2: PRÁCTICA EN GOOGLE DRIVE -->
+  <section id="section-practice" class="main-section scrollable-section">
+    <div class="section-shell" id="practice-container">
+      <!-- Renderizado por PracticeLab -->
+    </div>
+  </section>
+
+  <!-- BLOQUE 3: EVALUACIÓN GAMIFICADA & TABLA DE PUNTUACIONES (.JSON) -->
+  <section id="section-quiz" class="main-section scrollable-section">
+    <div class="section-shell" id="quiz-container">
+      <!-- Renderizado por QuizEngine -->
+    </div>
+  </section>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

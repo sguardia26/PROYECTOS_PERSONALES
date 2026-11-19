@@ -1,0 +1,16 @@
+{
+  "name": "capacitacion-dfa",
+  "version": "1.0.0",
+  "description": "Plataforma interactiva tipo Prezi con 3D, Realidad Aumentada, práctica en Google Drive y evaluación gamificada para el Departamento Formación de Agentes 'Gral. Ángel Vicente Peñaloza' (Sede Chilecito - La Rioja).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "author": "Guardia, Sebastián Nicolás — Técnico Superior en Sistemas y Redes Informáticas",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0",
+    "three": "^0.180.0"
+  }
+}

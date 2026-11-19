@@ -1,0 +1,362 @@
+{
+  "meta": {
+    "title": "Capacitación en Informática y Google Workspace",
+    "subtitle": "Fundamentos Digitales, Entorno en la Nube y Lógica Computacional",
+    "institution": "Departamento Formación de Agentes «Gral. Ángel Vicente Peñaloza»",
+    "location": "Sede Chilecito - La Rioja",
+    "instructor": "Guardia, Sebastián Nicolás",
+    "instructorTitle": "Técnico Superior en Sistemas y Redes Informáticas",
+    "logoPath": "assets/logos/dep_formacion_agentes.jpg",
+    "version": "1.0.0"
+  },
+  "stations": [
+    {
+      "id": "portada",
+      "order": 0,
+      "block": "Inicio",
+      "badge": "Estación 0 · Bienvenida",
+      "title": "Universo Digital DFA",
+      "subtitle": "Capacitación Interactiva en Informática y Google Drive",
+      "icon": "rocket",
+      "color": "#00B4F0",
+      "canvas": { "x": 0, "y": 0, "scale": 1.0, "rotate": 0 },
+      "summary": "Un recorrido espacial interactivo tipo Prezi con experiencias 3D, Realidad Aumentada, práctica real en Google Drive y evaluación gamificada.",
+      "highlights": [
+        { "label": "Bloque 1 · Teoría", "desc": "Informática, Datos, Información, Sistemas, Hardware, Software, Google y Drive" },
+        { "label": "Laboratorio 3D & AR", "desc": "Exploración tridimensional de hardware y proyección en Realidad Aumentada" },
+        { "label": "Bloque 2 · Práctica", "desc": "Trabajo real con tu cuenta personal en Drive, Docs, Sheets y Slides" },
+        { "label": "Bloque 3 · Desafío", "desc": "Evaluación inicial con lógica, ejercicios cotidianos, matemática y ranking" }
+      ],
+      "widget": "welcome"
+    },
+    {
+      "id": "informatica",
+      "order": 1,
+      "block": "Teoría",
+      "badge": "Estación 1 · Fundamentos",
+      "title": "¿Qué es la Informática?",
+      "subtitle": "Información + Automática al servicio de las personas",
+      "icon": "cpu",
+      "color": "#38BDF8",
+      "canvas": { "x": -980, "y": -520, "scale": 1.15, "rotate": -4 },
+      "definition": "La informática es la ciencia y conjunto de técnicas que estudia el tratamiento automático, racional y organizado de la información mediante computadoras y dispositivos digitales.",
+      "etymology": {
+        "part1": "INFOR (Información)",
+        "part2": "MÁTICA (Automática)",
+        "result": "Tratamiento automático de la información"
+      },
+      "keyPoints": [
+        "No se limita a saber usar una PC: implica resolver problemas de forma ordenada y eficiente.",
+        "En la función de un agente permite redactar actas, gestionar legajos, coordinar guardias y resguardar documentación sin pérdidas.",
+        "Reduce tiempos operativos, evita errores repetitivos y facilita el trabajo en equipo desde cualquier lugar."
+      ],
+      "realExample": "Antes, buscar un expediente entre cientos de carpetas de papel llevaba horas. Con informática, un buscador lo encuentra en 1 segundo.",
+      "widget": "etymology"
+    },
+    {
+      "id": "datos-informacion",
+      "order": 2,
+      "block": "Teoría",
+      "badge": "Estación 2 · Transformación",
+      "title": "Datos vs. Información",
+      "subtitle": "De valores aislados a conocimiento útil para decidir",
+      "icon": "database",
+      "color": "#F5C518",
+      "canvas": { "x": -340, "y": -860, "scale": 1.18, "rotate": 3 },
+      "definition": "Un DATO es un hecho, número, letra o símbolo aislado que por sí solo no explica el contexto. La INFORMACIÓN es el resultado de procesar, ordenar y relacionar datos para que adquieran significado.",
+      "comparison": {
+        "dato": {
+          "title": "DATO (Materia prima)",
+          "items": ["\"38\"", "\"Chilecito\"", "\"08:00\"", "\"Presente\""],
+          "note": "Sueltos no nos dicen qué pasó ni a quién pertenecen."
+        },
+        "informacion": {
+          "title": "INFORMACIÓN (Procesada)",
+          "items": ["\"El 18/11 a las 08:00 se registraron 38 agentes presentes en la Sede Chilecito.\""],
+          "note": "Tiene contexto, sentido y permite tomar decisiones."
+        }
+      },
+      "keyPoints": [
+        "Ciclo esencial: Dato → Procesamiento → Información → Toma de Decisiones.",
+        "Sin datos confiables no existe información confiable («basura entra, basura sale»).",
+        "Ordenar una planilla o redactar un parte convierte datos sueltos en información institucional."
+      ],
+      "widget": "data-transformer"
+    },
+    {
+      "id": "sistemas-informaticos",
+      "order": 3,
+      "block": "Teoría",
+      "badge": "Estación 3 · Arquitectura",
+      "title": "Sistemas Informáticos",
+      "subtitle": "Un conjunto integrado donde cada parte cumple un rol",
+      "icon": "network",
+      "color": "#10B981",
+      "canvas": { "x": 460, "y": -820, "scale": 1.18, "rotate": -3 },
+      "definition": "Un Sistema Informático es el conjunto interrelacionado de componentes físicos (Hardware), programas lógicos (Software), datos y personas (Recurso Humano) que trabajan juntos para capturar, procesar, almacenar y comunicar información.",
+      "pillars": [
+        { "name": "Hardware", "role": "El cuerpo físico", "desc": "PC, celular, teclado, pantalla, impresora, servidor." },
+        { "name": "Software", "role": "La mente lógica", "desc": "Sistema operativo, aplicaciones, navegadores, apps." },
+        { "name": "Recurso Humano", "role": "Quien opera y decide", "desc": "Agentes, docentes, técnicos y usuarios finales." },
+        { "name": "Datos y Redes", "role": "La savia conectada", "desc": "Archivos, registros e Internet que enlaza todo." }
+      ],
+      "cycle": ["1. Entrada (Input)", "2. Proceso (CPU)", "3. Almacenamiento", "4. Salida (Output)"],
+      "keyPoints": [
+        "Si falla cualquiera de los pilares, el sistema no cumple su objetivo.",
+        "Un sistema informático puede ser un teléfono celular, una notebook del aula o toda la red institucional."
+      ],
+      "widget": "ipo-cycle"
+    },
+    {
+      "id": "hardware",
+      "order": 4,
+      "block": "Teoría",
+      "badge": "Estación 4 · Lo Tangible + 3D/AR",
+      "title": "Hardware",
+      "subtitle": "Todo lo físico que podés ver y tocar en una computadora",
+      "icon": "box",
+      "color": "#F97316",
+      "canvas": { "x": 1060, "y": -340, "scale": 1.2, "rotate": 4 },
+      "definition": "El Hardware comprende todos los componentes electrónicos, mecánicos y periféricos físicos que conforman un equipo informático.",
+      "categories": [
+        {
+          "name": "Núcleo Interno",
+          "items": [
+            "CPU (Procesador): el «cerebro» que ejecuta cálculos e instrucciones.",
+            "Memoria RAM: la «mesa de trabajo» rápida y temporal (se borra al apagar).",
+            "Almacenamiento (SSD / HDD): el «archivero» permanente de archivos y programas.",
+            "Placa Madre (Motherboard): conecta y comunica todos los componentes."
+          ]
+        },
+        {
+          "name": "Periféricos",
+          "items": [
+            "Entrada: teclado, mouse, micrófono, escáner, cámara web.",
+            "Salida: monitor, impresora, parlantes, proyector.",
+            "Mixtos / Almacenamiento: pantalla táctil, pendrive, router Wi-Fi."
+          ]
+        }
+      ],
+      "keyPoints": [
+        "Regla nemotécnica simple: Hardware es lo que podés tocar con la mano.",
+        "Hacé clic en el botón de abajo para inspeccionar una PC en 3D desarmable o proyectarla en Realidad Aumentada."
+      ],
+      "widget": "hardware-3d-trigger"
+    },
+    {
+      "id": "software",
+      "order": 5,
+      "block": "Teoría",
+      "badge": "Estación 5 · Lo Intangible",
+      "title": "Software",
+      "subtitle": "Programas, instrucciones y aplicaciones que dan vida al equipo",
+      "icon": "code",
+      "color": "#A855F7",
+      "canvas": { "x": 960, "y": 460, "scale": 1.18, "rotate": -3 },
+      "definition": "El Software es el conjunto de programas, instrucciones, reglas y datos digitales (intangibles) que le indican al hardware qué hacer y cómo interactuar con el usuario.",
+      "types": [
+        {
+          "name": "Software de Sistema",
+          "examples": "Windows, Android, Linux, macOS, iOS",
+          "desc": "Administra el hardware y permite que funcionen las demás apps. Sin él, la PC no arranca."
+        },
+        {
+          "name": "Software de Aplicación",
+          "examples": "Google Chrome, Docs, Sheets, WhatsApp, PDF",
+          "desc": "Herramientas concretas diseñadas para las tareas diarias del usuario."
+        },
+        {
+          "name": "Software de Programación",
+          "examples": "VS Code, Python, JavaScript, PSeInt",
+          "desc": "Entornos usados por técnicos y programadores para crear nuevos programas."
+        }
+      ],
+      "keyPoints": [
+        "Hardware sin Software es solo metal y plástico; Software sin Hardware no tiene dónde ejecutarse.",
+        "¡Probá el mini-desafío interactivo para clasificar Hardware vs. Software!"
+      ],
+      "widget": "hw-sw-classifier"
+    },
+    {
+      "id": "ecosistema-google",
+      "order": 6,
+      "block": "Teoría",
+      "badge": "Estación 6 · La Nube",
+      "title": "Google y la Nube",
+      "subtitle": "Tu cuenta personal como llave a un ecosistema completo",
+      "icon": "cloud",
+      "color": "#4285F4",
+      "canvas": { "x": 220, "y": 820, "scale": 1.18, "rotate": 2 },
+      "definition": "Google ofrece un ecosistema de servicios en la nube (Cloud Computing): tus archivos y aplicaciones viven en servidores seguros en Internet, accesibles desde cualquier computadora o celular con tu cuenta Gmail.",
+      "benefits": [
+        { "title": "Acceso Multiplataforma", "desc": "Empezá un informe en la PC del aula y revisalo desde tu celular." },
+        { "title": "Guardado Automático", "desc": "Se corta la luz o se cierra el navegador y tu trabajo sigue a salvo." },
+        { "title": "Trabajo Colaborativo", "desc": "Varias personas pueden editar o comentar un mismo archivo al mismo tiempo." },
+        { "title": "Seguridad de Cuenta", "desc": "Usá contraseña fuerte y cerrá sesión siempre en computadoras compartidas." }
+      ],
+      "keyPoints": [
+        "Con una sola Cuenta de Google (@gmail.com) accedés a Gmail, Drive, Docs, Sheets, Slides, Calendar y Meet.",
+        "Consejo clave de aula: al terminar en una PC de laboratorio, hacé clic en tu foto arriba a la derecha → «Salir / Cerrar sesión»."
+      ],
+      "widget": "google-orbit"
+    },
+    {
+      "id": "google-drive",
+      "order": 7,
+      "block": "Teoría",
+      "badge": "Estación 7 · Almacenamiento",
+      "title": "Google Drive",
+      "subtitle": "Tu repositorio personal organizado en la nube (15 GB gratis)",
+      "icon": "folder",
+      "color": "#34A853",
+      "canvas": { "x": -560, "y": 780, "scale": 1.18, "rotate": -4 },
+      "definition": "Google Drive es el servicio de almacenamiento en la nube de Google donde podés guardar, organizar en carpetas, buscar y compartir documentos, fotos, PDFs y planillas sin depender de un pendrive.",
+      "permissions": [
+        { "role": "Lector", "color": "#38BDF8", "can": "Puede ver y descargar (si se permite), pero NO puede modificar ni borrar nada." },
+        { "role": "Comentarista", "color": "#F5C518", "can": "Puede ver y dejar sugerencias o comentarios al margen sin alterar el original." },
+        { "role": "Editor", "color": "#10B981", "can": "Control total sobre el archivo: puede escribir, corregir, formatear y agregar contenido." }
+      ],
+      "keyPoints": [
+        "«Mi Unidad» es tu espacio privado; «Compartido conmigo» muestra archivos que otros te enviaron.",
+        "Usá carpetas con nombres claros y colores (ej.: Capacitacion_DFA_Apellido) para encontrar todo rápido.",
+        "Si borrás algo por error, va a la Papelera durante 30 días antes de eliminarse."
+      ],
+      "widget": "drive-permissions"
+    },
+    {
+      "id": "ofimatica-google",
+      "order": 8,
+      "block": "Teoría",
+      "badge": "Estación 8 · Ofimática",
+      "title": "Herramientas Ofimáticas",
+      "subtitle": "Documentos, Hojas de Cálculo y Presentaciones de Google",
+      "icon": "layers",
+      "color": "#FBBC05",
+      "canvas": { "x": -1080, "y": 240, "scale": 1.2, "rotate": 3 },
+      "definition": "Dentro de Google Drive disponés de tres herramientas ofimáticas gratuitas que funcionan directo en el navegador sin instalar nada y son compatibles con Word, Excel y PowerPoint.",
+      "tools": [
+        {
+          "name": "Documentos de Google (Docs)",
+          "color": "#4285F4",
+          "shortcut": "https://docs.new",
+          "analogy": "Equivalente en la nube a Microsoft Word",
+          "uses": ["Notas formales y memorándums", "Actas, informes y reglamentos", "Currículums y cartas institucionales", "Exportación a PDF con 1 clic"]
+        },
+        {
+          "name": "Hojas de Cálculo (Sheets)",
+          "color": "#0F9D58",
+          "shortcut": "https://sheets.new",
+          "analogy": "Equivalente en la nube a Microsoft Excel",
+          "uses": ["Planillas de asistencia y guardias", "Inventarios de equipamiento", "Cálculos automáticos: =SUMA(), =PROMEDIO()", "Gráficos de barras y torta"]
+        },
+        {
+          "name": "Presentaciones de Google (Slides)",
+          "color": "#F4B400",
+          "shortcut": "https://slides.new",
+          "analogy": "Equivalente en la nube a Microsoft PowerPoint",
+          "uses": ["Exposiciones y capacitaciones", "Diapositivas visuales con imágenes e íconos", "Transiciones y animaciones limpias", "Presentación desde celular o proyector"]
+        }
+      ],
+      "keyPoints": [
+        "Truco profesional: escribí docs.new, sheets.new o slides.new en la barra del navegador para crear un archivo al instante.",
+        "¡Ahora ya tenés toda la base teórica! Pasemos a la Práctica en tu Google Drive y al Laboratorio 3D/AR."
+      ],
+      "widget": "office-selector"
+    }
+  ],
+  "practiceMissions": [
+    {
+      "id": "mision-drive",
+      "number": 1,
+      "tool": "Google Drive",
+      "color": "#34A853",
+      "url": "https://drive.google.com/drive/my-drive",
+      "buttonLabel": "Abrir Mi Unidad (Drive)",
+      "title": "Organizá tu Repositorio Personal",
+      "goal": "Ingresar a tu cuenta personal de Google y estructurar tu carpeta de capacitación como un profesional.",
+      "points": 100,
+      "steps": [
+        "Hacé clic en «Abrir Mi Unidad (Drive)» e iniciá sesión con tu cuenta personal (@gmail.com).",
+        "Presioná el botón «+ Nuevo» (arriba a la izquierda) y elegí «Carpeta nueva».",
+        "Nombrá la carpeta: Capacitacion_DFA_TuApellido (ejemplo: Capacitacion_DFA_Perez).",
+        "Hacé clic derecho sobre la carpeta → «Organizar» → elegí un color identificatorio (Celeste o Verde).",
+        "Entrá a la carpeta y creá 3 subcarpetas: 01_Documentos, 02_Planillas y 03_Presentaciones.",
+        "Practicá clic derecho → «Compartir» y verificá la diferencia entre Lector, Comentarista y Editor."
+      ],
+      "tip": "Recordá: nunca dejes abierta tu sesión personal en una computadora compartida al finalizar la clase."
+    },
+    {
+      "id": "mision-docs",
+      "number": 2,
+      "tool": "Documentos de Google",
+      "color": "#4285F4",
+      "url": "https://docs.new",
+      "buttonLabel": "Crear Nuevo Documento (docs.new)",
+      "title": "Redactá una Nota Institucional",
+      "goal": "Crear, dar formato profesional y guardar automáticamente un informe breve en Documentos de Google.",
+      "points": 100,
+      "copyTemplate": "DEPARTAMENTO FORMACIÓN DE AGENTES «GRAL. ÁNGEL VICENTE PEÑALOZA»\nSede Chilecito - La Rioja\n\nINFORME PRÁCTICO DE CAPACITACIÓN INFORMÁTICA\nFecha: 18/11/2026\nAgente: [Tu Nombre y Apellido]\nCapacitador: Tec. Sup. Guardia, Sebastián Nicolás\n\n1. Objetivo de la práctica:\nAplicar conceptos básicos de informática y herramientas colaborativas de Google Workspace.\n\n2. Conceptos clave aprendidos:\n• Diferencia entre Dato e Información.\n• Componentes de Hardware y Software.\n• Almacenamiento seguro en la nube con Google Drive.",
+      "steps": [
+        "Hacé clic en «Crear Nuevo Documento (docs.new)» o desde tu subcarpeta 01_Documentos → «+ Nuevo» → «Documentos de Google».",
+        "Arriba a la izquierda, cambiá «Documento sin título» por: Informe_Practico_DFA.",
+        "Copiá o escribí el encabezado institucional (podés usar el botón «Copiar plantilla» de abajo) y reemplazá [Tu Nombre y Apellido].",
+        "Seleccioná el título principal y aplicá Negrita (Ctrl + B), Centrado y tamaño 14.",
+        "Insertá una tabla (Menú Insertar → Tabla → 3x3) listando 2 ejemplos de Hardware y 2 de Software.",
+        "Verificá el ícono de la nube arriba («Guardado en Drive») y movelo a tu carpeta 01_Documentos si lo creaste con docs.new."
+      ],
+      "tip": "Atajos infalibles: Ctrl + Z deshace un error al instante; Ctrl + B aplica negrita; Ctrl + S ni siquiera hace falta porque guarda solo."
+    },
+    {
+      "id": "mision-sheets",
+      "number": 3,
+      "tool": "Hojas de Cálculo",
+      "color": "#0F9D58",
+      "url": "https://sheets.new",
+      "buttonLabel": "Crear Hoja de Cálculo (sheets.new)",
+      "title": "Planilla de Control con Fórmulas",
+      "goal": "Armar una tabla básica de control y automatizar sumas y promedios usando fórmulas reales.",
+      "points": 120,
+      "sampleTable": [
+        ["Ítem / Módulo", "Horas", "Puntaje"],
+        ["Teoría Informática", "2", "90"],
+        ["Práctica Drive", "1", "95"],
+        ["Práctica Docs", "1", "85"],
+        ["Práctica Sheets", "1", "100"]
+      ],
+      "formulas": [
+        { "formula": "=SUMA(B2:B5)", "meaning": "Suma total de horas de capacitación" },
+        { "formula": "=PROMEDIO(C2:C5)", "meaning": "Calcula el promedio de los puntajes" },
+        { "formula": "=MAX(C2:C5)", "meaning": "Encuentra el puntaje más alto de la tabla" }
+      ],
+      "steps": [
+        "Abrí una nueva planilla con «Crear Hoja de Cálculo (sheets.new)» y nombrala: Control_Capacitacion_DFA.",
+        "En la fila 1 escribí los encabezados: A1 = Módulo, B1 = Horas, C1 = Puntaje. Pintá esa fila de color azul oscuro con letra blanca.",
+        "Cargá los 4 registros de ejemplo de la tabla guía (filas 2 a 5).",
+        "En la celda B6 escribí exactamente: =SUMA(B2:B5) y presioná Enter.",
+        "En la celda C6 escribí: =PROMEDIO(C2:C5) y comprobá que calcula el promedio automáticamente.",
+        "Modificá uno de los puntajes y observá cómo el promedio se recalcula en tiempo real."
+      ],
+      "tip": "Toda fórmula en Hojas de Cálculo comienza siempre con el signo igual (=)."
+    },
+    {
+      "id": "mision-slides",
+      "number": 4,
+      "tool": "Presentaciones de Google",
+      "color": "#F4B400",
+      "url": "https://slides.new",
+      "buttonLabel": "Crear Presentación (slides.new)",
+      "title": "Mini Presentación Visual de 3 Diapositivas",
+      "goal": "Diseñar una presentación limpia y clara aplicando criterios visuales modernos.",
+      "points": 100,
+      "steps": [
+        "Abrí «Crear Presentación (slides.new)» y renombrala: Presentacion_DFA_TuApellido.",
+        "Elegí un Tema visual elegante en el panel derecho (ej.: «Simple oscuro» o «Geométrico»).",
+        "Diapositiva 1 (Portada): Título «Capacitación Informática DFA» y subtítulo con tu Nombre y Apellido.",
+        "Agregá la Diapositiva 2 (Ctrl + M): Título «Hardware vs. Software» con 3 viñetas cortas de cada uno.",
+        "Agregá la Diapositiva 3: Título «Mi uso de Google Drive» explicando cómo te ayudará en tu formación.",
+        "Aplicá una transición suave (Menú Diapositiva → Transición → Disolver) y presioná «Presentación» arriba a la derecha."
+      ],
+      "tip": "Regla de oro en presentaciones: poco texto por diapositiva, títulos claros y buen contraste."
+    }
+  ]
+}

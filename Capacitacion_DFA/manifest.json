@@ -1,0 +1,16 @@
+{
+  "name": "Capacitación DFA · Informática y Google Workspace",
+  "short_name": "Capacitación DFA",
+  "description": "Plataforma interactiva tipo Prezi con 3D, Realidad Aumentada, práctica en Google Drive y evaluación gamificada — Departamento Formación de Agentes Gral. Ángel Vicente Peñaloza.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#050a14",
+  "theme_color": "#00b4f0",
+  "icons": [
+    {
+      "src": "assets/logos/dep_formacion_agentes.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

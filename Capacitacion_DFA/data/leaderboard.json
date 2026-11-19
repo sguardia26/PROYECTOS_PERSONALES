@@ -1,0 +1,51 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-11-18T21:40:00.000Z",
+  "scores": [
+    {
+      "id": "demo-1",
+      "name": "Agente M. Rodríguez (Ejemplo)",
+      "section": "Comisión A · Chilecito",
+      "avatar": "🛡️",
+      "score": 1680,
+      "correct": 15,
+      "total": 16,
+      "accuracy": 94,
+      "bestStreak": 8,
+      "durationSec": 215,
+      "practiceBonus": 320,
+      "date": "2026-11-18T20:15:00.000Z",
+      "isDemo": true
+    },
+    {
+      "id": "demo-2",
+      "name": "Agente L. Fernández (Ejemplo)",
+      "section": "Comisión A · Chilecito",
+      "avatar": "⭐",
+      "score": 1490,
+      "correct": 14,
+      "total": 16,
+      "accuracy": 88,
+      "bestStreak": 6,
+      "durationSec": 248,
+      "practiceBonus": 220,
+      "date": "2026-11-18T20:22:00.000Z",
+      "isDemo": true
+    },
+    {
+      "id": "demo-3",
+      "name": "Agente C. Páez (Ejemplo)",
+      "section": "Comisión B · Chilecito",
+      "avatar": "💻",
+      "score": 1280,
+      "correct": 12,
+      "total": 16,
+      "accuracy": 75,
+      "bestStreak": 5,
+      "durationSec": 290,
+      "practiceBonus": 200,
+      "date": "2026-11-18T20:30:00.000Z",
+      "isDemo": true
+    }
+  ]
+}

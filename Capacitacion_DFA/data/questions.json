@@ -1,0 +1,251 @@
+{
+  "version": "1.0.0",
+  "quizConfig": {
+    "basePoints": 100,
+    "streakBonus": 25,
+    "hintPenalty": 20,
+    "passingPercent": 60
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "category": "Informática",
+      "difficulty": "Básico",
+      "question": "¿De qué dos palabras surge el término «Informática»?",
+      "options": [
+        "Información + Automática",
+        "Internet + Matemática",
+        "Informe + Electrónica",
+        "Ingeniería + Robótica"
+      ],
+      "correct": 0,
+      "hint": "Pensá en el «tratamiento automático de la información».",
+      "explanation": "Informática combina «Información» y «Automática», refiriéndose al procesamiento automático de datos mediante computadoras."
+    },
+    {
+      "id": "q2",
+      "category": "Datos e Información",
+      "difficulty": "Básico",
+      "question": "Si ves el número «42» escrito solo en un papel sin contexto, ¿qué representa?",
+      "options": [
+        "Un programa de software",
+        "Un DATO aislado",
+        "Una INFORMACIÓN completa",
+        "Un periférico de salida"
+      ],
+      "correct": 1,
+      "hint": "Todavía no sabés si 42 es una edad, un puntaje, una cantidad de agentes o una temperatura.",
+      "explanation": "Un valor suelto sin contexto es un DATO. Recién cuando se organiza y relaciona con un contexto («42 agentes presentes hoy») se transforma en INFORMACIÓN."
+    },
+    {
+      "id": "q3",
+      "category": "Hardware y Software",
+      "difficulty": "Básico",
+      "question": "¿Cuál de las siguientes opciones corresponde únicamente a HARDWARE (componentes físicos tangibles)?",
+      "options": [
+        "Windows, Google Chrome y WhatsApp",
+        "Teclado, monitor y disco SSD",
+        "Documentos de Google, mouse y Android",
+        "Correo electrónico, Wi-Fi y procesador"
+      ],
+      "correct": 1,
+      "hint": "Recordá la regla práctica: Hardware es todo lo que podés tocar físicamente.",
+      "explanation": "El teclado, el monitor y el disco SSD son piezas físicas que se pueden tocar (Hardware). Windows, Chrome y Docs son programas (Software)."
+    },
+    {
+      "id": "q4",
+      "category": "Hardware y Software",
+      "difficulty": "Básico",
+      "question": "Dentro de una computadora, ¿qué componente suele compararse con el «cerebro» porque procesa las instrucciones?",
+      "options": [
+        "La impresora",
+        "El procesador (CPU)",
+        "El cable de corriente",
+        "La carpeta de Google Drive"
+      ],
+      "correct": 1,
+      "hint": "Sus siglas en inglés significan Unidad Central de Procesamiento.",
+      "explanation": "La CPU (Central Processing Unit) es el procesador encargado de interpretar y ejecutar las instrucciones y cálculos del sistema."
+    },
+    {
+      "id": "q5",
+      "category": "Sistemas Informáticos",
+      "difficulty": "Básico",
+      "question": "¿Cuál es el orden correcto del ciclo básico de procesamiento de un sistema informático?",
+      "options": [
+        "Salida → Entrada → Proceso",
+        "Proceso → Salida → Entrada",
+        "Entrada → Proceso → Salida",
+        "Impresión → Apagado → Entrada"
+      ],
+      "correct": 2,
+      "hint": "Primero ingresan los datos, luego la PC los trabaja y al final muestra un resultado.",
+      "explanation": "Todo sistema informático recibe datos (Entrada), los transforma (Proceso) y entrega resultados útiles (Salida), pudiendo guardarlos en el camino (Almacenamiento)."
+    },
+    {
+      "id": "q6",
+      "category": "Google Drive",
+      "difficulty": "Básico",
+      "question": "Querés compartir un reglamento en Google Drive para que tus compañeros puedan LEERLO pero NO borrar ni editar el texto. ¿Qué permiso debés elegir?",
+      "options": [
+        "Editor",
+        "Lector",
+        "Propietario",
+        "Administrador de red"
+      ],
+      "correct": 1,
+      "hint": "El propio nombre del permiso indica que solo permite leer.",
+      "explanation": "El rol de «Lector» permite visualizar el archivo de forma segura impidiendo modificaciones accidentales o borrados."
+    },
+    {
+      "id": "q7",
+      "category": "Ofimática Google",
+      "difficulty": "Básico",
+      "question": "Necesitás redactar una nota formal institucional con encabezado, párrafos y viñetas. ¿Qué herramienta de Google Drive es la más adecuada?",
+      "options": [
+        "Documentos de Google (Docs)",
+        "Hojas de Cálculo (Sheets)",
+        "Google Maps",
+        "Calculadora de Windows"
+      ],
+      "correct": 0,
+      "hint": "Es el equivalente en la nube a Microsoft Word.",
+      "explanation": "Documentos de Google (Docs) está diseñado especialmente para redactar notas, actas, informes y textos formales con guardado automático."
+    },
+    {
+      "id": "q8",
+      "category": "Ofimática Google",
+      "difficulty": "Básico",
+      "question": "En Hojas de Cálculo de Google (Sheets), ¿con qué símbolo debe comenzar SIEMPRE una fórmula?",
+      "options": [
+        "Con el signo numeral (#)",
+        "Con el signo igual (=)",
+        "Con un asterisco (*)",
+        "Con dos puntos (:)"
+      ],
+      "correct": 1,
+      "hint": "Por ejemplo: ___SUMA(B2:B5).",
+      "explanation": "Toda fórmula o función en Hojas de Cálculo comienza con el signo igual (=), por ejemplo =SUMA(B2:B5) o =PROMEDIO(C2:C5)."
+    },
+    {
+      "id": "q9",
+      "category": "Ofimática Google",
+      "difficulty": "Básico",
+      "question": "¿Para qué sirve principalmente la herramienta «Presentaciones de Google» (Slides)?",
+      "options": [
+        "Para reparar la placa madre de la computadora",
+        "Para crear diapositivas visuales para exponer o capacitar",
+        "Para enviar dinero por transferencia",
+        "Para borrar virus del sistema operativo"
+      ],
+      "correct": 1,
+      "hint": "Es el equivalente en la nube a PowerPoint.",
+      "explanation": "Presentaciones de Google permite diseñar diapositivas ordenadas con títulos, imágenes y transiciones ideales para exposiciones y clases."
+    },
+    {
+      "id": "q10",
+      "category": "Google y Seguridad",
+      "difficulty": "Básico",
+      "question": "Terminaste tu práctica en una computadora compartida del aula usando tu cuenta personal de Google. ¿Qué es OBLIGATORIO hacer antes de retirarte?",
+      "options": [
+        "Dejar la sesión abierta para ahorrar tiempo mañana",
+        "Apagar solo el monitor sin cerrar el navegador",
+        "Cerrar sesión («Salir») en tu cuenta de Google",
+        "Borrar todos los archivos de tu Google Drive"
+      ],
+      "correct": 2,
+      "hint": "Pensá en proteger la privacidad de tus correos y documentos personales.",
+      "explanation": "En equipos compartidos siempre debemos cerrar sesión («Salir») en nuestra cuenta de Google para evitar que otra persona acceda a nuestros archivos o correos."
+    },
+    {
+      "id": "q11",
+      "category": "Lógica Computacional",
+      "difficulty": "Básico",
+      "question": "Un algoritmo es una serie ordenada de pasos para resolver un problema. ¿Cuál es el orden lógico correcto para preparar un mate?",
+      "options": [
+        "1. Cebar agua → 2. Poner yerba → 3. Calentar agua",
+        "1. Calentar agua → 2. Poner yerba y bombilla → 3. Cebar",
+        "1. Tomar el mate → 2. Comprar yerba → 3. Calentar agua",
+        "1. Poner bombilla sola → 2. Guardar la pava → 3. Poner yerba"
+      ],
+      "correct": 1,
+      "hint": "En informática, el orden de las instrucciones cambia por completo el resultado.",
+      "explanation": "Los algoritmos cotidianos siguen una secuencia lógica: primero se prepara el insumo (calentar agua), luego se arma el mate (yerba + bombilla) y finalmente se ceba."
+    },
+    {
+      "id": "q12",
+      "category": "Lógica Computacional",
+      "difficulty": "Básico",
+      "question": "Analizá la siguiente condición lógica: «SI la nota es mayor o igual a 6, ENTONCES Aprueba; SI NO, Recupera». Si un agente saca un 6, ¿qué ocurre?",
+      "options": [
+        "Recupera",
+        "Aprueba",
+        "Se borra su examen",
+        "No se puede saber"
+      ],
+      "correct": 1,
+      "hint": "Fijate con atención en las palabras «mayor O IGUAL a 6».",
+      "explanation": "Como la condición dice «mayor o igual a 6» (≥ 6), el número 6 cumple la condición verdadera y por lo tanto el resultado es «Aprueba»."
+    },
+    {
+      "id": "q13",
+      "category": "Lógica Computacional",
+      "difficulty": "Básico",
+      "question": "Observá la secuencia numérica: 5, 10, 15, 20, ___. ¿Qué número completa lógicamente la serie?",
+      "options": [
+        "22",
+        "24",
+        "25",
+        "30"
+      ],
+      "correct": 2,
+      "hint": "Cada número suma una cantidad constante respecto al anterior.",
+      "explanation": "El patrón suma +5 en cada paso (5 → 10 → 15 → 20 → 25). Detectar patrones es una habilidad clave del pensamiento computacional."
+    },
+    {
+      "id": "q14",
+      "category": "Matemática Básica",
+      "difficulty": "Básico",
+      "question": "Tu cuenta gratuita de Google Drive ofrece 15 GB de espacio. Si ya usaste 6 GB en fotos y archivos, ¿cuántos GB te quedan libres?",
+      "options": [
+        "8 GB",
+        "9 GB",
+        "10 GB",
+        "21 GB"
+      ],
+      "correct": 1,
+      "hint": "Restá el espacio ocupado al espacio total: 15 - 6.",
+      "explanation": "15 GB totales menos 6 GB ocupados dejan exactamente 9 GB disponibles para guardar nuevos documentos y carpetas."
+    },
+    {
+      "id": "q15",
+      "category": "Matemática Básica",
+      "difficulty": "Básico",
+      "question": "En una Hoja de Cálculo tenés tres puntajes de práctica: 80, 90 y 100. ¿Cuál es el PROMEDIO de esos tres valores?",
+      "options": [
+        "85",
+        "90",
+        "95",
+        "270"
+      ],
+      "correct": 1,
+      "hint": "Sumá los tres números (80 + 90 + 100) y dividí el total por 3.",
+      "explanation": "(80 + 90 + 100) = 270; al dividir 270 ÷ 3 obtenemos un promedio de 90. En Google Sheets se calcula automáticamente con =PROMEDIO()."
+    },
+    {
+      "id": "q16",
+      "category": "Cotidiano Digital",
+      "difficulty": "Básico",
+      "question": "Una carpeta de capacitación tiene 4 subcarpetas y en cada una guardás 5 documentos. ¿Cuántos documentos tenés en total?",
+      "options": [
+        "9 documentos",
+        "15 documentos",
+        "20 documentos",
+        "25 documentos"
+      ],
+      "correct": 2,
+      "hint": "Multiplicá la cantidad de subcarpetas por los documentos en cada una (4 × 5).",
+      "explanation": "4 subcarpetas × 5 documentos en cada una = 20 documentos en total."
+    }
+  ]
+}
