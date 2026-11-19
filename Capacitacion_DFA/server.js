@@ -1,34 +1,58 @@
 const express = require('express');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_DIR = path.join(__dirname, 'data');
+const IS_VERCEL = Boolean(process.env.VERCEL);
+
+const PUBLIC_DIR = path.join(__dirname, 'public');
+const SEED_DATA_DIR = path.join(__dirname, 'data');
+const WRITABLE_DATA_DIR = IS_VERCEL
+  ? path.join(os.tmpdir(), 'capacitacion_dfa_data')
+  : SEED_DATA_DIR;
 
 app.use(express.json({ limit: '1mb' }));
-app.use(express.static(__dirname));
+app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 
-// Helper: read JSON file safely
+// Asegurar directorio editable (en Vercel usa /tmp sembrado desde data/*.json)
+function ensureWritableFile(filename) {
+  if (!fs.existsSync(WRITABLE_DATA_DIR)) {
+    fs.mkdirSync(WRITABLE_DATA_DIR, { recursive: true });
+  }
+  const targetPath = path.join(WRITABLE_DATA_DIR, filename);
+  if (IS_VERCEL && !fs.existsSync(targetPath)) {
+    const seedPath = path.join(SEED_DATA_DIR, filename);
+    if (fs.existsSync(seedPath)) {
+      fs.copyFileSync(seedPath, targetPath);
+    }
+  }
+  return targetPath;
+}
+
+// Leer archivo JSON NoSQL de forma segura
 function readJson(filename, fallback) {
-  const filePath = path.join(DATA_DIR, filename);
   try {
-    if (!fs.existsSync(filePath)) return fallback;
-    const raw = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(raw);
+    const writablePath = ensureWritableFile(filename);
+    if (fs.existsSync(writablePath)) {
+      return JSON.parse(fs.readFileSync(writablePath, 'utf8'));
+    }
+    const seedPath = path.join(SEED_DATA_DIR, filename);
+    if (fs.existsSync(seedPath)) {
+      return JSON.parse(fs.readFileSync(seedPath, 'utf8'));
+    }
+    return fallback;
   } catch (err) {
     console.error(`[DB] Error leyendo ${filename}:`, err.message);
     return fallback;
   }
 }
 
-// Helper: write JSON file atomically
+// Escribir archivo JSON NoSQL de forma atómica
 function writeJson(filename, data) {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  const filePath = path.join(DATA_DIR, filename);
-  const tmpPath = `${filePath}.tmp`;
+  const filePath = ensureWritableFile(filename);
+  const tmpPath = `${filePath}.${Date.now()}.tmp`;
   fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf8');
   fs.renameSync(tmpPath, filePath);
 }
@@ -40,24 +64,37 @@ function sanitizeText(str, maxLen = 80) {
     .slice(0, maxLen);
 }
 
+function sortScores(scores = []) {
+  return [...scores].sort((a, b) => {
+    if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
+    if ((b.accuracy || 0) !== (a.accuracy || 0)) return (b.accuracy || 0) - (a.accuracy || 0);
+    return (a.durationSec || 9999) - (b.durationSec || 9999);
+  });
+}
+
 // Health check
 app.get('/api/health', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   res.json({
     ok: true,
-    engine: 'node-express-json',
-    storage: 'NoSQL JSON (data/*.json)',
+    engine: IS_VERCEL ? 'vercel-express-json' : 'node-express-json',
+    environment: IS_VERCEL ? 'vercel' : 'local',
+    ephemeral: IS_VERCEL,
+    storage: IS_VERCEL ? 'Vercel NoSQL JSON + Respaldo Local' : 'NoSQL JSON (data/*.json)',
     timestamp: new Date().toISOString()
   });
 });
 
 // Course data
 app.get('/api/course', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   const data = readJson('course.json', { meta: {}, stations: [], practiceMissions: [] });
   res.json(data);
 });
 
 // Questions
 app.get('/api/questions', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   const data = readJson('questions.json', { quizConfig: {}, questions: [] });
   res.json(data);
 });
@@ -85,13 +122,9 @@ app.post('/api/questions', (req, res) => {
 
 // Leaderboard (NoSQL JSON)
 app.get('/api/leaderboard', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   const db = readJson('leaderboard.json', { version: '1.0.0', updatedAt: null, scores: [] });
-  const sorted = [...(db.scores || [])].sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
-    return (a.durationSec || 9999) - (b.durationSec || 9999);
-  });
-  res.json({ ok: true, updatedAt: db.updatedAt, scores: sorted });
+  res.json({ ok: true, updatedAt: db.updatedAt, scores: sortScores(db.scores || []) });
 });
 
 app.post('/api/leaderboard', (req, res) => {
@@ -123,18 +156,14 @@ app.post('/api/leaderboard', (req, res) => {
   db.updatedAt = new Date().toISOString();
   writeJson('leaderboard.json', db);
 
-  const sorted = [...db.scores].sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
-    return (a.durationSec || 9999) - (b.durationSec || 9999);
-  });
+  const sorted = sortScores(db.scores);
   const rank = sorted.findIndex((s) => s.id === entry.id) + 1;
 
   res.status(201).json({ ok: true, entry, rank, scores: sorted });
 });
 
 app.delete('/api/leaderboard', (req, res) => {
-  const mode = req.query.mode || 'all'; // 'all' | 'demos'
+  const mode = req.query.mode || 'all';
   const db = readJson('leaderboard.json', { version: '1.0.0', updatedAt: null, scores: [] });
   if (mode === 'demos') {
     db.scores = (db.scores || []).filter((s) => !s.isDemo);
@@ -148,6 +177,7 @@ app.delete('/api/leaderboard', (req, res) => {
 
 // Practice Progress
 app.get('/api/progress', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   const db = readJson('progress.json', { version: '1.0.0', updatedAt: null, sessions: [] });
   res.json({ ok: true, ...db });
 });
@@ -182,7 +212,16 @@ app.post('/api/progress', (req, res) => {
   res.json({ ok: true, record });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 Plataforma Capacitación DFA activa en http://localhost:${PORT}`);
-  console.log(`📁 Base de datos NoSQL JSON en: ${DATA_DIR}\n`);
+// Ruta raíz explícita (garantiza que "/" sirva public/index.html tanto local como en Vercel)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
+
+if (!IS_VERCEL && require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Plataforma Capacitación DFA activa en http://localhost:${PORT}`);
+    console.log(`📁 Base de datos NoSQL JSON en: ${WRITABLE_DATA_DIR}\n`);
+  });
+}
+
+module.exports = app;

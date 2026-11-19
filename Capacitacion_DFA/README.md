@@ -1,7 +1,8 @@
 # 🌌 Plataforma Interactiva de Capacitación Informática — DFA
 
 **Entidad:** Departamento Formación de Agentes «Gral. Ángel Vicente Peñaloza» — Sede Chilecito, La Rioja  
-**Capacitador:** Guardia, Sebastián Nicolás — *Técnico Superior en Sistemas y Redes Informáticas*
+**Capacitador:** Guardia, Sebastián Nicolás — *Técnico Superior en Sistemas y Redes Informáticas*  
+**Producción (Vercel):** https://capacitaciondfa.vercel.app
 
 Plataforma educativa interactiva con navegación espacial **estilo Prezi**, visor **3D WebGL (Three.js)**, experiencia de **Realidad Aumentada (AR)**, laboratorio práctico guiado en **Google Drive** (cuenta personal) y **evaluación gamificada** con base de datos no relacional **`.json`**.
 

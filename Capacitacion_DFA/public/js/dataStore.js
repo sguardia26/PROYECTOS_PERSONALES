@@ -1,5 +1,5 @@
 // Capa de persistencia híbrida para Base de Datos No Relacional (.json)
-// Soporta automáticamente: Node.js (/api/*), MAMP PHP (api/db.php) y Modo Estático (data/*.json + localStorage)
+// Soporta automáticamente: Node.js / Vercel Express (/api/*), MAMP PHP (../api/db.php) y Modo Estático
 
 const LS_SCORES_KEY = 'dfa_capacitacion_scores_v1';
 const LS_PROGRESS_KEY = 'dfa_capacitacion_progress_v1';
@@ -8,37 +8,45 @@ const LS_QUESTIONS_KEY = 'dfa_capacitacion_extra_questions_v1';
 class DataStore {
   constructor() {
     this.mode = 'static'; // 'node' | 'php' | 'static'
+    this.ephemeral = false;
+    this.phpBase = '../api/db.php';
     this.engineLabel = 'JSON Local (Navegador)';
   }
 
   async init() {
-    // 1. Probar Node.js Express API
+    // 1. Probar Node.js / Vercel Express API
     try {
       const res = await fetch('/api/health', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (data && data.ok) {
           this.mode = 'node';
-          this.engineLabel = 'Node.js + NoSQL JSON (data/*.json)';
+          this.ephemeral = Boolean(data.ephemeral);
+          this.engineLabel = data.ephemeral
+            ? 'Vercel + NoSQL JSON (Cloud + Local)'
+            : 'Node.js + NoSQL JSON (data/*.json)';
           return this.mode;
         }
       }
     } catch (_) {}
 
-    // 2. Probar MAMP / Apache PHP API
-    try {
-      const res = await fetch('api/db.php?resource=health', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.ok) {
-          this.mode = 'php';
-          this.engineLabel = 'MAMP PHP + NoSQL JSON (data/*.json)';
-          return this.mode;
+    // 2. Probar MAMP / Apache PHP API (tanto desde /public/ como desde raíz)
+    for (const candidate of ['../api/db.php', 'api/db.php']) {
+      try {
+        const res = await fetch(`${candidate}?resource=health`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.ok) {
+            this.mode = 'php';
+            this.phpBase = candidate;
+            this.engineLabel = 'MAMP PHP + NoSQL JSON (data/*.json)';
+            return this.mode;
+          }
         }
-      }
-    } catch (_) {}
+      } catch (_) {}
+    }
 
-    // 3. Fallback estático (Vercel / GitHub Pages)
+    // 3. Fallback estático
     this.mode = 'static';
     this.engineLabel = 'JSON Estático + Persistencia Local';
     return this.mode;
@@ -49,9 +57,9 @@ class DataStore {
       return `/api/${resource}${query ? '?' + query : ''}`;
     }
     if (this.mode === 'php') {
-      return `api/db.php?resource=${resource}${query ? '&' + query : ''}`;
+      return `${this.phpBase}?resource=${resource}${query ? '&' + query : ''}`;
     }
-    return `data/${resource}.json`;
+    return `../data/${resource}.json`;
   }
 
   _sortScores(scores) {
@@ -62,6 +70,15 @@ class DataStore {
     });
   }
 
+  _mergeUniqueScores(primary = [], secondary = []) {
+    const map = new Map();
+    [...primary, ...secondary].forEach((s) => {
+      const key = s.id || `${s.name}-${s.score}-${s.date}`;
+      if (!map.has(key)) map.set(key, s);
+    });
+    return this._sortScores([...map.values()]);
+  }
+
   async getCourse() {
     const res = await fetch(this._endpoint('course'), { cache: 'no-store' });
     return await res.json();
@@ -70,9 +87,10 @@ class DataStore {
   async getQuestions() {
     const res = await fetch(this._endpoint('questions'), { cache: 'no-store' });
     const data = await res.json();
-    if (this.mode === 'static') {
+    if (this.mode === 'static' || this.ephemeral) {
       const extra = JSON.parse(localStorage.getItem(LS_QUESTIONS_KEY) || '[]');
-      data.questions = [...(data.questions || []), ...extra];
+      const existingIds = new Set((data.questions || []).map((q) => q.id));
+      data.questions = [...(data.questions || []), ...extra.filter((q) => !existingIds.has(q.id))];
     }
     return data;
   }
@@ -84,7 +102,13 @@ class DataStore {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      return await res.json();
+      const json = await res.json();
+      if (this.ephemeral && json.ok && json.question) {
+        const extra = JSON.parse(localStorage.getItem(LS_QUESTIONS_KEY) || '[]');
+        extra.push(json.question);
+        localStorage.setItem(LS_QUESTIONS_KEY, JSON.stringify(extra));
+      }
+      return json;
     }
     const extra = JSON.parse(localStorage.getItem(LS_QUESTIONS_KEY) || '[]');
     const newQ = { id: `q-local-${Date.now()}`, ...payload };
@@ -97,12 +121,17 @@ class DataStore {
     if (this.mode === 'node' || this.mode === 'php') {
       const res = await fetch(this._endpoint('leaderboard'), { cache: 'no-store' });
       const data = await res.json();
-      return this._sortScores(data.scores || []);
+      const serverScores = data.scores || [];
+      if (this.ephemeral) {
+        const localSaved = JSON.parse(localStorage.getItem(LS_SCORES_KEY) || '[]');
+        return this._mergeUniqueScores(serverScores, localSaved);
+      }
+      return this._sortScores(serverScores);
     }
-    // Static mode: seed from data/leaderboard.json + merge local scores
+
     let baseScores = [];
     try {
-      const res = await fetch('data/leaderboard.json', { cache: 'no-store' });
+      const res = await fetch(this._endpoint('leaderboard'), { cache: 'no-store' });
       if (res.ok) {
         const json = await res.json();
         baseScores = json.scores || [];
@@ -123,8 +152,17 @@ class DataStore {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      return await res.json();
+      const json = await res.json();
+      if (this.ephemeral && json.ok && json.entry) {
+        const localSaved = JSON.parse(localStorage.getItem(LS_SCORES_KEY) || '[]');
+        const merged = this._mergeUniqueScores(json.scores || [], [...localSaved, json.entry]);
+        localStorage.setItem(LS_SCORES_KEY, JSON.stringify(merged.filter((s) => !s.isDemo)));
+        const rank = merged.findIndex((s) => s.id === json.entry.id) + 1;
+        return { ...json, rank, scores: merged };
+      }
+      return json;
     }
+
     const current = await this.getLeaderboard();
     const entry = {
       id: `sc-${Date.now()}`,
@@ -143,6 +181,9 @@ class DataStore {
       const res = await fetch(this._endpoint('leaderboard', `mode=${mode}`), {
         method: 'DELETE'
       });
+      if (this.ephemeral) {
+        if (mode === 'all') localStorage.removeItem(LS_SCORES_KEY);
+      }
       return await res.json();
     }
     const current = await this.getLeaderboard();
