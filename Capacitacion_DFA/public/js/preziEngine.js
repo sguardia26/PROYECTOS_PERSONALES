@@ -17,9 +17,11 @@ export class PreziEngine {
 
     this.currentIndex = 0;
     this.isOverview = false;
+    this.userZoom = 1.0;
     this.panOffset = { x: 0, y: 0 };
     this.isDragging = false;
     this.dragStart = { x: 0, y: 0 };
+    this.onZoomChange = null;
 
     // Estado de widgets interactivos
     this.hwSwItems = [
@@ -144,9 +146,9 @@ export class PreziEngine {
             </div>
             <div class="hero-cta-row">
               <button class="btn-primary-glow" data-action="start-tour">🚀 Iniciar Recorrido Prezi</button>
-              <button class="btn-glass" data-action="open-3d">🧊 Laboratorio 3D & AR</button>
               <button class="btn-glass" data-action="open-practice">📂 Práctica Drive</button>
               <button class="btn-glass" data-action="open-quiz">🏆 Evaluación</button>
+              <button class="btn-glass" data-action="open-3d">🧊 Simulador Diseño 3D &amp; AR</button>
             </div>
           </div>
         </div>
@@ -498,15 +500,17 @@ export class PreziEngine {
   }
 
   _bindInteractions() {
-    // Arrastrar para explorar el lienzo en Vista Panorámica
+    // Arrastrar para desplazar el lienzo en Vista Panorámica o cuando hay Zoom aplicado
     this.viewportEl.addEventListener('mousedown', (e) => {
-      if (!this.isOverview) return;
+      if (!this.isOverview && this.userZoom <= 1.01) return;
+      if (e.target.closest('button, a, input, select, textarea, label')) return;
       this.isDragging = true;
+      this.viewportEl.classList.add('is-panning');
       this.dragStart = { x: e.clientX - this.panOffset.x, y: e.clientY - this.panOffset.y };
     });
 
     window.addEventListener('mousemove', (e) => {
-      if (!this.isDragging || !this.isOverview) return;
+      if (!this.isDragging) return;
       this.panOffset.x = e.clientX - this.dragStart.x;
       this.panOffset.y = e.clientY - this.dragStart.y;
       this._applyCamera(true);
@@ -514,13 +518,47 @@ export class PreziEngine {
 
     window.addEventListener('mouseup', () => {
       this.isDragging = false;
+      this.viewportEl.classList.remove('is-panning');
     });
+
+    // Zoom suave con rueda del mouse en el lienzo Prezi
+    this.viewportEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.1 : -0.1;
+      this.setZoom(this.userZoom + delta, true);
+    }, { passive: false });
+  }
+
+  setZoom(nextZoom, instant = false) {
+    this.userZoom = Math.max(0.65, Math.min(1.9, Number(nextZoom.toFixed(2))));
+    if (this.userZoom <= 1.01 && !this.isOverview) {
+      this.panOffset = { x: 0, y: 0 };
+    }
+    this._applyCamera(instant);
+    if (this.onZoomChange) this.onZoomChange(Math.round(this.userZoom * 100));
+  }
+
+  zoomIn() {
+    soundFx.click();
+    this.setZoom(this.userZoom + 0.15, false);
+  }
+
+  zoomOut() {
+    soundFx.click();
+    this.setZoom(this.userZoom - 0.15, false);
+  }
+
+  resetZoom() {
+    soundFx.click();
+    this.panOffset = { x: 0, y: 0 };
+    this.setZoom(1.0, false);
   }
 
   goTo(index, instant = false) {
     const safeIdx = Math.max(0, Math.min(this.stations.length - 1, index));
     this.currentIndex = safeIdx;
     this.isOverview = false;
+    this.userZoom = 1.0;
     this.panOffset = { x: 0, y: 0 };
 
     if (!instant) soundFx.whoosh();
@@ -531,6 +569,7 @@ export class PreziEngine {
     });
 
     this._applyCamera(instant);
+    if (this.onZoomChange) this.onZoomChange(100);
     this.onNavigate(safeIdx, this.stations[safeIdx], false);
   }
 
@@ -558,6 +597,7 @@ export class PreziEngine {
 
   toggleOverview(forceState = null) {
     this.isOverview = forceState !== null ? forceState : !this.isOverview;
+    this.userZoom = 1.0;
     this.panOffset = { x: 0, y: 0 };
     soundFx.whoosh();
 
@@ -567,6 +607,7 @@ export class PreziEngine {
     });
 
     this._applyCamera(false);
+    if (this.onZoomChange) this.onZoomChange(100);
     this.onNavigate(this.currentIndex, this.stations[this.currentIndex], this.isOverview);
   }
 
@@ -576,26 +617,32 @@ export class PreziEngine {
 
     this.worldEl.style.transition = instant
       ? 'none'
-      : 'transform 0.92s cubic-bezier(0.22, 1, 0.36, 1)';
+      : 'transform 0.78s cubic-bezier(0.22, 1, 0.36, 1)';
 
     if (this.isOverview) {
-      const overviewScale = Math.max(0.22, Math.min(vw / 2950, vh / 2200));
-      this.worldEl.style.transform = `translate3d(${vw / 2 + this.panOffset.x}px, ${vh / 2 + this.panOffset.y}px, 0) scale(${overviewScale}) rotate(0deg)`;
+      const baseOverview = Math.max(0.24, Math.min(vw / 2750, vh / 2050));
+      const finalOverview = baseOverview * this.userZoom;
+      this.worldEl.style.transform = `translate3d(${vw / 2 + this.panOffset.x}px, ${vh / 2 + this.panOffset.y}px, 0) scale(${finalOverview}) rotate(0deg)`;
       return;
     }
 
     const st = this.stations[this.currentIndex];
     if (!st) return;
 
-    const targetW = st.id === 'portada' ? 1020 : 940;
-    const targetH = st.id === 'portada' ? 660 : 690;
-    const fitScale = Math.min((vw - 36) / targetW, (vh - 155) / targetH, 1.06);
-    const scale = Math.max(0.36, fitScale);
+    // Medir el tamaño REAL de la tarjeta activa para aprovechar al máximo la pantalla
+    const activeNode = this.worldEl.querySelector(`.prezi-node[data-index="${this.currentIndex}"]`);
+    const measuredW = activeNode?.offsetWidth || (st.id === 'portada' ? 1040 : 980);
+    const measuredH = activeNode?.offsetHeight || 560;
+
+    // Dejar margen justo para la barra inferior (86px) y bordes laterales (32px)
+    const availW = Math.max(320, vw - 36);
+    const availH = Math.max(300, vh - 96);
+    const fitScale = Math.min(availW / measuredW, availH / measuredH, 1.32);
+    const scale = Math.max(0.45, fitScale * this.userZoom);
     const rot = -(st.canvas.rotate || 0);
 
-    // Centrar exactamente la estación en pantalla y contrarrotar para lectura horizontal perfecta
     this.worldEl.style.transform = `
-      translate3d(${vw / 2}px, ${vh / 2 - 12}px, 0)
+      translate3d(${vw / 2 + this.panOffset.x}px, ${vh / 2 - 22 + this.panOffset.y}px, 0)
       scale(${scale})
       rotate(${rot}deg)
       translate3d(${-st.canvas.x}px, ${-st.canvas.y}px, 0)

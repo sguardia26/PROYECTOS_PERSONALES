@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Capacitación DFA · Informática, Google Drive, 3D &amp; AR</title>
-  <meta name="description" content="Plataforma interactiva tipo Prezi con 3D, Realidad Aumentada, práctica en Google Drive y evaluación gamificada — Departamento Formación de Agentes Gral. Ángel Vicente Peñaloza." />
+  <meta name="description" content="Plataforma interactiva tipo Prezi con práctica en Google Drive, evaluación gamificada y simulador de diseño 3D con Realidad Aumentada — Departamento Formación de Agentes Gral. Ángel Vicente Peñaloza." />
   <link rel="icon" type="image/jpeg" href="assets/logos/dep_formacion_agentes.jpg" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="css/styles.css" />
@@ -14,13 +14,13 @@
   <div id="boot-loader" class="boot-loader">
     <img src="assets/logos/dep_formacion_agentes.jpg" alt="Logo DFA" class="loader-logo" />
     <div class="loader-title">Departamento Formación de Agentes «Gral. Ángel Vicente Peñaloza»</div>
-    <div class="loader-sub">Iniciando Universo Interactivo 3D &amp; Prezi...</div>
+    <div class="loader-sub">Iniciando Plataforma Interactiva Prezi, Drive &amp; Diseño 3D...</div>
   </div>
 
   <!-- Fondo 3D Cósmico con Paralaje -->
   <canvas id="cosmic-bg-canvas" aria-hidden="true"></canvas>
 
-  <!-- Barra Superior HUD Institucional -->
+  <!-- Barra Superior HUD Institucional (3D & AR como último acceso) -->
   <header class="top-hud">
     <div class="hud-brand">
       <img src="assets/logos/dep_formacion_agentes.jpg" alt="Escudo DFA" class="hud-logo" />
@@ -34,14 +34,14 @@
       <button type="button" class="nav-pill active" data-section="prezi">
         <span>🌌</span> Presentación Prezi
       </button>
-      <button type="button" class="nav-pill" data-section="studio3d">
-        <span>🧊</span> Lab 3D &amp; AR
-      </button>
       <button type="button" class="nav-pill" data-section="practice">
         <span>📂</span> Práctica Drive <em id="nav-practice-badge" class="nav-mini-badge">0%</em>
       </button>
       <button type="button" class="nav-pill" data-section="quiz">
         <span>🏆</span> Evaluación &amp; Ranking
+      </button>
+      <button type="button" class="nav-pill" data-section="studio3d">
+        <span>🧊</span> Simulador 3D &amp; AR
       </button>
     </nav>
 
@@ -52,90 +52,32 @@
     </div>
   </header>
 
-  <!-- BLOQUE 1: PRESENTACIÓN ESPACIAL TIPO PREZI -->
+  <!-- BLOQUE 1: PRESENTACIÓN ESPACIAL TIPO PREZI CON ZOOM -->
   <main id="section-prezi" class="main-section active">
     <div id="prezi-viewport" class="prezi-viewport">
       <div id="prezi-world" class="prezi-world">
         <svg id="prezi-flight-svg" class="prezi-flight-svg" viewBox="-1800 -1400 3600 2800" aria-hidden="true"></svg>
       </div>
     </div>
+
     <div class="prezi-bottom-dock">
       <div class="prezi-dock-status" id="prezi-current-label">Estación 0 · Universo Digital DFA</div>
       <div class="prezi-dock-controls">
         <button type="button" id="btn-prezi-prev" class="dock-btn">← Anterior</button>
         <button type="button" id="btn-prezi-overview" class="dock-btn accent">🗺️ Mapa General</button>
         <div id="prezi-dots" class="prezi-dots" aria-label="Estaciones"></div>
+
+        <!-- Herramienta de Zoom interactivo -->
+        <div class="prezi-zoom-group" aria-label="Controles de zoom">
+          <button type="button" id="btn-zoom-out" class="dock-zoom-btn" title="Alejar diapositiva (-)">−</button>
+          <button type="button" id="btn-zoom-reset" class="dock-zoom-readout" title="Restablecer zoom a 100%">100%</button>
+          <button type="button" id="btn-zoom-in" class="dock-zoom-btn" title="Acercar diapositiva (+)">+</button>
+        </div>
+
         <button type="button" id="btn-prezi-next" class="dock-btn primary">Siguiente →</button>
       </div>
     </div>
   </main>
-
-  <!-- LABORATORIO 3D INTERACTIVO & REALIDAD AUMENTADA (AR) -->
-  <section id="section-studio3d" class="main-section scrollable-section">
-    <div class="section-shell">
-      <div class="studio-header">
-        <div>
-          <span class="section-eyebrow">EXPERIENCIA INMERSIVA · WEBGL 3D + REALIDAD AUMENTADA</span>
-          <h2>Laboratorio Holográfico 3D &amp; Realidad Aumentada (AR)</h2>
-          <p>Rotá los modelos 360°, desarmá una PC por dentro o activá tu cámara para proyectar el holograma en el aula.</p>
-        </div>
-        <div class="model-tabs">
-          <button type="button" class="model-tab active" data-3d-model="hardware">🖥️ PC Hardware 3D</button>
-          <button type="button" class="model-tab" data-3d-model="system">🔄 Sistema Informático</button>
-          <button type="button" class="model-tab" data-3d-model="google">☁️ Google Workspace</button>
-        </div>
-      </div>
-
-      <div class="studio-grid">
-        <div class="studio-stage-card" id="studio-3d-stage">
-          <!-- Video de cámara real en vivo para AR -->
-          <video id="ar-camera-video" class="ar-video-bg" playsinline muted hidden></video>
-
-          <!-- Retícula futurista AR -->
-          <div id="ar-hud-overlay" class="ar-hud-overlay" hidden>
-            <div class="ar-corner tl"></div>
-            <div class="ar-corner tr"></div>
-            <div class="ar-corner bl"></div>
-            <div class="ar-corner br"></div>
-            <div class="ar-live-chip">● MODO REALIDAD AUMENTADA ACTIVO · DFA CHILECITO</div>
-          </div>
-
-          <!-- Canvas Three.js interactivo -->
-          <canvas id="three-studio-canvas" class="studio-canvas"></canvas>
-
-          <div class="studio-status-bar" id="ar-status-text">
-            Modo Laboratorio 3D · Arrastrá para rotar y hacé clic en cualquier componente
-          </div>
-        </div>
-
-        <aside class="studio-sidebar">
-          <div class="inspector-card" id="inspector-card">
-            <span class="inspector-tag" id="inspector-tag">Tocá una pieza 3D</span>
-            <h3 id="inspector-title">PC de Escritorio 3D (Hardware)</h3>
-            <p id="inspector-desc">Hacé clic sobre cualquier componente 3D del escenario para inspeccionar su función dentro de un sistema informático.</p>
-          </div>
-
-          <div class="studio-controls-card">
-            <h4>🎛️ Controles 3D &amp; AR</h4>
-            <div class="controls-stack">
-              <button type="button" class="btn-primary-glow" id="btn-3d-explode">💥 Desarmar (Vista Explotada)</button>
-              <button type="button" class="btn-gold" id="btn-ar-camera"><span>📷</span> Activar Cámara AR</button>
-              <button type="button" class="btn-glass" id="btn-ar-sim">🕶️ Modo AR Simulado (Sin Cámara)</button>
-              <button type="button" class="btn-glass" id="btn-ar-photo">📸 Capturar Foto AR (.png)</button>
-              <div class="controls-row-2">
-                <button type="button" class="btn-glass-sm active" id="btn-3d-autorot">🔄 Auto-Rotar: ON</button>
-                <button type="button" class="btn-glass-sm" id="btn-3d-reset">↺ Reiniciar Vista</button>
-              </div>
-              <label class="scale-control">
-                <span>Tamaño del Holograma (AR / 3D)</span>
-                <input type="range" id="ar-scale-slider" min="0.55" max="1.45" step="0.05" value="1" />
-              </label>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </div>
-  </section>
 
   <!-- BLOQUE 2: PRÁCTICA EN GOOGLE DRIVE -->
   <section id="section-practice" class="main-section scrollable-section">
@@ -144,10 +86,148 @@
     </div>
   </section>
 
-  <!-- BLOQUE 3: EVALUACIÓN GAMIFICADA & TABLA DE PUNTUACIONES (.JSON) -->
+  <!-- BLOQUE 3: EVALUACIÓN GAMIFICADA, RANKING Y PANEL DOCENTE PROTEGIDO -->
   <section id="section-quiz" class="main-section scrollable-section">
     <div class="section-shell" id="quiz-container">
       <!-- Renderizado por QuizEngine -->
+    </div>
+  </section>
+
+  <!-- BLOQUE 4 (ÚLTIMO ACCESO): SIMULADOR DE DISEÑO 3D (CAD) & REALIDAD AUMENTADA (AR) -->
+  <section id="section-studio3d" class="main-section scrollable-section">
+    <div class="section-shell">
+      <div class="studio-header">
+        <div>
+          <span class="section-eyebrow">ESTUDIO CREATIVO · SIMULADOR DE DISEÑO 3D (CAD) + REALIDAD AUMENTADA</span>
+          <h2>Simulador de Diseño 3D &amp; Realidad Aumentada (AR)</h2>
+          <p>Diseñá prototipos 3D con formas geométricas, materiales y coordenadas X/Y/Z, o inspeccioná modelos de Hardware y Google Workspace en 3D y AR.</p>
+        </div>
+        <div class="model-tabs">
+          <button type="button" class="model-tab active" data-3d-model="designer">🎨 Diseño 3D Libre</button>
+          <button type="button" class="model-tab" data-3d-model="hardware">🖥️ PC Hardware 3D</button>
+          <button type="button" class="model-tab" data-3d-model="system">🔄 Sistema Informático</button>
+          <button type="button" class="model-tab" data-3d-model="google">☁️ Google Workspace</button>
+        </div>
+      </div>
+
+      <!-- Barra CAD de Primitivas 3D (visible en modo Diseño 3D Libre) -->
+      <div class="cad-toolbar" id="cad-toolbar">
+        <div class="cad-toolbar-group">
+          <span class="cad-group-label">➕ Agregar Forma 3D:</span>
+          <button type="button" class="cad-chip" data-add-shape="box">🧊 Cubo</button>
+          <button type="button" class="cad-chip" data-add-shape="sphere">⚪ Esfera</button>
+          <button type="button" class="cad-chip" data-add-shape="cylinder">🥫 Cilindro</button>
+          <button type="button" class="cad-chip" data-add-shape="cone">🔺 Pirámide</button>
+          <button type="button" class="cad-chip" data-add-shape="torus">🍩 Anillo</button>
+          <button type="button" class="cad-chip" data-add-shape="octahedron">💎 Cristal</button>
+          <button type="button" class="cad-chip" data-add-shape="plate">📐 Placa</button>
+        </div>
+        <div class="cad-toolbar-group">
+          <span class="cad-group-label">📦 Plantillas:</span>
+          <button type="button" class="cad-chip accent" data-cad-preset="workstation">💻 Estación PC</button>
+          <button type="button" class="cad-chip accent" data-cad-preset="satellite">🛰️ Satélite Red</button>
+          <button type="button" class="cad-chip" id="btn-cad-wireframe">🕸️ Malla CAD</button>
+          <button type="button" class="cad-chip" id="btn-cad-export">💾 Exportar .JSON</button>
+          <button type="button" class="cad-chip danger" id="btn-cad-clear">🗑️ Vaciar</button>
+        </div>
+      </div>
+
+      <div class="studio-grid">
+        <div class="studio-stage-card" id="studio-3d-stage">
+          <video id="ar-camera-video" class="ar-video-bg" playsinline muted hidden></video>
+
+          <div id="ar-hud-overlay" class="ar-hud-overlay" hidden>
+            <div class="ar-corner tl"></div>
+            <div class="ar-corner tr"></div>
+            <div class="ar-corner bl"></div>
+            <div class="ar-corner br"></div>
+            <div class="ar-live-chip">● MODO REALIDAD AUMENTADA ACTIVO · DFA CHILECITO</div>
+          </div>
+
+          <div class="cad-axes-badge" title="Ejes del plano 3D">
+            <span class="ax-x">X</span> <span class="ax-y">Y</span> <span class="ax-z">Z</span>
+            · <strong id="cad-object-count">5 objetos</strong>
+          </div>
+
+          <canvas id="three-studio-canvas" class="studio-canvas"></canvas>
+
+          <div class="studio-status-bar" id="ar-status-text">
+            Simulador Diseño 3D · Arrastrá para orbitar · Rueda para zoom · Clic para seleccionar objetos
+          </div>
+        </div>
+
+        <aside class="studio-sidebar">
+          <!-- Propiedades del Objeto Seleccionado en el Simulador de Diseño 3D -->
+          <div class="cad-inspector-card" id="cad-properties-panel">
+            <div class="cad-prop-head">
+              <span class="inspector-tag">🎛️ Propiedades CAD</span>
+              <strong id="cad-sel-name">Seleccioná un objeto 3D</strong>
+            </div>
+
+            <div id="cad-prop-controls" class="cad-prop-controls">
+              <div class="cad-prop-row">
+                <label>Color</label>
+                <div class="cad-color-row">
+                  <input type="color" id="cad-color-input" value="#00B4F0" />
+                  <button type="button" class="swatch" data-swatch="#00B4F0" style="background:#00B4F0"></button>
+                  <button type="button" class="swatch" data-swatch="#F5C518" style="background:#F5C518"></button>
+                  <button type="button" class="swatch" data-swatch="#10B981" style="background:#10B981"></button>
+                  <button type="button" class="swatch" data-swatch="#EF4444" style="background:#EF4444"></button>
+                  <button type="button" class="swatch" data-swatch="#A855F7" style="background:#A855F7"></button>
+                </div>
+              </div>
+
+              <div class="cad-prop-row">
+                <label for="cad-mat-select">Material 3D</label>
+                <select id="cad-mat-select" class="field-input mini-select">
+                  <option value="standard">Sólido Mate</option>
+                  <option value="metal">Metálico Brillante</option>
+                  <option value="glass">Cristal / Holograma</option>
+                  <option value="wireframe">Malla Wireframe</option>
+                </select>
+              </div>
+
+              <div class="cad-sliders-grid">
+                <label><span>Posición X</span><input type="range" id="cad-pos-x" min="-3.5" max="3.5" step="0.1" value="0" /></label>
+                <label><span>Altura Y</span><input type="range" id="cad-pos-y" min="-1.5" max="2.5" step="0.1" value="0" /></label>
+                <label><span>Profundidad Z</span><input type="range" id="cad-pos-z" min="-3.5" max="3.5" step="0.1" value="0" /></label>
+                <label><span>Escala (Tamaño)</span><input type="range" id="cad-scale" min="0.25" max="2.4" step="0.05" value="1" /></label>
+                <label><span>Rotación Y (°)</span><input type="range" id="cad-rot-y" min="0" max="360" step="5" value="0" /></label>
+              </div>
+
+              <div class="controls-row-2">
+                <button type="button" class="btn-glass-sm" id="btn-cad-duplicate">📋 Duplicar</button>
+                <button type="button" class="btn-danger-sm" id="btn-cad-delete">🗑️ Eliminar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inspector Educativo (visible en modelos Hardware / Sistema / Google) -->
+          <div class="inspector-card" id="inspector-card" hidden>
+            <span class="inspector-tag" id="inspector-tag">Tocá una pieza 3D</span>
+            <h3 id="inspector-title">PC de Escritorio 3D (Hardware)</h3>
+            <p id="inspector-desc">Hacé clic sobre cualquier componente 3D del escenario para inspeccionar su función.</p>
+          </div>
+
+          <div class="studio-controls-card">
+            <h4>📷 Realidad Aumentada &amp; Cámara</h4>
+            <div class="controls-stack">
+              <button type="button" class="btn-primary-glow" id="btn-3d-explode" hidden>💥 Desarmar (Vista Explotada)</button>
+              <button type="button" class="btn-gold" id="btn-ar-camera"><span>📷</span> Proyectar en Cámara AR</button>
+              <button type="button" class="btn-glass" id="btn-ar-sim">🕶️ Modo AR Simulado</button>
+              <button type="button" class="btn-glass" id="btn-ar-photo">📸 Capturar Foto 3D / AR (.png)</button>
+              <div class="controls-row-2">
+                <button type="button" class="btn-glass-sm" id="btn-3d-autorot">⏸️ Auto-Rotar: OFF</button>
+                <button type="button" class="btn-glass-sm" id="btn-3d-reset">↺ Reiniciar Vista</button>
+              </div>
+              <label class="scale-control">
+                <span>Escala Global del Holograma</span>
+                <input type="range" id="ar-scale-slider" min="0.55" max="1.45" step="0.05" value="1" />
+              </label>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   </section>
 

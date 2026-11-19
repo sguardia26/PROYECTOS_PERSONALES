@@ -1,9 +1,12 @@
 // Capa de persistencia híbrida para Base de Datos No Relacional (.json)
 // Soporta automáticamente: Node.js / Vercel Express (/api/*), MAMP PHP (../api/db.php) y Modo Estático
+// Incluye autenticación docente con sesión temporal (sessionStorage) y header X-Teacher-Token.
 
 const LS_SCORES_KEY = 'dfa_capacitacion_scores_v1';
 const LS_PROGRESS_KEY = 'dfa_capacitacion_progress_v1';
 const LS_QUESTIONS_KEY = 'dfa_capacitacion_extra_questions_v1';
+const SS_TEACHER_TOKEN = 'dfa_teacher_token_v1';
+const SS_TEACHER_NAME = 'dfa_teacher_name_v1';
 
 class DataStore {
   constructor() {
@@ -14,7 +17,6 @@ class DataStore {
   }
 
   async init() {
-    // 1. Probar Node.js / Vercel Express API
     try {
       const res = await fetch('/api/health', { cache: 'no-store' });
       if (res.ok) {
@@ -30,7 +32,6 @@ class DataStore {
       }
     } catch (_) {}
 
-    // 2. Probar MAMP / Apache PHP API (tanto desde /public/ como desde raíz)
     for (const candidate of ['../api/db.php', 'api/db.php']) {
       try {
         const res = await fetch(`${candidate}?resource=health`, { cache: 'no-store' });
@@ -46,7 +47,6 @@ class DataStore {
       } catch (_) {}
     }
 
-    // 3. Fallback estático
     this.mode = 'static';
     this.engineLabel = 'JSON Estático + Persistencia Local';
     return this.mode;
@@ -60,6 +60,74 @@ class DataStore {
       return `${this.phpBase}?resource=${resource}${query ? '&' + query : ''}`;
     }
     return `../data/${resource}.json`;
+  }
+
+  // ---- Autenticación Docente ----
+  getTeacherToken() {
+    return sessionStorage.getItem(SS_TEACHER_TOKEN) || '';
+  }
+
+  getTeacherName() {
+    return sessionStorage.getItem(SS_TEACHER_NAME) || 'Tec. Sup. Guardia, Sebastián Nicolás';
+  }
+
+  isTeacherAuthenticated() {
+    return Boolean(this.getTeacherToken());
+  }
+
+  logoutTeacher() {
+    sessionStorage.removeItem(SS_TEACHER_TOKEN);
+    sessionStorage.removeItem(SS_TEACHER_NAME);
+  }
+
+  async loginTeacher(username, password) {
+    const userNorm = String(username || '').trim().toLowerCase();
+    const passStr = String(password || '');
+
+    if (this.mode === 'node') {
+      const res = await fetch('/api/teacher/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: userNorm, password: passStr })
+      });
+      const json = await res.json();
+      if (res.ok && json.ok && json.token) {
+        sessionStorage.setItem(SS_TEACHER_TOKEN, json.token);
+        sessionStorage.setItem(SS_TEACHER_NAME, json.teacher || 'Docente Capacitador');
+        return { ok: true, teacher: json.teacher };
+      }
+      return { ok: false, error: json.error || 'Credenciales inválidas.' };
+    }
+
+    if (this.mode === 'php') {
+      const res = await fetch(`${this.phpBase}?resource=teacher_login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: userNorm, password: passStr })
+      });
+      const json = await res.json();
+      if (res.ok && json.ok && json.token) {
+        sessionStorage.setItem(SS_TEACHER_TOKEN, json.token);
+        sessionStorage.setItem(SS_TEACHER_NAME, json.teacher || 'Docente Capacitador');
+        return { ok: true, teacher: json.teacher };
+      }
+      return { ok: false, error: json.error || 'Credenciales inválidas.' };
+    }
+
+    // Fallback modo estático puro
+    if (userNorm === 'sguardia' && passStr === 'DFA2026!') {
+      sessionStorage.setItem(SS_TEACHER_TOKEN, 'static-teacher-ok');
+      sessionStorage.setItem(SS_TEACHER_NAME, 'Tec. Sup. Guardia, Sebastián Nicolás');
+      return { ok: true, teacher: 'Tec. Sup. Guardia, Sebastián Nicolás' };
+    }
+    return { ok: false, error: 'Usuario o contraseña incorrectos. Acceso exclusivo para el capacitador.' };
+  }
+
+  _authHeaders(extra = {}) {
+    const headers = { ...extra };
+    const token = this.getTeacherToken();
+    if (token) headers['X-Teacher-Token'] = token;
+    return headers;
   }
 
   _sortScores(scores) {
@@ -99,10 +167,14 @@ class DataStore {
     if (this.mode === 'node' || this.mode === 'php') {
       const res = await fetch(this._endpoint('questions'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this._authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload)
       });
       const json = await res.json();
+      if (res.status === 401) {
+        this.logoutTeacher();
+        return { ok: false, unauthorized: true, error: json.error };
+      }
       if (this.ephemeral && json.ok && json.question) {
         const extra = JSON.parse(localStorage.getItem(LS_QUESTIONS_KEY) || '[]');
         extra.push(json.question);
@@ -179,12 +251,18 @@ class DataStore {
   async clearLeaderboard(mode = 'all') {
     if (this.mode === 'node' || this.mode === 'php') {
       const res = await fetch(this._endpoint('leaderboard', `mode=${mode}`), {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: this._authHeaders()
       });
-      if (this.ephemeral) {
-        if (mode === 'all') localStorage.removeItem(LS_SCORES_KEY);
+      const json = await res.json();
+      if (res.status === 401) {
+        this.logoutTeacher();
+        return { ok: false, unauthorized: true, error: json.error };
       }
-      return await res.json();
+      if (this.ephemeral && mode === 'all') {
+        localStorage.removeItem(LS_SCORES_KEY);
+      }
+      return json;
     }
     const current = await this.getLeaderboard();
     const next = mode === 'demos' ? current.filter((s) => !s.isDemo) : [];

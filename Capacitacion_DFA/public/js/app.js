@@ -8,7 +8,7 @@ import { QuizEngine } from './quizEngine.js';
 
 class CapacitacionApp {
   constructor() {
-    this.activeSection = 'prezi'; // 'prezi' | 'studio3d' | 'practice' | 'quiz'
+    this.activeSection = 'prezi'; // 'prezi' | 'practice' | 'quiz' | 'studio3d'
     this.course = null;
     this.questionsData = null;
     this.backdrop3D = null;
@@ -20,13 +20,11 @@ class CapacitacionApp {
   }
 
   async boot() {
-    // 1. Iniciar fondo 3D cósmico
     const bgCanvas = document.getElementById('cosmic-bg-canvas');
     if (bgCanvas) {
       this.backdrop3D = new CosmicBackdrop3D(bgCanvas);
     }
 
-    // 2. Detectar motor de base de datos NoSQL (.json) y cargar datos
     await dataStore.init();
     const dbBadge = document.getElementById('db-engine-pill');
     if (dbBadge) {
@@ -41,7 +39,7 @@ class CapacitacionApp {
     this.course = course;
     this.questionsData = questionsData;
 
-    // 3. Inicializar Motor Espacial tipo PREZI
+    // 1. Motor Espacial tipo PREZI con Zoom interactivo
     this.prezi = new PreziEngine({
       viewportEl: document.getElementById('prezi-viewport'),
       worldEl: document.getElementById('prezi-world'),
@@ -51,12 +49,13 @@ class CapacitacionApp {
       onOpenSection: (sec) => this.switchSection(sec),
       onOpen3D: (modelName, autoAR) => this.openStudio3D(modelName, autoAR)
     });
+    this.prezi.onZoomChange = (pct) => {
+      const readout = document.getElementById('btn-zoom-reset');
+      if (readout) readout.textContent = `${pct}%`;
+    };
     this._buildPreziDots();
 
-    // 4. Inicializar Laboratorio 3D & Realidad Aumentada
-    this._initStudio3D();
-
-    // 5. Inicializar Bloque 2: Práctica Google Drive
+    // 2. Bloque Práctica Google Drive
     this.practiceLab = new PracticeLab({
       container: document.getElementById('practice-container'),
       course: this.course,
@@ -70,7 +69,7 @@ class CapacitacionApp {
     const navBadge = document.getElementById('nav-practice-badge');
     if (navBadge) navBadge.textContent = `${initProg.percent}%`;
 
-    // 6. Inicializar Bloque 3: Evaluación & Ranking JSON
+    // 3. Bloque Evaluación, Ranking y Panel Docente con Login
     this.quizEngine = new QuizEngine({
       container: document.getElementById('quiz-container'),
       course: this.course,
@@ -78,14 +77,19 @@ class CapacitacionApp {
       getPracticeSummary: () => this.practiceLab.getProgressSummary()
     });
 
-    // 7. Conectar navegación global, teclado y controles HUD
+    // 4. Bloque Simulador de Diseño 3D (CAD) & Realidad Aumentada (AR)
+    this._initStudio3D();
+
+    // 5. Navegación global, teclado y controles HUD
     this._bindGlobalControls();
 
-    // Ocultar loader inicial suavemente
+    // Recalcular encuadre Prezi cuando las fuentes e imágenes estén listas
+    requestAnimationFrame(() => this.prezi?._applyCamera(true));
+
     const loader = document.getElementById('boot-loader');
     if (loader) {
       loader.classList.add('fade-out');
-      setTimeout(() => loader.remove(), 450);
+      setTimeout(() => loader.remove(), 420);
     }
   }
 
@@ -121,7 +125,6 @@ class CapacitacionApp {
       ovBtn.innerHTML = isOverview ? '🎯 Enfocar Estación' : '🗺️ Mapa General';
     }
 
-    // Sincronizar paralaje del fondo 3D con la posición de la estación
     if (this.backdrop3D && station && station.canvas) {
       const nx = isOverview ? 0 : station.canvas.x / 1200;
       const ny = isOverview ? 0 : station.canvas.y / 900;
@@ -140,12 +143,62 @@ class CapacitacionApp {
       card: document.getElementById('inspector-card')
     };
 
-    this.studio3D = new InteractiveStudio3D(canvas, (info) => {
-      if (inspector.tag) inspector.tag.textContent = info.tag || 'Componente 3D';
-      if (inspector.title) inspector.title.textContent = info.name || '';
-      if (inspector.desc) inspector.desc.textContent = info.desc || '';
-      if (inspector.card) inspector.card.style.setProperty('--accent', info.color || '#00B4F0');
-    });
+    const cadUI = {
+      toolbar: document.getElementById('cad-toolbar'),
+      propPanel: document.getElementById('cad-properties-panel'),
+      propControls: document.getElementById('cad-prop-controls'),
+      selName: document.getElementById('cad-sel-name'),
+      objCount: document.getElementById('cad-object-count'),
+      colorInput: document.getElementById('cad-color-input'),
+      matSelect: document.getElementById('cad-mat-select'),
+      posX: document.getElementById('cad-pos-x'),
+      posY: document.getElementById('cad-pos-y'),
+      posZ: document.getElementById('cad-pos-z'),
+      scale: document.getElementById('cad-scale'),
+      rotY: document.getElementById('cad-rot-y'),
+      explodeBtn: document.getElementById('btn-3d-explode'),
+      autorotBtn: document.getElementById('btn-3d-autorot')
+    };
+
+    this.studio3D = new InteractiveStudio3D(
+      canvas,
+      (info) => {
+        if (inspector.tag) inspector.tag.textContent = info.tag || 'Componente 3D';
+        if (inspector.title) inspector.title.textContent = info.name || '';
+        if (inspector.desc) inspector.desc.textContent = info.desc || '';
+        if (inspector.card) inspector.card.style.setProperty('--accent', info.color || '#00B4F0');
+      },
+      (state) => {
+        const isCAD = state.isDesignerMode;
+        if (cadUI.toolbar) cadUI.toolbar.hidden = !isCAD;
+        if (cadUI.propPanel) cadUI.propPanel.hidden = !isCAD;
+        if (inspector.card) inspector.card.hidden = isCAD;
+        if (cadUI.explodeBtn) cadUI.explodeBtn.hidden = isCAD;
+        if (cadUI.objCount) {
+          cadUI.objCount.textContent = isCAD ? `${state.count} objeto${state.count === 1 ? '' : 's'}` : 'Modelo Educativo';
+        }
+        if (cadUI.autorotBtn) {
+          const on = Boolean(this.studio3D?.autoRotate);
+          cadUI.autorotBtn.classList.toggle('active', on);
+          cadUI.autorotBtn.innerHTML = on ? '🔄 Auto-Rotar: ON' : '⏸️ Auto-Rotar: OFF';
+        }
+
+        if (isCAD && state.selected) {
+          if (cadUI.selName) cadUI.selName.textContent = state.selected.name;
+          if (cadUI.propControls) cadUI.propControls.classList.remove('disabled-panel');
+          if (cadUI.colorInput) cadUI.colorInput.value = state.selected.color;
+          if (cadUI.matSelect) cadUI.matSelect.value = state.selected.materialStyle;
+          if (cadUI.posX) cadUI.posX.value = state.selected.x;
+          if (cadUI.posY) cadUI.posY.value = state.selected.y;
+          if (cadUI.posZ) cadUI.posZ.value = state.selected.z;
+          if (cadUI.scale) cadUI.scale.value = state.selected.scale;
+          if (cadUI.rotY) cadUI.rotY.value = state.selected.rotY;
+        } else if (isCAD) {
+          if (cadUI.selName) cadUI.selName.textContent = 'Agregá o tocá un objeto 3D';
+          if (cadUI.propControls) cadUI.propControls.classList.add('disabled-panel');
+        }
+      }
+    );
 
     this.arCtrl = new ARStudioController(this.studio3D, {
       stage: document.getElementById('studio-3d-stage'),
@@ -155,24 +208,59 @@ class CapacitacionApp {
       arStatus: document.getElementById('ar-status-text')
     });
 
-    // Selector de modelos 3D
+    // Selector de modo / modelos 3D
     document.querySelectorAll('[data-3d-model]').forEach((btn) => {
       btn.addEventListener('click', () => {
         soundFx.whoosh();
         document.querySelectorAll('[data-3d-model]').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         this.studio3D.loadModel(btn.dataset['3dModel']);
-        const expBtn = document.getElementById('btn-3d-explode');
-        if (expBtn) expBtn.innerHTML = '💥 Desarmar (Vista Explotada)';
+        if (cadUI.explodeBtn) cadUI.explodeBtn.innerHTML = '💥 Desarmar (Vista Explotada)';
       });
     });
 
-    document.getElementById('btn-3d-explode')?.addEventListener('click', (e) => {
+    // Barra CAD: Agregar Primitivas 3D
+    document.querySelectorAll('[data-add-shape]').forEach((btn) => {
+      btn.addEventListener('click', () => this.studio3D.addPrimitive(btn.dataset.addShape));
+    });
+
+    // Barra CAD: Plantillas rápidas
+    document.querySelectorAll('[data-cad-preset]').forEach((btn) => {
+      btn.addEventListener('click', () => this.studio3D.loadDesignerPreset(btn.dataset.cadPreset));
+    });
+
+    document.getElementById('btn-cad-wireframe')?.addEventListener('click', (e) => {
+      const on = this.studio3D.toggleGlobalWireframe();
+      e.currentTarget.classList.toggle('active', on);
+    });
+    document.getElementById('btn-cad-export')?.addEventListener('click', () => this.studio3D.exportDesignerJson());
+    document.getElementById('btn-cad-clear')?.addEventListener('click', () => this.studio3D.clearDesignerScene());
+
+    // Propiedades CAD en vivo
+    cadUI.colorInput?.addEventListener('input', (e) => this.studio3D.updateSelectedDesigner({ color: e.target.value }));
+    document.querySelectorAll('[data-swatch]').forEach((sw) => {
+      sw.addEventListener('click', () => {
+        soundFx.click();
+        this.studio3D.updateSelectedDesigner({ color: sw.dataset.swatch });
+      });
+    });
+    cadUI.matSelect?.addEventListener('change', (e) => this.studio3D.updateSelectedDesigner({ materialStyle: e.target.value }));
+    cadUI.posX?.addEventListener('input', (e) => this.studio3D.updateSelectedDesigner({ x: Number(e.target.value) }));
+    cadUI.posY?.addEventListener('input', (e) => this.studio3D.updateSelectedDesigner({ y: Number(e.target.value) }));
+    cadUI.posZ?.addEventListener('input', (e) => this.studio3D.updateSelectedDesigner({ z: Number(e.target.value) }));
+    cadUI.scale?.addEventListener('input', (e) => this.studio3D.updateSelectedDesigner({ scale: Number(e.target.value) }));
+    cadUI.rotY?.addEventListener('input', (e) => this.studio3D.updateSelectedDesigner({ rotY: Number(e.target.value) }));
+
+    document.getElementById('btn-cad-duplicate')?.addEventListener('click', () => this.studio3D.duplicateSelected());
+    document.getElementById('btn-cad-delete')?.addEventListener('click', () => this.studio3D.deleteSelected());
+
+    // Controles 3D & AR
+    cadUI.explodeBtn?.addEventListener('click', (e) => {
       const exp = this.studio3D.toggleExplode();
       e.currentTarget.innerHTML = exp ? '🧩 Ensamblar Piezas' : '💥 Desarmar (Vista Explotada)';
     });
 
-    document.getElementById('btn-3d-autorot')?.addEventListener('click', (e) => {
+    cadUI.autorotBtn?.addEventListener('click', (e) => {
       const on = this.studio3D.toggleAutoRotate();
       e.currentTarget.classList.toggle('active', on);
       e.currentTarget.innerHTML = on ? '🔄 Auto-Rotar: ON' : '⏸️ Auto-Rotar: OFF';
@@ -183,8 +271,7 @@ class CapacitacionApp {
       this.studio3D.resetView();
       const slider = document.getElementById('ar-scale-slider');
       if (slider) slider.value = '1';
-      const expBtn = document.getElementById('btn-3d-explode');
-      if (expBtn) expBtn.innerHTML = '💥 Desarmar (Vista Explotada)';
+      if (cadUI.explodeBtn) cadUI.explodeBtn.innerHTML = '💥 Desarmar (Vista Explotada)';
     });
 
     document.getElementById('ar-scale-slider')?.addEventListener('input', (e) => {
@@ -206,7 +293,7 @@ class CapacitacionApp {
     });
   }
 
-  openStudio3D(modelName = 'hardware', autoAR = false) {
+  openStudio3D(modelName = 'designer', autoAR = false) {
     this.switchSection('studio3d');
     document.querySelectorAll('[data-3d-model]').forEach((b) => {
       b.classList.toggle('active', b.dataset['3dModel'] === modelName);
@@ -249,6 +336,11 @@ class CapacitacionApp {
     document.getElementById('btn-prezi-next')?.addEventListener('click', () => this.prezi.next());
     document.getElementById('btn-prezi-overview')?.addEventListener('click', () => this.prezi.toggleOverview());
 
+    // Controles de Zoom en Prezi
+    document.getElementById('btn-zoom-in')?.addEventListener('click', () => this.prezi.zoomIn());
+    document.getElementById('btn-zoom-out')?.addEventListener('click', () => this.prezi.zoomOut());
+    document.getElementById('btn-zoom-reset')?.addEventListener('click', () => this.prezi.resetZoom());
+
     document.getElementById('btn-sound-toggle')?.addEventListener('click', (e) => {
       const enabled = soundFx.toggle();
       e.currentTarget.textContent = enabled ? '🔊' : '🔇';
@@ -263,7 +355,7 @@ class CapacitacionApp {
       }
     });
 
-    // Atajos de teclado tipo Prezi
+    // Atajos de teclado tipo Prezi (incluye + / - para zoom)
     window.addEventListener('keydown', (e) => {
       if (this.activeSection !== 'prezi') return;
       const tag = document.activeElement?.tagName;
@@ -277,6 +369,12 @@ class CapacitacionApp {
         this.prezi.prev();
       } else if (e.key === 'Escape' || e.key.toLowerCase() === 'o') {
         this.prezi.toggleOverview();
+      } else if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        this.prezi.zoomIn();
+      } else if (e.key === '-') {
+        e.preventDefault();
+        this.prezi.zoomOut();
       } else if (/^[0-8]$/.test(e.key)) {
         this.prezi.goTo(Number(e.key));
       }

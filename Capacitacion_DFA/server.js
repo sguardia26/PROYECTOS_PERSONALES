@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -6,6 +7,29 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const IS_VERCEL = Boolean(process.env.VERCEL);
+
+// Credenciales del Panel Docente (configurables vía variables de entorno en Vercel)
+const TEACHER_USER = (process.env.TEACHER_USER || 'sguardia').trim().toLowerCase();
+const TEACHER_PASS = process.env.TEACHER_PASS || 'DFA2026!';
+const AUTH_SALT = process.env.TEACHER_SALT || 'dfa-chilecito-guardia-2026';
+
+function expectedTeacherToken() {
+  return crypto
+    .createHash('sha256')
+    .update(`${TEACHER_USER}:${TEACHER_PASS}:${AUTH_SALT}`)
+    .digest('hex');
+}
+
+function requireTeacherAuth(req, res, next) {
+  const token = req.headers['x-teacher-token'] || '';
+  if (!token || token !== expectedTeacherToken()) {
+    return res.status(401).json({
+      ok: false,
+      error: 'Acceso restringido. Iniciá sesión con credenciales de docente.'
+    });
+  }
+  next();
+}
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const SEED_DATA_DIR = path.join(__dirname, 'data');
@@ -16,7 +40,6 @@ const WRITABLE_DATA_DIR = IS_VERCEL
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 
-// Asegurar directorio editable (en Vercel usa /tmp sembrado desde data/*.json)
 function ensureWritableFile(filename) {
   if (!fs.existsSync(WRITABLE_DATA_DIR)) {
     fs.mkdirSync(WRITABLE_DATA_DIR, { recursive: true });
@@ -31,7 +54,6 @@ function ensureWritableFile(filename) {
   return targetPath;
 }
 
-// Leer archivo JSON NoSQL de forma segura
 function readJson(filename, fallback) {
   try {
     const writablePath = ensureWritableFile(filename);
@@ -49,7 +71,6 @@ function readJson(filename, fallback) {
   }
 }
 
-// Escribir archivo JSON NoSQL de forma atómica
 function writeJson(filename, data) {
   const filePath = ensureWritableFile(filename);
   const tmpPath = `${filePath}.${Date.now()}.tmp`;
@@ -85,6 +106,30 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Login Docente (protege el Panel Docente)
+app.post('/api/teacher/login', (req, res) => {
+  const { username, password } = req.body || {};
+  const userNorm = String(username || '').trim().toLowerCase();
+  const passStr = String(password || '');
+
+  if (userNorm === TEACHER_USER && passStr === TEACHER_PASS) {
+    return res.json({
+      ok: true,
+      token: expectedTeacherToken(),
+      teacher: 'Tec. Sup. Guardia, Sebastián Nicolás'
+    });
+  }
+  return res.status(401).json({
+    ok: false,
+    error: 'Usuario o contraseña incorrectos. Acceso exclusivo para el capacitador.'
+  });
+});
+
+// Verificar sesión docente
+app.get('/api/teacher/verify', requireTeacherAuth, (req, res) => {
+  res.json({ ok: true, teacher: 'Tec. Sup. Guardia, Sebastián Nicolás' });
+});
+
 // Course data
 app.get('/api/course', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -99,7 +144,7 @@ app.get('/api/questions', (req, res) => {
   res.json(data);
 });
 
-app.post('/api/questions', (req, res) => {
+app.post('/api/questions', requireTeacherAuth, (req, res) => {
   const { category, difficulty, question, options, correct, hint, explanation } = req.body || {};
   if (!question || !Array.isArray(options) || options.length !== 4 || typeof correct !== 'number') {
     return res.status(400).json({ ok: false, error: 'Datos de pregunta incompletos.' });
@@ -162,7 +207,7 @@ app.post('/api/leaderboard', (req, res) => {
   res.status(201).json({ ok: true, entry, rank, scores: sorted });
 });
 
-app.delete('/api/leaderboard', (req, res) => {
+app.delete('/api/leaderboard', requireTeacherAuth, (req, res) => {
   const mode = req.query.mode || 'all';
   const db = readJson('leaderboard.json', { version: '1.0.0', updatedAt: null, scores: [] });
   if (mode === 'demos') {
@@ -212,7 +257,6 @@ app.post('/api/progress', (req, res) => {
   res.json({ ok: true, record });
 });
 
-// Ruta raíz explícita (garantiza que "/" sirva public/index.html tanto local como en Vercel)
 app.get('/', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });

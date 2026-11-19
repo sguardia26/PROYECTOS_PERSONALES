@@ -1,17 +1,30 @@
 <?php
 /**
  * API JSON NoSQL compatible con MAMP / Apache + PHP 7.4/8.x
- * Permite que CapacitacionDFA funcione 100% igual con MAMP o Node.js
- * leyendo y escribiendo en los mismos archivos data/*.json
+ * Incluye autenticación docente para proteger el Panel Docente.
  */
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, X-Teacher-Token');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
+}
+
+$TEACHER_USER = strtolower(trim(getenv('TEACHER_USER') ?: 'sguardia'));
+$TEACHER_PASS = getenv('TEACHER_PASS') ?: 'DFA2026!';
+$AUTH_SALT = getenv('TEACHER_SALT') ?: 'dfa-chilecito-guardia-2026';
+$EXPECTED_TOKEN = hash('sha256', "$TEACHER_USER:$TEACHER_PASS:$AUTH_SALT");
+
+function requireTeacher($expected) {
+    $token = $_SERVER['HTTP_X_TEACHER_TOKEN'] ?? '';
+    if (!$token || !hash_equals($expected, $token)) {
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'error' => 'Acceso restringido. Iniciá sesión con credenciales de docente.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 }
 
 $dataDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data';
@@ -58,6 +71,24 @@ switch ($resource) {
         ]);
         break;
 
+    case 'teacher_login':
+        $u = strtolower(trim((string)($input['username'] ?? '')));
+        $p = (string)($input['password'] ?? '');
+        if ($u === $TEACHER_USER && $p === $TEACHER_PASS) {
+            echo json_encode([
+                'ok' => true,
+                'token' => $EXPECTED_TOKEN,
+                'teacher' => 'Tec. Sup. Guardia, Sebastián Nicolás'
+            ], JSON_UNESCAPED_UNICODE);
+        } else {
+            http_response_code(401);
+            echo json_encode([
+                'ok' => false,
+                'error' => 'Usuario o contraseña incorrectos. Acceso exclusivo para el capacitador.'
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        break;
+
     case 'course':
         echo json_encode(readJsonFile("$dataDir/course.json", ['meta' => [], 'stations' => [], 'practiceMissions' => []]), JSON_UNESCAPED_UNICODE);
         break;
@@ -65,6 +96,7 @@ switch ($resource) {
     case 'questions':
         $path = "$dataDir/questions.json";
         if ($method === 'POST') {
+            requireTeacher($EXPECTED_TOKEN);
             if (empty($input['question']) || empty($input['options']) || count($input['options']) !== 4) {
                 http_response_code(400);
                 echo json_encode(['ok' => false, 'error' => 'Datos de pregunta incompletos.']);
@@ -126,6 +158,7 @@ switch ($resource) {
             http_response_code(201);
             echo json_encode(['ok' => true, 'entry' => $entry, 'rank' => $rank, 'scores' => $sorted], JSON_UNESCAPED_UNICODE);
         } elseif ($method === 'DELETE') {
+            requireTeacher($EXPECTED_TOKEN);
             $mode = $_GET['mode'] ?? 'all';
             $db = readJsonFile($path, ['version' => '1.0.0', 'updatedAt' => null, 'scores' => []]);
             if ($mode === 'demos') {

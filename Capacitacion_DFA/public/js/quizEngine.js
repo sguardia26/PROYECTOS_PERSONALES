@@ -241,7 +241,7 @@ export class QuizEngine {
       <div class="quiz-subnav">
         <button type="button" class="qtab ${this.view === 'setup' || this.view === 'playing' || this.view === 'results' ? 'active' : ''}" data-qview="setup">🎯 Desafío Evaluativo</button>
         <button type="button" class="qtab ${this.view === 'leaderboard' ? 'active' : ''}" data-qview="leaderboard">🏆 Tabla de Puntuaciones (${this.leaderboard.length})</button>
-        <button type="button" class="qtab ${this.view === 'teacher' ? 'active' : ''}" data-qview="teacher">⚙️ Panel Docente (.json)</button>
+        <button type="button" class="qtab ${this.view === 'teacher' ? 'active' : ''}" data-qview="teacher">${dataStore.isTeacherAuthenticated() ? '🔓' : '🔒'} Panel Docente (.json)</button>
       </div>
     `;
 
@@ -519,7 +519,40 @@ export class QuizEngine {
   }
 
   _renderTeacherPanel() {
+    if (!dataStore.isTeacherAuthenticated()) {
+      return `
+        <div class="teacher-auth-wrap">
+          <div class="teacher-auth-card">
+            <div class="auth-lock-icon">🔐</div>
+            <span class="section-eyebrow">ACCESO RESTRINGIDO · CAPACITADOR</span>
+            <h2>Panel Docente Protegido</h2>
+            <p>Esta sección permite administrar el banco de preguntas (<code>questions.json</code>), exportar actas y reiniciar la tabla de puntuaciones. Ingresá tus credenciales docentes.</p>
+
+            <form id="teacher-login-form" class="teacher-form" autocomplete="off">
+              <div class="form-group">
+                <label for="teacher-user-input">Usuario Docente</label>
+                <input type="text" id="teacher-user-input" name="username" required class="field-input" placeholder="Ingresá tu usuario" />
+              </div>
+              <div class="form-group">
+                <label for="teacher-pass-input">Contraseña</label>
+                <div class="pass-input-wrap">
+                  <input type="password" id="teacher-pass-input" name="password" required class="field-input" placeholder="Ingresá tu contraseña" />
+                  <button type="button" class="pass-eye-btn" id="btn-toggle-pass" title="Mostrar / ocultar contraseña">👁️</button>
+                </div>
+              </div>
+              <div id="teacher-login-error" class="auth-error-msg" hidden></div>
+              <button type="submit" class="btn-primary-glow" style="width:100%;">🔓 Ingresar al Panel Docente</button>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
     return `
+      <div class="teacher-session-bar">
+        <span>✅ Sesión docente activa: <strong>${dataStore.getTeacherName()}</strong></span>
+        <button type="button" class="btn-glass-sm" id="btn-teacher-logout">🔒 Cerrar Sesión Docente</button>
+      </div>
       <div class="teacher-grid">
         <div class="teacher-card">
           <h3>➕ Agregar Nueva Pregunta al Banco (.json)</h3>
@@ -641,8 +674,38 @@ export class QuizEngine {
     this.container.querySelector('#t-export-json')?.addEventListener('click', () => dataStore.exportLeaderboardJson());
     this.container.querySelector('#t-export-csv')?.addEventListener('click', () => dataStore.exportLeaderboardCsv());
 
+    // Login / Logout Panel Docente
+    this.container.querySelector('#btn-toggle-pass')?.addEventListener('click', () => {
+      const inp = this.container.querySelector('#teacher-pass-input');
+      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+    });
+
+    this.container.querySelector('#teacher-login-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const errBox = this.container.querySelector('#teacher-login-error');
+      const res = await dataStore.loginTeacher(fd.get('username'), fd.get('password'));
+      if (res.ok) {
+        soundFx.correct();
+        this.render();
+      } else {
+        soundFx.wrong();
+        if (errBox) {
+          errBox.hidden = false;
+          errBox.textContent = `⛔ ${res.error || 'Usuario o contraseña incorrectos.'}`;
+        }
+      }
+    });
+
+    this.container.querySelector('#btn-teacher-logout')?.addEventListener('click', () => {
+      dataStore.logoutTeacher();
+      soundFx.click();
+      this.render();
+    });
+
     this.container.querySelector('#t-clear-demos')?.addEventListener('click', async () => {
       const res = await dataStore.clearLeaderboard('demos');
+      if (res.unauthorized) { this.render(); return; }
       this.leaderboard = res.scores || [];
       const st = this.container.querySelector('#teacher-db-status');
       if (st) st.textContent = '✅ Se eliminaron los registros de ejemplo.';
@@ -652,6 +715,7 @@ export class QuizEngine {
     this.container.querySelector('#t-clear-all')?.addEventListener('click', async () => {
       if (!confirm('¿Seguro que deseás vaciar toda la tabla de puntuaciones para iniciar una nueva comisión?')) return;
       const res = await dataStore.clearLeaderboard('all');
+      if (res.unauthorized) { this.render(); return; }
       this.leaderboard = res.scores || [];
       const st = this.container.querySelector('#teacher-db-status');
       if (st) st.textContent = '✅ Tabla de puntuaciones reiniciada correctamente.';
@@ -671,6 +735,7 @@ export class QuizEngine {
         explanation: fd.get('explanation') || 'Pregunta incorporada por el docente.'
       };
       const res = await dataStore.addQuestion(payload);
+      if (res.unauthorized) { this.render(); return; }
       if (res.ok) {
         this.questionsData = await dataStore.getQuestions();
         e.target.reset();
