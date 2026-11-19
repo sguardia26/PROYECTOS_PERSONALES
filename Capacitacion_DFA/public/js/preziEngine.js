@@ -21,6 +21,9 @@ export class PreziEngine {
     this.panOffset = { x: 0, y: 0 };
     this.isDragging = false;
     this.dragStart = { x: 0, y: 0 };
+    this.touchStart = null;
+    this.pinchStartDist = null;
+    this.pinchStartZoom = 1.0;
     this.onZoomChange = null;
 
     // Estado de widgets interactivos
@@ -499,9 +502,14 @@ export class PreziEngine {
     }
   }
 
+  _isCompactMobile() {
+    return (this.viewportEl.clientWidth || window.innerWidth) <= 820;
+  }
+
   _bindInteractions() {
-    // Arrastrar para desplazar el lienzo en Vista Panorámica o cuando hay Zoom aplicado
+    // Arrastrar con mouse en Vista Panorámica o con Zoom aumentado
     this.viewportEl.addEventListener('mousedown', (e) => {
+      if (this._isCompactMobile() && !this.isOverview) return;
       if (!this.isOverview && this.userZoom <= 1.01) return;
       if (e.target.closest('button, a, input, select, textarea, label')) return;
       this.isDragging = true;
@@ -521,8 +529,59 @@ export class PreziEngine {
       this.viewportEl.classList.remove('is-panning');
     });
 
-    // Zoom suave con rueda del mouse en el lienzo Prezi
+    // Gestos táctiles: Swipe izquierda/derecha (móvil), paneo y pinch-to-zoom (2 dedos)
+    this.viewportEl.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        this.pinchStartDist = Math.hypot(dx, dy);
+        this.pinchStartZoom = this.userZoom;
+        this.touchStart = null;
+      } else if (e.touches.length === 1) {
+        this.touchStart = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+          panX: this.panOffset.x,
+          panY: this.panOffset.y,
+          time: Date.now()
+        };
+      }
+    }, { passive: true });
+
+    this.viewportEl.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && this.pinchStartDist) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        const ratio = dist / this.pinchStartDist;
+        this.setZoom(this.pinchStartZoom * ratio, true);
+      } else if (e.touches.length === 1 && this.touchStart && (this.isOverview || (!this._isCompactMobile() && this.userZoom > 1.02))) {
+        const dx = e.touches[0].clientX - this.touchStart.x;
+        const dy = e.touches[0].clientY - this.touchStart.y;
+        this.panOffset.x = this.touchStart.panX + dx;
+        this.panOffset.y = this.touchStart.panY + dy;
+        this._applyCamera(true);
+      }
+    }, { passive: true });
+
+    this.viewportEl.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) this.pinchStartDist = null;
+      if (this.touchStart && e.changedTouches.length === 1 && !this.isOverview && this._isCompactMobile()) {
+        const dx = e.changedTouches[0].clientX - this.touchStart.x;
+        const dy = e.changedTouches[0].clientY - this.touchStart.y;
+        const dt = Date.now() - this.touchStart.time;
+        // Swipe horizontal limpio para cambiar diapositiva en celulares
+        if (dt < 450 && Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+          if (dx < 0) this.next();
+          else this.prev();
+        }
+      }
+      if (e.touches.length === 0) this.touchStart = null;
+    }, { passive: true });
+
+    // Zoom suave con rueda del mouse en escritorio/tablet
     this.viewportEl.addEventListener('wheel', (e) => {
+      if (this._isCompactMobile() && !this.isOverview) return;
       e.preventDefault();
       const delta = e.deltaY < 0 ? 0.1 : -0.1;
       this.setZoom(this.userZoom + delta, true);
@@ -614,29 +673,40 @@ export class PreziEngine {
   _applyCamera(instant = false) {
     const vw = this.viewportEl.clientWidth || window.innerWidth;
     const vh = this.viewportEl.clientHeight || window.innerHeight;
+    const isMobileReading = this._isCompactMobile() && !this.isOverview;
+
+    this.viewportEl.classList.toggle('mobile-slide-mode', isMobileReading);
+
+    // En teléfonos/pantallas angostas, mostrar la diapositiva activa en modo lectura táctil 100% legible
+    if (isMobileReading) {
+      this.worldEl.style.transition = 'none';
+      this.worldEl.style.transform = 'none';
+      this.worldEl.style.setProperty('--mobile-zoom', String(this.userZoom));
+      const activeNode = this.worldEl.querySelector(`.prezi-node[data-index="${this.currentIndex}"]`);
+      if (activeNode) activeNode.scrollTop = 0;
+      return;
+    }
 
     this.worldEl.style.transition = instant
       ? 'none'
       : 'transform 0.78s cubic-bezier(0.22, 1, 0.36, 1)';
 
     if (this.isOverview) {
-      const baseOverview = Math.max(0.24, Math.min(vw / 2750, vh / 2050));
+      const baseOverview = Math.max(0.14, Math.min((vw - 24) / 2750, (vh - 110) / 2100));
       const finalOverview = baseOverview * this.userZoom;
-      this.worldEl.style.transform = `translate3d(${vw / 2 + this.panOffset.x}px, ${vh / 2 + this.panOffset.y}px, 0) scale(${finalOverview}) rotate(0deg)`;
+      this.worldEl.style.transform = `translate3d(${vw / 2 + this.panOffset.x}px, ${vh / 2 - 14 + this.panOffset.y}px, 0) scale(${finalOverview}) rotate(0deg)`;
       return;
     }
 
     const st = this.stations[this.currentIndex];
     if (!st) return;
 
-    // Medir el tamaño REAL de la tarjeta activa para aprovechar al máximo la pantalla
     const activeNode = this.worldEl.querySelector(`.prezi-node[data-index="${this.currentIndex}"]`);
-    const measuredW = activeNode?.offsetWidth || (st.id === 'portada' ? 1040 : 980);
+    const measuredW = activeNode?.offsetWidth || (st.id === 'portada' ? 1080 : 1020);
     const measuredH = activeNode?.offsetHeight || 560;
 
-    // Dejar margen justo para la barra inferior (86px) y bordes laterales (32px)
     const availW = Math.max(320, vw - 36);
-    const availH = Math.max(300, vh - 96);
+    const availH = Math.max(280, vh - 96);
     const fitScale = Math.min(availW / measuredW, availH / measuredH, 1.32);
     const scale = Math.max(0.45, fitScale * this.userZoom);
     const rot = -(st.canvas.rotate || 0);

@@ -230,14 +230,38 @@ export class InteractiveStudio3D {
     window.addEventListener('mouseup', (e) => onUp(e.clientX, e.clientY));
 
     el.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) onDown(e.touches[0].clientX, e.touches[0].clientY);
+      if (e.touches.length === 2) {
+        this.isDragging = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        this._pinchDist = Math.hypot(dx, dy);
+        this._pinchZoom = this.targetZoom;
+      } else if (e.touches.length === 1) {
+        onDown(e.touches[0].clientX, e.touches[0].clientY);
+      }
     }, { passive: true });
     el.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 1) onMove(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
+      if (e.touches.length === 2 && this._pinchDist) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        const factor = this._pinchDist / Math.max(10, dist);
+        this.targetZoom = Math.max(3.8, Math.min(14.5, this._pinchZoom * factor));
+      } else if (e.touches.length === 1) {
+        onMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: false });
     el.addEventListener('touchend', (e) => {
-      if (e.changedTouches.length === 1) onUp(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      if (e.touches.length < 2) this._pinchDist = null;
+      if (e.changedTouches.length === 1 && e.touches.length === 0) {
+        onUp(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      }
     });
+
+    if (typeof ResizeObserver !== 'undefined' && el.parentElement) {
+      new ResizeObserver(() => this.resize()).observe(el.parentElement);
+    }
 
     el.addEventListener('wheel', (e) => {
       e.preventDefault();

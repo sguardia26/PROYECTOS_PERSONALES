@@ -80,8 +80,9 @@ class CapacitacionApp {
     // 4. Bloque Simulador de Diseño 3D (CAD) & Realidad Aumentada (AR)
     this._initStudio3D();
 
-    // 5. Navegación global, teclado y controles HUD
+    // 5. Navegación global, teclado, controles HUD y sincronización responsiva de altura HUD
     this._bindGlobalControls();
+    this._syncHudHeight();
 
     // Recalcular encuadre Prezi cuando las fuentes e imágenes estén listas
     requestAnimationFrame(() => this.prezi?._applyCamera(true));
@@ -325,6 +326,25 @@ class CapacitacionApp {
     } else if (sectionName === 'quiz') {
       this.quizEngine?.refreshLeaderboard().then(() => this.quizEngine.render());
     }
+  }
+
+  _syncHudHeight() {
+    const hud = document.querySelector('.top-hud');
+    if (!hud) return;
+    const update = () => {
+      const h = Math.ceil(hud.getBoundingClientRect().height);
+      if (h > 40) {
+        document.documentElement.style.setProperty('--hud-h', `${h}px`);
+        if (this.activeSection === 'prezi') this.prezi?._applyCamera(true);
+        if (this.activeSection === 'studio3d') this.studio3D?.resize();
+      }
+    };
+    update();
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(update).observe(hud);
+    }
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', () => setTimeout(update, 180));
   }
 
   _bindGlobalControls() {

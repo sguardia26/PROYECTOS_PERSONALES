@@ -31,11 +31,13 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
   background: radial-gradient(circle at 20% 20%, #0d1f3d 0%, var(--bg-deep) 68%);
   color: var(--text);
   font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Fondo WebGL Cósmico */
@@ -847,6 +849,7 @@ html, body {
   height: 100%;
   display: block;
   cursor: grab;
+  touch-action: none;
 }
 .studio-canvas:active { cursor: grabbing; }
 
@@ -1608,22 +1611,270 @@ kbd {
 }
 
 /* ==========================================================================
-   RESPONSIVE & IMPRESIÓN DE CERTIFICADO
+   MODO LECTURA ADAPTATIVO PREZI PARA MÓVILES Y TABLETS VERTICALES (<= 820px)
    ========================================================================== */
-@media (max-width: 1024px) {
-  .db-engine-pill { display: none; }
-  .studio-grid, .practice-header-card, .quiz-setup-grid, .results-layout, .teacher-grid {
-    grid-template-columns: 1fr;
-  }
-  .google-dock-grid, .mission-tabs-row, .lb-stats-row { grid-template-columns: repeat(2, 1fr); }
+.prezi-viewport.mobile-slide-mode {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 12px calc(108px + env(safe-area-inset-bottom));
+}
+.prezi-viewport.mobile-slide-mode .prezi-world {
+  position: relative;
+  width: 100%;
+  height: auto;
+  transform: none !important;
+}
+.prezi-viewport.mobile-slide-mode .prezi-flight-svg {
+  display: none;
+}
+.prezi-viewport.mobile-slide-mode .prezi-node {
+  display: none;
+}
+.prezi-viewport.mobile-slide-mode .prezi-node.active-station {
+  display: block;
+  position: relative;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100%;
+  padding: 18px 16px;
+  border-radius: 20px;
+  opacity: 1;
+  filter: none;
+  font-size: calc(1rem * var(--mobile-zoom, 1));
+  zoom: var(--mobile-zoom, 1);
+}
+.prezi-viewport.mobile-slide-mode .hero-station-grid {
+  grid-template-columns: 1fr;
+  gap: 16px;
+  text-align: center;
+}
+.prezi-viewport.mobile-slide-mode .hero-logo-img {
+  width: 126px;
+  height: 126px;
+}
+.prezi-viewport.mobile-slide-mode .hero-title,
+.prezi-viewport.mobile-slide-mode .node-title {
+  font-size: 1.5rem;
+}
+.prezi-viewport.mobile-slide-mode .hero-pillars,
+.prezi-viewport.mobile-slide-mode .pillars-grid-4,
+.prezi-viewport.mobile-slide-mode .two-col-cards,
+.prezi-viewport.mobile-slide-mode .three-col-cards,
+.prezi-viewport.mobile-slide-mode .ipo-buttons {
+  grid-template-columns: 1fr;
+}
+.prezi-viewport.mobile-slide-mode .hw3d-banner,
+.prezi-viewport.mobile-slide-mode .cloud-tip-bar,
+.prezi-viewport.mobile-slide-mode .next-block-cta {
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+}
+.prezi-viewport.mobile-slide-mode .hw3d-actions,
+.prezi-viewport.mobile-slide-mode .hero-cta-row,
+.prezi-viewport.mobile-slide-mode .classifier-btns {
+  flex-direction: column;
+}
+.prezi-viewport.mobile-slide-mode .hero-cta-row > button,
+.prezi-viewport.mobile-slide-mode .hw3d-actions > button {
+  width: 100%;
 }
 
-@media (max-width: 720px) {
-  .hud-brand-text small { display: none; }
-  .hud-nav { overflow-x: auto; max-width: 58vw; }
-  .nav-pill { padding: 7px 10px; font-size: 0.78rem; }
-  .options-grid, .podium-grid, .google-dock-grid, .mission-tabs-row { grid-template-columns: 1fr; }
+/* ==========================================================================
+   RESPONSIVE MULTI-DISPOSITIVO (4K · DESKTOP · NOTEBOOK · TABLET · MÓVIL)
+   ========================================================================== */
+
+/* Pantallas grandes / proyectores 1440px+ */
+@media (min-width: 1500px) {
+  .section-shell { max-width: 1360px; }
+  .studio-grid { grid-template-columns: 1fr 370px; }
+  .studio-stage-card { min-height: 580px; }
+}
+
+/* Notebooks compactas y Tablets horizontales (<= 1180px) */
+@media (max-width: 1180px) {
+  .db-engine-pill { display: none; }
+  .top-hud { padding: 0 12px; gap: 8px; }
+  .nav-pill { padding: 7px 11px; font-size: 0.8rem; }
+  .hud-brand-text strong { font-size: 0.86rem; }
+  .studio-grid { grid-template-columns: 1fr 310px; }
+}
+
+/* Tablets (<= 960px): HUD en 2 filas limpias + layouts adaptados */
+@media (max-width: 960px) {
+  .top-hud {
+    height: auto;
+    flex-wrap: wrap;
+    padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+    row-gap: 8px;
+  }
+  .hud-brand { flex: 1; }
+  .hud-right { order: 2; }
+  .hud-nav {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    justify-content: space-between;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 4px;
+    border-radius: 14px;
+  }
+  .hud-nav::-webkit-scrollbar { display: none; }
+  .nav-pill {
+    flex: 1 0 auto;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  .scrollable-section { padding: 16px 14px calc(48px + env(safe-area-inset-bottom)); }
+
+  .studio-grid,
+  .practice-header-card,
+  .quiz-setup-grid,
+  .results-layout,
+  .teacher-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .studio-stage-card {
+    min-height: 360px;
+    height: 50dvh;
+    max-height: 480px;
+  }
+
+  .google-dock-grid,
+  .mission-tabs-row,
+  .lb-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .prezi-dots { display: none; }
+}
+
+/* Teléfonos estándar y pantallas angostas (<= 640px) */
+@media (max-width: 640px) {
+  .hud-logo { width: 34px; height: 34px; }
+  .hud-brand-text strong { font-size: 0.82rem; }
+  .hud-brand-text small { display: none; }
+  .icon-btn { width: 34px; height: 34px; font-size: 0.92rem; }
+  .nav-pill { padding: 7px 9px; font-size: 0.75rem; gap: 4px; }
+
+  .prezi-bottom-dock {
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    width: calc(100vw - 16px);
+  }
+  .prezi-dock-status {
+    font-size: 0.72rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .prezi-dock-controls {
+    width: 100%;
+    justify-content: space-between;
+    gap: 5px;
+    padding: 6px 7px;
+  }
+  .dock-btn { padding: 8px 9px; font-size: 0.75rem; }
+  .dock-zoom-btn { width: 28px; height: 30px; font-size: 0.92rem; }
+  .dock-zoom-readout { padding: 0 6px; font-size: 0.72rem; height: 30px; }
+
+  /* Práctica Drive */
+  .practice-header-card,
+  .mission-panel,
+  .setup-card,
+  .setup-info-card,
+  .quiz-arena-card,
+  .results-summary-card,
+  .teacher-card,
+  .teacher-auth-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+  .practice-head-left h2,
+  .studio-header h2,
+  .setup-card h2 {
+    font-size: 1.32rem;
+  }
+  .pp-top, .pp-bottom, .mission-panel-top, .shortcuts-strip, .lb-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mini-input, .lb-toolbar .field-input { width: 100%; max-width: 100%; }
+  .mission-panel-top .btn-primary-glow,
+  .shortcuts-strip .btn-primary-glow,
+  .setup-cta-row > button,
+  .res-actions > button {
+    width: 100%;
+  }
+
+  /* Evaluación, Podio y Tabla */
+  .quiz-subnav { display: grid; grid-template-columns: 1fr; gap: 6px; }
+  .qtab { width: 100%; text-align: center; padding: 9px 12px; font-size: 0.82rem; }
+  .arena-hud { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .hud-pill { font-size: 0.76rem; padding: 6px 10px; text-align: center; }
+  .arena-question { font-size: 1.12rem; }
+  .options-grid,
+  .podium-grid,
+  .form-row-2,
+  .res-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  /* En móvil el 1° Puesto sube arriba del podio */
+  .podium-card.place-1 { order: -1; padding-top: 18px; }
+  .quiz-option-btn { padding: 13px 12px; font-size: 0.88rem; }
+  .lb-table { font-size: 0.78rem; }
+  .lb-table th, .lb-table td { padding: 9px 8px; white-space: nowrap; }
+  .cert-header, .cert-footer { flex-direction: column; text-align: center; align-items: center; gap: 10px; }
+  .cert-sign-line { width: 180px; margin: 0 auto 4px; }
+
+  /* Simulador 3D & AR */
+  .model-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    gap: 6px;
+  }
+  .model-tab { padding: 8px 8px; font-size: 0.76rem; text-align: center; }
+  .cad-toolbar { padding: 10px; gap: 8px; }
+  .cad-toolbar-group {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .cad-toolbar-group::-webkit-scrollbar { display: none; }
+  .cad-group-label { white-space: nowrap; }
+  .cad-chip { white-space: nowrap; flex-shrink: 0; font-size: 0.76rem; padding: 6px 9px; }
+  .studio-stage-card { min-height: 300px; height: 46dvh; }
+  .cad-sliders-grid label { grid-template-columns: 92px 1fr; }
+}
+
+/* Teléfonos muy pequeños (<= 400px) */
+@media (max-width: 400px) {
+  .google-dock-grid,
+  .mission-tabs-row,
+  .lb-stats-row {
+    grid-template-columns: 1fr;
+  }
+  .nav-pill span { display: none; }
+  .dock-btn { padding: 7px 7px; font-size: 0.72rem; }
+}
+
+/* Teléfonos en horizontal (altura muy reducida <= 500px) */
+@media (max-height: 500px) and (orientation: landscape) {
+  .top-hud { padding: 4px 12px; }
+  .hud-logo { width: 30px; height: 30px; }
+  .prezi-dock-status { display: none; }
+  .prezi-bottom-dock { bottom: 6px; }
+  .studio-stage-card { min-height: 240px; height: 68dvh; }
 }
 
 @media print {
